@@ -268,7 +268,11 @@ export class Engine {
 
 /* ---------------- React binding ---------------- */
 let current: Engine | null = null;
-export const setEngine = (e: Engine) => (current = e);
+export const setEngine = (e: Engine) => {
+  current = e;
+  // Dev-only handle for debugging and seeding test data from the console.
+  if (import.meta.env.DEV) (window as unknown as { __ruecai?: Engine }).__ruecai = e;
+};
 export function useEngine(): Engine {
   const e = current!;
   useSyncExternalStore(e.subscribe, () => e.version);

@@ -51,7 +51,8 @@ test("concept map, tools, quiz → mastery, flashcards → review, tutor with ci
 
   await tab(page, /מפת מושגים/).click();
   await expect(page.getByTestId("concept-card")).toHaveCount(8);
-  await expect(page.locator(".mermaid-host svg text").filter({ hasText: "בייס" }).first()).toBeVisible();
+  await page.getByTestId("concept-card").filter({ hasText: "בייס" }).first().click();
+  await expect(page.getByTestId("concept-panel")).toContainText("כדאי ללמוד קודם");
 
   // Summary with citations that open the source
   await tab(page, /כלים/).click();

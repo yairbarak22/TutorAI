@@ -10,6 +10,7 @@ export * from "./llm/anthropic.ts";
 export * from "./llm/mock.ts";
 export * from "./learner/bkt.ts";
 export * from "./learner/srs.ts";
+export * from "./learner/graph.ts";
 export * from "./runtime.ts";
 export * from "./plugin-loader.ts";
 export * from "./seed.ts";
