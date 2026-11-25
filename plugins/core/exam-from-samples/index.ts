@@ -20,8 +20,9 @@ export default defineTool<"exam_simulation">({
       context: samples.text,
       tier: "smart",
       tag: "exam-from-samples:analyze",
-      maxTokens: 4000,
-      prompt: "Analyze the sample exams: number of questions, duration, question types, how points are split, topics, and the style of phrasing and grading.",
+      maxTokens: 8000,
+      prompt:
+        "Analyze the sample exams: number of questions, duration, question types, how points are split, topics, and the style of phrasing and grading. Be concise: at most 10 topics, points_pattern in one sentence, style_notes under 80 words.",
     });
 
     ctx.progress(0.4, t("כותב מבחן חדש…", "Writing a new exam…"));
