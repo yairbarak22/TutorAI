@@ -8,10 +8,10 @@ import { CitationChips } from "../ui/Citations.tsx";
 import { MermaidView } from "../ui/Visuals.tsx";
 
 const COLORS: Record<MasteryLevel, { fill: string; chip: string }> = {
-  new: { fill: "#e2e8f0", chip: "bg-slate-100 text-slate-700" },
-  weak: { fill: "#fecaca", chip: "bg-red-100 text-red-800" },
-  progress: { fill: "#fde68a", chip: "bg-amber-100 text-amber-900" },
-  strong: { fill: "#a7f3d0", chip: "bg-emerald-100 text-emerald-800" },
+  new: { fill: "#ffffff", chip: "bg-black/[0.05] text-ink-2" },
+  weak: { fill: "#fdecec", chip: "bg-red-50 text-red-700" },
+  progress: { fill: "#fdf4e3", chip: "bg-amber-50 text-amber-700" },
+  strong: { fill: "#e8f6ee", chip: "bg-emerald-50 text-emerald-700" },
 };
 
 export function conceptGraph(concepts: { name: string; prerequisites: string[]; level: MasteryLevel }[]) {
@@ -20,7 +20,7 @@ export function conceptGraph(concepts: { name: string; prerequisites: string[]; 
   const lines = ["flowchart TD"];
   concepts.forEach((c) => lines.push(`  ${id.get(c.name)}["${esc(c.name)}"]:::${c.level}`));
   concepts.forEach((c) => c.prerequisites.forEach((p) => id.has(p) && lines.push(`  ${id.get(p)} --> ${id.get(c.name)}`)));
-  (Object.keys(COLORS) as MasteryLevel[]).forEach((l) => lines.push(`  classDef ${l} fill:${COLORS[l].fill},stroke:#64748b,color:#0f172a`));
+  (Object.keys(COLORS) as MasteryLevel[]).forEach((l) => lines.push(`  classDef ${l} fill:${COLORS[l].fill},stroke:#d6d6d6,stroke-width:1px,color:#0f0f10,rx:10,ry:10`));
   return lines.join("\n");
 }
 

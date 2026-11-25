@@ -10,10 +10,11 @@ const loadMermaid = () =>
     m.default.initialize({
       startOnLoad: false,
       securityLevel: "strict",
-      theme: "neutral",
+      theme: "base",
+      themeVariables: { primaryColor: "#ffffff", primaryBorderColor: "#d6d6d6", primaryTextColor: "#0f0f10", lineColor: "#a1a1a6", fontSize: "14px" },
       htmlLabels: false,
       flowchart: { htmlLabels: false },
-      fontFamily: "Segoe UI, Arial Hebrew, sans-serif",
+      fontFamily: "Inter Variable, Heebo Variable, system-ui, sans-serif",
     });
     return m.default;
   }));

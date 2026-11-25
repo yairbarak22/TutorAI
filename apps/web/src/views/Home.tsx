@@ -41,7 +41,12 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
   const ask = () => {
     if (!q.trim()) return;
     if (!course) return onNewCourse();
-    go(`#/course/${course.id}/tutor/${encodeURIComponent(q.trim())}`);
+    try {
+      sessionStorage.setItem(`ruecai.ask.${course.id}`, q.trim());
+    } catch {
+      /* ignore */
+    }
+    go(href.course(course.id, "tutor"));
   };
 
   return (

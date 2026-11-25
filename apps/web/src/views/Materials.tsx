@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { FileText, Trash2, Upload } from "lucide-react";
+import { ClipboardCheck, ExternalLink, FileText, Repeat, Trash2, Upload } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { href } from "../router.ts";
 import { Alert, Badge, Button, Card, Empty, ProgressBar, Spinner } from "../ui/components.tsx";
@@ -118,10 +118,13 @@ function SourceRow({ s }: { s: Source }) {
   const sections = s.status === "ready" ? engine.store.sectionsOfSource(s.id).length : 0;
   const st = STATUS[s.status];
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4" data-testid="source-row">
+    <div className="flex flex-wrap items-center gap-3 px-3 py-3" data-testid="source-row">
+      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink/70 shadow-[inset_0_-6px_12px_rgba(0,0,0,0.08)] ${s.kind === "sample_exam" ? "tile-grad-5" : "tile-grad-6"}`}>
+        {s.kind === "sample_exam" ? <ClipboardCheck size={17} /> : <FileText size={17} />}
+      </span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate font-medium" dir="auto">
+          <span className="truncate text-[14px] font-medium" dir="auto">
             {s.name}
           </span>
           <Badge color={st.color}>{st.label}</Badge>
@@ -136,17 +139,18 @@ function SourceRow({ s }: { s: Source }) {
         {s.status === "ready" && <div className="text-xs text-slate-500">{sections} קטעים · {(s.size / 1024).toFixed(0)}KB</div>}
         {s.status === "error" && <div className="text-sm text-red-700">{s.error}</div>}
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-1.5">
         <Button
           size="sm"
-          variant="ghost"
+          variant="secondary"
+          className="h-7 px-2.5 text-[12.5px]"
           onClick={() => engine.store.setSourceKind(s.id, s.kind === "material" ? "sample_exam" : "material")}
           title="החלפת סוג"
         >
-          {s.kind === "material" ? "סמן כמבחן" : "סמן כחומר"}
+          <Repeat size={13} /> {s.kind === "material" ? "סמן כמבחן" : "סמן כחומר"}
         </Button>
-        <Button size="sm" variant="ghost" onClick={async () => window.open(await engine.sourceUrl(s.id), "_blank", "noopener")}>
-          פתיחה
+        <Button size="sm" variant="secondary" className="h-7 px-2.5 text-[12.5px]" onClick={async () => window.open(await engine.sourceUrl(s.id), "_blank", "noopener")}>
+          <ExternalLink size={13} /> פתיחה
         </Button>
         {s.status === "error" && (
           <Button size="sm" variant="secondary" onClick={() => engine.retry(s.id)}>
@@ -156,6 +160,7 @@ function SourceRow({ s }: { s: Source }) {
         <Button
           size="sm"
           variant="ghost"
+          className="h-7 w-7 px-0"
           onClick={() => confirm(`למחוק את "${s.name}"? הקובץ יימחק גם מהתיקייה.`) && engine.deleteSource(s.id)}
           aria-label={`מחיקת ${s.name}`}
         >

@@ -9,7 +9,7 @@ import { CitationChips } from "../ui/Citations.tsx";
 const MODES = ["סוקרטי", "הסבר ישיר", "בוחן אותי", "פשוט כמו לילד בן 12"];
 const STARTERS = ["תסביר לי את המושג הכי חשוב בקורס", "על מה כדאי לי לחזור לקראת המבחן?", "תבחן אותי על החומר", "לא הבנתי את השיעור האחרון"];
 
-export function Tutor({ courseId, ask }: { courseId: number; ask?: string }) {
+export function Tutor({ courseId }: { courseId: number }) {
   const engine = useEngine();
   const chat = engine.store.chat(courseId);
   const [messages, setMessages] = useState<ChatTurn[]>(chat.messages);
@@ -44,15 +44,23 @@ export function Tutor({ courseId, ask }: { courseId: number; ask?: string }) {
     }
   };
 
-  // A question handed over from the home prompt box (#/course/<id>/tutor/<question>): ask it once.
-  const asked = useRef<string | null>(null);
+  // A question typed in the Home prompt box. It is handed over through sessionStorage (same tab,
+  // set only by our own form), never through the URL, so an outside link can't make the tutor
+  // spend the student's API key.
+  const handed = useRef(false);
   useEffect(() => {
-    if (!ask || asked.current === ask) return;
-    asked.current = ask;
-    history.replaceState(null, "", `#/course/${courseId}/tutor`);
-    void send(ask);
+    if (handed.current) return;
+    handed.current = true;
+    let q: string | null = null;
+    try {
+      q = sessionStorage.getItem(`ruecai.ask.${courseId}`);
+      sessionStorage.removeItem(`ruecai.ask.${courseId}`);
+    } catch {
+      /* ignore */
+    }
+    if (q) void send(q);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ask]);
+  }, []);
 
   const hasMaterial = engine.store.sources(courseId).some((s) => s.status === "ready");
 

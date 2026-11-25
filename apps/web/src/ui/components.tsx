@@ -190,3 +190,8 @@ export function Row({ title, desc, action, children, wide }: { title: ReactNode;
     </div>
   );
 }
+
+/** Soft grey panel (settings-style section): light fill, no hard border. */
+export function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`rounded-2xl bg-[#f7f7f7] ${className}`}>{children}</div>;
+}

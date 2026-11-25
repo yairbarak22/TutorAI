@@ -290,7 +290,7 @@ function GlobalSearch() {
   const term = q.trim();
   const results = term ? items.filter((i) => i.label.includes(term)).slice(0, 8) : [];
   return (
-    <div className="relative hidden w-[300px] lg:block">
+    <div className="relative hidden w-[260px] shrink-0 lg:block">
       <Search size={15} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-muted" />
       <input
         ref={ref}
@@ -308,10 +308,10 @@ function GlobalSearch() {
         }}
         placeholder="חיפוש…"
         aria-label="חיפוש"
-        className="h-8 w-full rounded-lg border border-black/10 bg-white ps-9 pe-16 text-[13px] outline-none placeholder:text-slate-400 focus:border-black/25"
+        className="h-8 w-full rounded-lg border border-black/10 bg-white ps-9 pe-14 text-[13px] outline-none placeholder:text-slate-400 focus:border-black/25"
       />
-      <span className="pointer-events-none absolute end-2 top-1/2 flex -translate-y-1/2 gap-0.5" dir="ltr">
-        <kbd className="rounded border border-black/10 px-1 text-[10px] text-muted">⌘</kbd>
+      <span className="pointer-events-none absolute left-2 top-1/2 flex -translate-y-1/2 gap-0.5" dir="ltr">
+        <kbd className="rounded border border-black/10 px-1 font-sans text-[10px] text-muted" style={{ fontFamily: "system-ui, -apple-system" }}>⌘</kbd>
         <kbd className="rounded border border-black/10 px-1 text-[10px] text-muted">K</kbd>
       </span>
       {open && results.length > 0 && (
@@ -387,9 +387,9 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
           <button className="hidden h-8 w-8 place-items-center rounded-lg text-muted hover:bg-hover hover:text-ink md:grid" onClick={toggle} aria-label={collapsed ? "הצגת התפריט" : "הסתרת התפריט"} title={collapsed ? "הצגת התפריט" : "הסתרת התפריט"}>
             <PanelRight size={17} />
           </button>
-          <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] text-muted">{crumbs}</div>
+          <div className="flex min-w-0 items-center gap-1.5 text-[13px] text-muted">{crumbs}</div>
+          <div className="flex-1" />
           <GlobalSearch />
-          <div className="hidden flex-1 lg:block" />
           {engine.demo && (
             <a href={href.settings()} className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[12px] font-medium text-amber-800 md:hidden">
               מצב הדגמה

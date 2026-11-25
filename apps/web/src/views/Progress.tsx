@@ -4,7 +4,7 @@ import { conceptInfos, masteryLevel, MASTERY_LABEL } from "@ruecai/core";
 import type { StudyPlan } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
-import { Alert, Button, Card, Empty, ProgressBar, Spinner, errorMessage } from "../ui/components.tsx";
+import { Alert, Button, Card, Empty, Panel, ProgressBar, Spinner, errorMessage } from "../ui/components.tsx";
 import { daysUntil } from "./Home.tsx";
 
 export function ProgressView({ courseId }: { courseId: number }) {
@@ -38,21 +38,21 @@ export function ProgressView({ courseId }: { courseId: number }) {
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="p-4">
+        <Panel className="p-4">
           <div className="text-sm text-slate-500">שליטה ממוצעת</div>
-          <div className="text-3xl font-semibold text-brand-700">{Math.round(avg * 100)}%</div>
-        </Card>
-        <Card className="p-4">
+          <div className="mt-1 text-[28px] font-semibold tracking-tight text-ink">{Math.round(avg * 100)}%</div>
+        </Panel>
+        <Panel className="p-4">
           <div className="text-sm text-slate-500">תשובות שנבדקו</div>
-          <div className="text-3xl font-semibold text-brand-700">{attempts.length}</div>
-        </Card>
-        <Card className="p-4">
+          <div className="mt-1 text-[28px] font-semibold tracking-tight text-ink">{attempts.length}</div>
+        </Panel>
+        <Panel className="p-4">
           <div className="text-sm text-slate-500">ימים למבחן</div>
-          <div className="text-3xl font-semibold text-brand-700">{d ?? "—"}</div>
-        </Card>
+          <div className="mt-1 text-[28px] font-semibold tracking-tight text-ink">{d ?? "—"}</div>
+        </Panel>
       </div>
 
-      <Card className="space-y-3 p-5">
+      <Panel className="space-y-3 p-5">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="flex items-center gap-2 font-semibold"><CalendarDays size={16} /> היום בתוכנית</h2>
           <Button size="sm" className="ms-auto" onClick={makePlan} disabled={busy}>
@@ -80,7 +80,7 @@ export function ProgressView({ courseId }: { courseId: number }) {
             </p>
           )
         )}
-      </Card>
+      </Panel>
 
       <Card className="p-5">
         <h2 className="mb-3 font-semibold">שליטה לפי מושג</h2>
