@@ -12,13 +12,26 @@ export interface RawUnit {
 
 export type SupportedKind = "pdf" | "pptx" | "docx" | "text";
 
-export function detectKind(name: string, mime = ""): SupportedKind | null {
+/** Decided by file extension only — the browser-reported MIME type is not trusted. */
+export function detectKind(name: string, _mime = ""): SupportedKind | null {
   const ext = name.toLowerCase().split(".").pop() ?? "";
-  if (ext === "pdf" || mime === "application/pdf") return "pdf";
+  if (ext === "pdf") return "pdf";
   if (ext === "pptx") return "pptx";
   if (ext === "docx") return "docx";
-  if (["txt", "md", "markdown"].includes(ext) || mime.startsWith("text/")) return "text";
+  if (["txt", "md", "markdown"].includes(ext)) return "text";
   return null;
+}
+
+/** Inert MIME type used when opening a stored file. Never an active type (html/svg/js). */
+export function safeMimeFor(name: string): string {
+  switch (detectKind(name)) {
+    case "pdf":
+      return "application/pdf";
+    case "text":
+      return "text/plain;charset=utf-8";
+    default:
+      return "application/octet-stream";
+  }
 }
 
 const decodeXml = (s: string) =>

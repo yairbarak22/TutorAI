@@ -4,7 +4,7 @@ import JSZip from "jszip";
 import { z } from "zod";
 import { checkGrounding, cleanCitations, hebrewRatio, renderTemplate, extractInlineCitations } from "@ruecai/sdk";
 import { Store, sectionKey } from "./db/store.ts";
-import { parseDocx, parsePptx, parseText, detectKind } from "./ingest/parsers.ts";
+import { parseDocx, parsePptx, parseText, detectKind, safeMimeFor } from "./ingest/parsers.ts";
 import { ingestSource, mergeConcepts } from "./ingest/pipeline.ts";
 import { MemoryFileStore, sha256Hex } from "./files.ts";
 import { MockLLM } from "./llm/mock.ts";
@@ -51,6 +51,13 @@ describe("parsers", () => {
     expect(detectKind("a.pptx")).toBe("pptx");
     expect(detectKind("notes.md")).toBe("text");
     expect(detectKind("a.exe")).toBeNull();
+  });
+  it("never trusts the browser MIME type (no HTML/SVG as material)", () => {
+    expect(detectKind("evil.html", "text/html")).toBeNull();
+    expect(detectKind("evil.svg", "text/plain")).toBeNull();
+    expect(safeMimeFor("notes.md")).toBe("text/plain;charset=utf-8");
+    expect(safeMimeFor("evil.html")).toBe("application/octet-stream");
+    expect(safeMimeFor("a.pdf")).toBe("application/pdf");
   });
 
   it("parses PPTX slides with notes, in slide order", async () => {

@@ -16,6 +16,5 @@ jobs:
       - run: npm ci
       - run: npm run build
         env: { VITE_PREVIEW: "1" }
-      - run: echo "${{ github.event.pull_request.number }}" > apps/web/dist/.pr-number
       - uses: actions/upload-artifact@v4
-        with: { name: preview-site, path: apps/web/dist, include-hidden-files: true, retention-days: 7 }
+        with: { name: preview-site, path: apps/web/dist, retention-days: 7 }

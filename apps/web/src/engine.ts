@@ -9,6 +9,7 @@ import {
   MockLLM,
   Store,
   detectKind,
+  safeMimeFor,
   gradeAnswer,
   ingestSource,
   recordAttempt,
@@ -136,7 +137,7 @@ export class Engine {
       const path = `courses/${courseId}/sources/${hash.slice(0, 10)}-${safeFileName(f.name)}`;
       await this.root.files.write(path, bytes);
       const guessKind = /מבחן|בחינה|exam|מועד/i.test(f.name) && kind === "material" ? "sample_exam" : kind;
-      const id = this.store.addSource({ course_id: courseId, name: f.name, kind: guessKind, mime: f.type, path, hash, size: f.size });
+      const id = this.store.addSource({ course_id: courseId, name: f.name, kind: guessKind, mime: safeMimeFor(f.name), path, hash, size: f.size });
       this.enqueue(id);
     }
     return problems;
@@ -195,7 +196,8 @@ export class Engine {
     const s = this.store.source(id);
     if (!s) throw new Error("not found");
     const bytes = await this.root.files.read(s.path);
-    const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: s.mime || (s.name.endsWith(".pdf") ? "application/pdf" : "application/octet-stream") }));
+    // Inert, allowlisted type: a stored file must never be rendered as HTML/SVG in our origin.
+    const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: safeMimeFor(s.name) }));
     return page && s.name.toLowerCase().endsWith(".pdf") ? `${url}#page=${page}` : url;
   }
 

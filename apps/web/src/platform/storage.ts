@@ -289,6 +289,8 @@ export async function importBackup(root: DataRoot, file: Blob): Promise<Uint8Arr
   if (!db) throw new Error("קובץ הגיבוי לא תקין (חסר ruecai.db)");
   for (const [path, entry] of Object.entries(zip.files)) {
     if (entry.dir || path === DB_FILE) continue;
+    // Only source files in the exact layout we write; anything else in the archive is ignored.
+    if (!/^courses\/\d+\/sources\/[^/\\]+$/.test(path) || path.includes("..")) continue;
     await root.files.write(path, await entry.async("uint8array"));
   }
   return db;

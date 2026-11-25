@@ -59,10 +59,14 @@ window.addEventListener('error',function(e){r((e.message||'error')+(e.lineno?' (
 window.addEventListener('unhandledrejection',function(e){r(e.reason&&e.reason.message||e.reason)});
 window.addEventListener('load',function(){setTimeout(function(){parent.postMessage({ruecaiWidgetOk:true,height:document.documentElement.scrollHeight},'*')},50)});})();</script>`;
 
+/**
+ * Our CSP <meta> is always the very first element of the document, before any model output,
+ * so no generated markup can precede or displace it (extra policies can only tighten CSP).
+ * The model's own <!doctype>/<html>/<head> that follow are merged/ignored by the HTML parser.
+ */
 export function buildWidgetDoc(html: string) {
   const meta = `<meta http-equiv="Content-Security-Policy" content="${CSP}">`;
-  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => `${m}${meta}${REPORTER}`);
-  return `<!doctype html><html dir="rtl" lang="he"><head><meta charset="utf-8">${meta}${REPORTER}</head><body>${html}</body></html>`;
+  return `<!doctype html><html dir="rtl" lang="he"><head>${meta}<meta charset="utf-8">${REPORTER}\n${html}`;
 }
 
 export function WidgetFrame({ html, onError, onRepair, repairing }: { html: string; onError?: (e: string) => void; onRepair?: (e: string) => void; repairing?: boolean }) {
