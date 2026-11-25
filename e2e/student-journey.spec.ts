@@ -111,7 +111,8 @@ test("interactive explainer runs sandboxed without errors", async ({ page }) => 
   await page.getByRole("button", { name: "קורס לדוגמה: הסתברות" }).click();
   await tab(page, /כלים/).click();
   await page.getByTestId("tool-explainer").click();
-  await page.getByRole("combobox").first().selectOption("נוסחת בייס");
+  await page.getByRole("combobox").first().click();
+  await page.getByRole("option", { name: "נוסחת בייס" }).click();
   await page.getByRole("button", { name: /יצירה/ }).click();
   const frame = page.frameLocator('iframe[title="הסבר אינטראקטיבי"]');
   await expect(frame.locator(".viz-readouts dd").last()).toHaveText(/%/);

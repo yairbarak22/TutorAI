@@ -3,6 +3,7 @@ import { ClipboardCheck, ExternalLink, FileText, Repeat, Trash2, Upload } from "
 import { useEngine } from "../engine.ts";
 import { href } from "../router.ts";
 import { Alert, Badge, Button, Card, Empty, Spinner } from "../ui/components.tsx";
+import { Select } from "../ui/Select.tsx";
 import { LongTask } from "../ui/LongTask.tsx";
 import { expectedSeconds } from "../platform/timing.ts";
 import { t } from "../i18n.tsx";
@@ -57,13 +58,21 @@ export function Materials({ courseId }: { courseId: number }) {
         <p className="mt-2 font-semibold">{t("גררו לכאן קבצים", "Drop files here")}</p>
         <p className="text-sm text-slate-500">PDF · PowerPoint (PPTX) · Word (DOCX) · TXT/MD. {t("הקבצים נשמרים רק אצלכם.", "Your files stay on your device.")}</p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-          <label className="text-sm">
-            {t("סוג:", "Type:")}{" "}
-            <select className="rounded border border-slate-300 px-2 py-1" value={kind} onChange={(e) => setKind(e.target.value as Source["kind"])}>
-              <option value="material">{t("חומר לימוד", "Study material")}</option>
-              <option value="sample_exam">{t("מבחן לדוגמה", "Sample exam")}</option>
-            </select>
-          </label>
+          <div className="flex items-center gap-2 text-sm">
+            <span>{t("סוג:", "Type:")}</span>
+            <div className="w-40">
+              <Select
+                size="sm"
+                aria-label={t("סוג הקובץ", "File type")}
+                value={kind}
+                onChange={(v) => setKind(v as Source["kind"])}
+                options={[
+                  { value: "material", label: t("חומר לימוד", "Study material") },
+                  { value: "sample_exam", label: t("מבחן לדוגמה", "Sample exam") },
+                ]}
+              />
+            </div>
+          </div>
           <Button onClick={() => input.current?.click()} disabled={busy}>
             {busy ? <Spinner label={t("מעלה…", "Uploading…")} /> : t("בחירת קבצים", "Choose files")}
           </Button>

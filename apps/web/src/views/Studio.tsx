@@ -7,6 +7,7 @@ import { ArrowBack, ChevronForward, t, toolText } from "../i18n.tsx";
 import { Alert, Badge, Button, Card, Field, errorMessage, inputClass } from "../ui/components.tsx";
 import { ToolOrb, ToolTile } from "../ui/toolIcons.tsx";
 import { LongTask } from "../ui/LongTask.tsx";
+import { Select } from "../ui/Select.tsx";
 import { expectedChars, expectedSeconds, recordRun } from "../platform/timing.ts";
 
 const packLabel = (p: string): string =>
@@ -219,36 +220,36 @@ function InputControl({
   let control;
   if (input.type === "select")
     control = (
-      <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
-        {input.options?.map((o) => (
-          <option key={o} value={o}>
-            {tx.option(input.name, o)}
-          </option>
-        ))}
-      </select>
+      <Select
+        value={String(value)}
+        onChange={onChange}
+        options={(input.options ?? []).map((o) => ({ value: o, label: tx.option(input.name, o) }))}
+      />
     );
   else if (input.type === "source")
     control = (
-      <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="all">{t("כל החומרים", "All materials")}</option>
-        {engine.store
-          .sources(courseId)
-          .filter((s) => s.status === "ready" && s.kind === "material")
-          .map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-      </select>
+      <Select
+        value={String(value)}
+        onChange={onChange}
+        options={[
+          { value: "all", label: t("כל החומרים", "All materials") },
+          ...engine.store
+            .sources(courseId)
+            .filter((s) => s.status === "ready" && s.kind === "material")
+            .map((s) => ({ value: String(s.id), label: s.name })),
+        ]}
+      />
     );
   else if (input.type === "concept")
     control = (
-      <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">{t("כל המושגים", "All concepts")}</option>
-        {engine.store.concepts(courseId).map((c) => (
-          <option key={c.id}>{c.name}</option>
-        ))}
-      </select>
+      <Select
+        value={String(value)}
+        onChange={onChange}
+        options={[
+          { value: "", label: t("כל המושגים", "All concepts") },
+          ...engine.store.concepts(courseId).map((c) => ({ value: c.name, label: c.name, hint: c.name_en || undefined })),
+        ]}
+      />
     );
   else if (input.type === "number")
     control = <input type="number" min={0} className={inputClass} value={value} onChange={(e) => onChange(Number(e.target.value))} />;
