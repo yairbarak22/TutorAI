@@ -49,7 +49,7 @@ export function CourseView({ id, tab, sub }: { id: number; tab: string; sub?: st
         </Button>
       </div>
       {/* On small screens the course sections live here instead of the sidebar. */}
-      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 md:hidden" aria-label={t("לשוניות הקורס", "Course tabs")}>
+      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 md:hidden" aria-label={t("לשוניות הקורס", "Course sections")}>
         {COURSE_SECTIONS.map((s) => (
           <a
             key={s.id}
