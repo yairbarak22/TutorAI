@@ -42,9 +42,16 @@ export class MockLLM implements LLMApi {
 
   async object<S extends z.ZodType>(schema: S, opts: LLMCallOptions): Promise<z.infer<S>> {
     this.calls.push({ tag: opts.tag, prompt: opts.prompt, context: opts.context });
-    await this.wait();
     const ids = this.ids(opts);
-    return schema.parse(this.remap(this.find(opts.tag), ids));
+    const out = this.remap(this.find(opts.tag), ids);
+    // Simulate the model "writing" so progress UIs behave like they do with the real API.
+    const total = JSON.stringify(out).length;
+    const steps = 12;
+    for (let i = 1; i <= steps; i++) {
+      if (this.options.delayMs) await new Promise((r) => setTimeout(r, this.options.delayMs! / steps));
+      opts.onOutput?.(Math.round((total * i) / steps));
+    }
+    return schema.parse(out);
   }
 
   async text(opts: LLMCallOptions): Promise<string> {
@@ -60,6 +67,7 @@ export class MockLLM implements LLMApi {
       if (this.options.delayMs) await new Promise((r) => setTimeout(r, Math.min(15, this.options.delayMs!)));
       onDelta(c);
     }
+    opts.onOutput?.(text.length);
     return text;
   }
 }

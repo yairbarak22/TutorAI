@@ -33,7 +33,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 let sqlPromise: Promise<SqlJsStatic> | null = null;
 const loadSql = () => (sqlPromise ??= initSqlJs({ locateFile: () => sqlWasmUrl }));
 
-export type IngestEvent = { sourceId: number; pct: number; message: string };
+export type IngestEvent = { sourceId: number; pct: number; message: string; startedAt: number };
 
 /**
  * App-level orchestration around the core: one Store (ruecai.db), one FileStore,
@@ -102,7 +102,7 @@ export class Engine {
     const key = secrets.getApiKey();
     this.demo = secrets.isDemo() || !key;
     this.llm = this.demo
-      ? new MockLLM(demoFixtures(), { delayMs: 500 })
+      ? new MockLLM(demoFixtures(), { delayMs: 900 })
       : new AnthropicLLM(key!, secrets.getModels() ?? DEFAULT_MODELS, (u) => this.store.addUsage(u));
     this.bump();
   }
@@ -169,7 +169,8 @@ export class Engine {
               pdf: { pdfjs },
               ocrSparsePages: !this.demo,
               onProgress: (sourceId, pct, message) => {
-                this.ingestStatus.set(sourceId, { sourceId, pct, message });
+                const startedAt = this.ingestStatus.get(sourceId)?.startedAt ?? Date.now();
+                this.ingestStatus.set(sourceId, { sourceId, pct, message, startedAt });
                 this.bump();
               },
             },
@@ -202,8 +203,21 @@ export class Engine {
   }
 
   /* ---------------- tools ---------------- */
-  async run(toolId: string, courseId: number, params: Record<string, string | number>, onProgress?: (pct: number, msg: string) => void): Promise<RunResult> {
-    return runTool(getTool(toolId), { store: this.store, llm: this.llm, courseId, params, onProgress });
+  async run(
+    toolId: string,
+    courseId: number,
+    params: Record<string, string | number>,
+    onProgress?: (pct: number, msg: string) => void,
+    onOutput?: (chars: number) => void,
+  ): Promise<RunResult> {
+    return runTool(getTool(toolId), { store: this.store, llm: this.llm, courseId, params, onProgress, onOutput });
+  }
+
+  /** Position in the ingestion queue (0 = being processed now), or -1 when not queued. */
+  queuePosition(sourceId: number): number {
+    if (this.ingesting && !this.queue.includes(sourceId) && this.ingestStatus.has(sourceId)) return 0;
+    const i = this.queue.indexOf(sourceId);
+    return i < 0 ? -1 : i + 1;
   }
 
   async chat(courseId: number, message: string, history: ChatTurn[], mode: string, onDelta: (t: string) => void) {
@@ -218,13 +232,13 @@ export class Engine {
     return res.reply;
   }
 
-  async repairArtifact(artifactId: number, error: string) {
+  async repairArtifact(artifactId: number, error: string, onOutput?: (chars: number) => void) {
     const a = this.store.artifact(artifactId);
     if (!a) return;
     const tool = getTool(a.tool_id);
     if (!tool.code?.repair) return;
     const { buildContext } = await import("@ruecai/core");
-    const ctx = buildContext(tool, { store: this.store, llm: this.llm, courseId: a.course_id, params: a.params as Record<string, string> }, new Set());
+    const ctx = buildContext(tool, { store: this.store, llm: this.llm, courseId: a.course_id, params: a.params as Record<string, string>, onOutput }, new Set());
     const fixed = await tool.code.repair(ctx, { type: a.type, title: a.title, data: a.data } as ArtifactPayload, error);
     this.store.updateArtifactData(artifactId, fixed.data);
   }

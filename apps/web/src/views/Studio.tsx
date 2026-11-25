@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { InputSpec, LoadedTool } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { ArrowRight, ChevronLeft, Search, Sparkles } from "lucide-react";
-import { Alert, Badge, Button, Card, Field, ProgressBar, errorMessage, inputClass } from "../ui/components.tsx";
+import { Alert, Badge, Button, Card, Field, errorMessage, inputClass } from "../ui/components.tsx";
 import { ToolOrb, ToolTile } from "../ui/toolIcons.tsx";
+import { LongTask } from "../ui/LongTask.tsx";
+import { expectedChars, expectedSeconds, recordRun } from "../platform/timing.ts";
 
 const PACK_LABEL: Record<string, string> = { core: "כלי ליבה", law: "חבילת משפטים", math: "חבילת מתמטיקה וכמותי" };
 const PACK_CHIP: Record<string, string> = { core: "ליבה", law: "משפטים", math: "מתמטיקה" };
@@ -104,20 +106,41 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
   const init: Record<string, string | number> = {};
   for (const i of tool.manifest.inputs) init[i.name] = preset[i.name] ?? (i.name === "exam_date" ? course.exam_date ?? "" : i.name === "minutes_per_day" ? course.minutes_per_day : (i.default ?? ""));
   const [params, setParams] = useState(init);
-  const [running, setRunning] = useState<{ pct: number; msg: string } | null>(null);
+  const [running, setRunning] = useState<{ pct: number; msg: string; chars: number; startedAt: number } | null>(null);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  const key = `tool:${tool.manifest.id}`;
   const [error, setError] = useState<string | null>(null);
   const missing = tool.manifest.inputs.filter((i) => i.required && !String(params[i.name] ?? "").trim());
 
   const run = async () => {
     setError(null);
-    setRunning({ pct: 0.02, msg: "מתחיל…" });
+    const startedAt = Date.now();
+    let chars = 0;
+    setRunning({ pct: 0.02, msg: "מתחיל…", chars: 0, startedAt });
     try {
-      const res = await engine.run(tool.manifest.id, courseId, params, (pct, msg) => setRunning({ pct, msg }));
-      if (res.kind === "artifact") go(href.course(courseId, "artifacts", res.artifactId));
+      const res = await engine.run(
+        tool.manifest.id,
+        courseId,
+        params,
+        (pct, msg) => alive.current && setRunning((r) => (r ? { ...r, pct, msg } : r)),
+        (n) => {
+          chars = n;
+          if (alive.current) setRunning((r) => (r ? { ...r, chars: n } : r));
+        },
+      );
+      recordRun(key, (Date.now() - startedAt) / 1000, chars, engine.demo);
+      // Only jump to the result if the student is still on this screen.
+      if (alive.current && res.kind === "artifact") go(href.course(courseId, "artifacts", res.artifactId));
     } catch (e) {
-      setError(errorMessage(e));
+      if (alive.current) setError(errorMessage(e));
     } finally {
-      setRunning(null);
+      if (alive.current) setRunning(null);
     }
   };
 
@@ -139,11 +162,21 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
         ))}
         {error && <Alert kind="error">{error}</Alert>}
         {running ? (
-          <div className="space-y-2" role="status">
-            <ProgressBar value={running.pct} />
-            <div className="text-sm text-ink-2 animate-pulse-soft">{running.msg}</div>
-            <div className="text-xs text-slate-400">זה יכול לקחת עד דקה. אפשר להמשיך לעבוד בלשוניות אחרות.</div>
-          </div>
+          <LongTask
+            title={`יוצר ${tool.manifest.name}`}
+            stages={["אוסף חומר מהקורס", "Claude כותב", "בודק ציטוטים ושומר"]}
+            stage={running.pct >= 1 ? 3 : running.chars > 0 || running.pct >= 0.2 ? 1 : 0}
+            detail={running.chars > 0 && running.msg === "יוצר…" ? "Claude כותב…" : running.msg}
+            startedAt={running.startedAt}
+            expectedSec={expectedSeconds(key, engine.demo)}
+            chars={running.chars}
+            expectedChars={expectedChars(key)}
+            hint={
+              <>
+                אפשר להמשיך לעבוד בלשוניות אחרות בזמן הזה. כשזה יסתיים, התוצר יישמר בעמוד <a className="font-medium underline" href={href.course(courseId, "artifacts")}>תוצרים</a>.
+              </>
+            }
+          />
         ) : (
           <Button size="lg" className="w-full" onClick={run} disabled={missing.length > 0}>
             <Sparkles size={16} /> יצירה

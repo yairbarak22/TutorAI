@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { LongTask } from "../ui/LongTask.tsx";
+import { expectedChars, expectedSeconds, recordRun } from "../platform/timing.ts";
 import { FolderOpen, Printer, Trash2 } from "lucide-react";
 import type { Diagram, ExamSimulation, Flashcards, InteractiveWidget, MarkdownDoc, Quiz, StudyPlan } from "@ruecai/sdk";
 import type { Artifact } from "@ruecai/core";
@@ -159,6 +161,7 @@ function DiagramView({ d }: { d: Diagram }) {
 function WidgetView({ w, artifactId }: { w: InteractiveWidget; artifactId: number }) {
   const engine = useEngine();
   const [repairing, setRepairing] = useState(false);
+  const [repair, setRepair] = useState<{ startedAt: number; chars: number } | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [err, setErr] = useState<string | null>(null);
   return (
@@ -175,18 +178,37 @@ function WidgetView({ w, artifactId }: { w: InteractiveWidget; artifactId: numbe
             ? async (error) => {
                 setRepairing(true);
                 setErr(null);
+                const startedAt = Date.now();
+                let chars = 0;
+                setRepair({ startedAt, chars: 0 });
                 try {
-                  await engine.repairArtifact(artifactId, error);
+                  await engine.repairArtifact(artifactId, error, (n) => {
+                    chars = n;
+                    setRepair((r) => (r ? { ...r, chars: n } : r));
+                  });
+                  recordRun("repair:explainer", (Date.now() - startedAt) / 1000, chars, engine.demo);
                   setAttempts(attempts + 1);
                 } catch (e) {
                   setErr(errorMessage(e));
                 } finally {
                   setRepairing(false);
+                  setRepair(null);
                 }
               }
             : undefined
         }
       />
+      {repair && (
+        <LongTask
+          title="מתקן את ההסבר האינטראקטיבי"
+          stages={["קורא את השגיאה", "Claude כותב קוד מתוקן", "טוען מחדש"]}
+          stage={repair.chars > 0 ? 1 : 0}
+          startedAt={repair.startedAt}
+          expectedSec={expectedSeconds("repair:explainer", engine.demo)}
+          chars={repair.chars}
+          expectedChars={expectedChars("repair:explainer")}
+        />
+      )}
       {err && <p className="text-sm text-red-700">{err}</p>}
     </div>
   );

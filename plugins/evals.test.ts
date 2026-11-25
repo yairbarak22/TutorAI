@@ -60,12 +60,14 @@ describe.each(tools.map((t) => [t.manifest.id, t] as const))("plugin %s", (_id, 
       const courseId = seedCourse(store, structuredClone(courseFixtures[spec.fixture]));
       const llm = llmFor();
       const deltas: string[] = [];
+      const written: number[] = [];
       const result = await runTool(tool, {
         store,
         llm,
         courseId,
         params: spec.params,
         today: "2027-01-01",
+        onOutput: (n) => written.push(n),
         chat:
           tool.manifest.output === "chat"
             ? { history: [], message: "לא מבין את נוסחת בייס, אפשר עזרה?", onDelta: (t) => deltas.push(t) }
@@ -85,6 +87,11 @@ describe.each(tools.map((t) => [t.manifest.id, t] as const))("plugin %s", (_id, 
         expect(result.grounding.coverage).toBeGreaterThanOrEqual(spec.checks.min_citation_coverage);
         expect(store.artifact(result.artifactId)).toBeDefined();
         if (result.payload.type === "flashcards") expect(store.cardCount(courseId)).toBe(countItems("flashcards", data));
+      }
+      // Progress reporting: output size only ever grows during a run (cumulative across LLM calls).
+      if (tool.manifest.id !== "study-plan") {
+        expect(written.length).toBeGreaterThan(0);
+        for (let i = 1; i < written.length; i++) expect(written[i]).toBeGreaterThanOrEqual(written[i - 1]);
       }
       expect(hebrewRatio(text)).toBeGreaterThanOrEqual(spec.checks.min_hebrew_ratio);
       for (const word of spec.checks.must_mention) expect(text).toContain(word);

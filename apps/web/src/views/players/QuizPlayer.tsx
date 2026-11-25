@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Thinking } from "../../ui/LongTask.tsx";
 import { Dumbbell, Trophy } from "lucide-react";
 import type { GradeResult, Quiz } from "@ruecai/sdk";
 import { useEngine } from "../../engine.ts";
@@ -67,7 +68,7 @@ export function QuizPlayer({ quiz, courseId, artifactId }: { quiz: Quiz; courseI
             )}
             {!a.checked && (
               <Button size="sm" disabled={a.grading || (q.kind === "mcq" ? a.choice === undefined : !a.text?.trim())} onClick={() => check(q)}>
-                {a.grading ? <Spinner label="בודק…" /> : "בדיקה"}
+                {a.grading ? <Thinking label={q.kind === "mcq" ? "בודק" : "בודק את התשובה מול התשובה לדוגמה"} /> : "בדיקה"}
               </Button>
             )}
             {a.error && <p className="text-sm text-red-700">{a.error}</p>}

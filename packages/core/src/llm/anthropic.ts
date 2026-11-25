@@ -104,15 +104,15 @@ export class AnthropicLLM implements LLMApi {
     try {
       // Streamed even though we only need the final result: large max_tokens requests
       // are refused by the SDK unless streamed (long-request timeout guard).
-      const res = await this.client.beta.messages
-        .stream({
-          ...params,
-          output_config: {
-            format: betaZodOutputFormat(schema),
-            effort: opts.tier === "fast" ? "low" : "medium",
-          },
-        })
-        .finalMessage();
+      const stream = this.client.beta.messages.stream({
+        ...params,
+        output_config: {
+          format: betaZodOutputFormat(schema),
+          effort: opts.tier === "fast" ? "low" : "medium",
+        },
+      });
+      if (opts.onOutput) stream.on("text", (_delta, snapshot) => opts.onOutput!(snapshot.length));
+      const res = await stream.finalMessage();
       this.track(opts.tag, params.model, res.usage);
       if (res.stop_reason === "refusal") throw new LLMError("המודל סירב לבקשה הזו.", "refusal");
       if (res.stop_reason === "max_tokens") throw new LLMError("התשובה נקטעה (ארוכה מדי). נסו היקף קטן יותר.", "invalid_output");
@@ -139,6 +139,7 @@ export class AnthropicLLM implements LLMApi {
         if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
           text += event.delta.text;
           onDelta(event.delta.text);
+          opts.onOutput?.(text.length);
         }
       }
       const final = await stream.finalMessage();

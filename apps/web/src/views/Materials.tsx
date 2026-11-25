@@ -2,7 +2,14 @@ import { useRef, useState } from "react";
 import { ClipboardCheck, ExternalLink, FileText, Repeat, Trash2, Upload } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { href } from "../router.ts";
-import { Alert, Badge, Button, Card, Empty, ProgressBar, Spinner } from "../ui/components.tsx";
+import { Alert, Badge, Button, Card, Empty, Spinner } from "../ui/components.tsx";
+import { LongTask } from "../ui/LongTask.tsx";
+import { expectedSeconds } from "../platform/timing.ts";
+
+const INGEST_STAGES = ["קורא את הקובץ", "מנתח נושאים ומושגים", "מוכן"];
+/** Rough processing time for a file: a fixed part plus a per-MB part (scanned pages and slides take longer). */
+const ingestSeconds = (bytes: number, demo: boolean) =>
+  demo ? expectedSeconds("ingest:base", true) : expectedSeconds("ingest:base", false) + (bytes / 1048576) * expectedSeconds("ingest:per-mb", false);
 import type { Source } from "@ruecai/core";
 
 const STATUS: Record<Source["status"], { label: string; color: "slate" | "green" | "amber" | "red" | "blue" }> = {
@@ -115,6 +122,7 @@ export function Materials({ courseId }: { courseId: number }) {
 function SourceRow({ s }: { s: Source }) {
   const engine = useEngine();
   const live = engine.ingestStatus.get(s.id);
+  const queuePos = engine.queuePosition(s.id);
   const sections = s.status === "ready" ? engine.store.sectionsOfSource(s.id).length : 0;
   const st = STATUS[s.status];
   return (
@@ -131,9 +139,24 @@ function SourceRow({ s }: { s: Source }) {
           {s.kind === "sample_exam" && <Badge color="amber">מבחן לדוגמה</Badge>}
         </div>
         {(s.status === "parsing" || s.status === "analyzing" || s.status === "pending") && (
-          <div className="mt-2 space-y-1">
-            <ProgressBar value={live?.pct ?? s.progress} />
-            <div className="text-xs text-slate-500 animate-pulse-soft">{live?.message ?? "ממתין…"}</div>
+          <div className="mt-2">
+            {live ? (
+              <LongTask
+                compact
+                title={`מעבד את ${s.name}`}
+                stages={INGEST_STAGES}
+                stage={live.pct < 0.35 ? 0 : live.pct < 1 ? 1 : 2}
+                detail={live.message}
+                startedAt={live.startedAt}
+                expectedSec={ingestSeconds(s.size, engine.demo)}
+                progress={live.pct}
+              />
+            ) : (
+              <div className="flex items-center gap-2 text-[12.5px] text-muted">
+                <span className="h-2 w-2 rounded-full bg-black/20" />
+                {queuePos === 1 ? "הבא בתור" : queuePos > 1 ? `ממתין בתור (${queuePos} קבצים לפניו)` : "ממתין לעיבוד…"}
+              </div>
+            )}
           </div>
         )}
         {s.status === "ready" && <div className="text-xs text-slate-500">{sections} קטעים · {(s.size / 1024).toFixed(0)}KB</div>}
@@ -160,7 +183,7 @@ function SourceRow({ s }: { s: Source }) {
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 w-7 px-0"
+          className="h-7! w-7! px-0!"
           onClick={() => confirm(`למחוק את "${s.name}"? הקובץ יימחק גם מהתיקייה.`) && engine.deleteSource(s.id)}
           aria-label={`מחיקת ${s.name}`}
         >

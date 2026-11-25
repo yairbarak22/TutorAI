@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Thinking } from "../ui/LongTask.tsx";
 import { MessagesSquare, SquarePen } from "lucide-react";
 import { extractInlineCitations, type ChatTurn } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
@@ -105,7 +106,7 @@ export function Tutor({ courseId }: { courseId: number }) {
         {messages.map((m, i) => (
           <Bubble key={i} turn={m} />
         ))}
-        {streaming !== null && (streaming ? <Bubble turn={{ role: "assistant", content: streaming }} /> : <Spinner label="חושב…" />)}
+        {streaming !== null && (streaming ? <Bubble turn={{ role: "assistant", content: streaming }} /> : <TutorThinking />)}
         <div ref={bottom} />
       </div>
 
@@ -148,6 +149,23 @@ function Bubble({ turn }: { turn: ChatTurn }) {
         {mine ? <p className="whitespace-pre-wrap" dir="auto">{turn.content}</p> : <Markdown text={turn.content} />}
         {!mine && <CitationChips ids={extractInlineCitations(turn.content)} />}
       </div>
+    </div>
+  );
+}
+
+/** Before the first word arrives: say what the tutor is doing, not just "thinking". */
+function TutorThinking() {
+  const [t0] = useState(() => Date.now());
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 500);
+    return () => clearInterval(id);
+  }, []);
+  const s = (Date.now() - t0) / 1000;
+  const label = s < 2 ? "מחפש בחומר של הקורס" : s < 6 ? "קורא את הקטעים הרלוונטיים" : s < 15 ? "מנסח תשובה עם ציטוטים" : "עוד רגע, התשובה כמעט מוכנה";
+  return (
+    <div className="rounded-2xl bg-[#f7f7f7] px-4 py-3">
+      <Thinking label={label} />
     </div>
   );
 }

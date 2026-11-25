@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Lightbulb, Timer } from "lucide-react";
 import type { ExamSimulation, GradeResult } from "@ruecai/sdk";
 import { useEngine } from "../../engine.ts";
-import { Alert, Button, Card, ProgressBar, Spinner, inputClass } from "../../ui/components.tsx";
+import { Alert, Button, Card, inputClass } from "../../ui/components.tsx";
+import { LongTask } from "../../ui/LongTask.tsx";
+import { expectedSeconds, recordRun } from "../../platform/timing.ts";
 import { Markdown } from "../../ui/Markdown.tsx";
 import { CitationChips } from "../../ui/Citations.tsx";
 
@@ -20,7 +22,7 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
   const [started, setStarted] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const [grades, setGrades] = useState<Record<string, GradeResult> | null>(null);
-  const [grading, setGrading] = useState(0);
+  const [grading, setGrading] = useState<{ done: number; startedAt: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,20 +46,22 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
     if (!confirm("להגיש את המבחן לבדיקה?")) return;
     setError(null);
     const out: Record<string, GradeResult> = {};
-    setGrading(0.01);
+    setGrading({ done: 0, startedAt: Date.now() });
     try {
       for (const [i, q] of exam.questions.entries()) {
+        const t0 = Date.now();
         const g = await engine.grade({ question: q.prompt, answer: answers[q.id] ?? "", modelAnswer: q.model_answer, rubric: q.rubric, maxPoints: q.points, tier: "smart" });
         out[q.id] = g;
         const ratio = g.score / q.points;
         for (const c of q.concepts) engine.recordAttempt(courseId, c, `${artifactId}:${q.id}`, ratio >= 0.7, ratio, "exam", answers[q.id], g.feedback);
-        setGrading((i + 1) / exam.questions.length);
+        recordRun("grade", (Date.now() - t0) / 1000, undefined, engine.demo);
+        setGrading((gr) => (gr ? { ...gr, done: i + 1 } : gr));
       }
       setGrades(out);
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setGrading(0);
+      setGrading(null);
     }
   };
 
@@ -142,11 +146,17 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
 
       {error && <Alert kind="error">{error}</Alert>}
       {!grades &&
-        (grading > 0 ? (
-          <Card className="space-y-2 p-4">
-            <Spinner label="בודק לפי המחוון…" />
-            <ProgressBar value={grading} />
-          </Card>
+        (grading ? (
+          <LongTask
+            title="בודק את המבחן לפי המחוון"
+            stages={exam.questions.length <= 8 ? exam.questions.map((_, i) => `שאלה ${i + 1}`) : ["בודק תשובות", "מסכם ציון"]}
+            stage={exam.questions.length <= 8 ? grading.done : grading.done < exam.questions.length ? 0 : 1}
+            detail={`בודק את שאלה ${Math.min(grading.done + 1, exam.questions.length)} מתוך ${exam.questions.length}: משווה לתשובה לדוגמה ולכל סעיף במחוון`}
+            startedAt={grading.startedAt}
+            expectedSec={exam.questions.length * expectedSeconds("grade", engine.demo)}
+            progress={grading.done / exam.questions.length}
+            hint="כל שאלה נבדקת בנפרד, עם ניקוד לכל סעיף במחוון ומשוב אישי."
+          />
         ) : (
           <Button size="lg" className="w-full" onClick={submit}>
             הגשה לבדיקה

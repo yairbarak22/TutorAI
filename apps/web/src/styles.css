@@ -110,3 +110,37 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.015em; }
 
 @keyframes pulse-soft { 50% { opacity: .55; } }
 .animate-pulse-soft { animation: pulse-soft 1.6s ease-in-out infinite; }
+
+/* ---------- Waiting states: a calm, slowly turning gradient orb ---------- */
+@keyframes orb-spin { to { transform: rotate(360deg); } }
+@keyframes orb-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+@keyframes dot-pulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes bar-sheen { from { transform: translateX(120%); } to { transform: translateX(-220%); } }
+.wait-orb {
+  position: relative; display: inline-block; width: 52px; height: 52px; border-radius: 999px;
+  animation: orb-breathe 3.2s ease-in-out infinite;
+}
+.wait-orb::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: conic-gradient(from 0deg, #8ec5fc, #e0c3fc, #fbc2eb, #fccb90, #84fab0, #8ec5fc);
+  animation: orb-spin 7s linear infinite;
+}
+.wait-orb::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.95), rgba(255,255,255,.35) 38%, transparent 68%),
+              radial-gradient(circle at 70% 85%, rgba(0,0,0,.10), transparent 55%);
+}
+.wait-orb-sm { width: 16px; height: 16px; }
+.wait-dot { animation: dot-pulse 1.2s ease-in-out infinite; }
+.wait-dots { display: inline-flex; gap: 3px; }
+.wait-dots i { width: 4px; height: 4px; border-radius: 99px; background: currentColor; animation: dot-pulse 1.2s ease-in-out infinite; }
+.wait-dots i:nth-child(2) { animation-delay: .2s; }
+.wait-dots i:nth-child(3) { animation-delay: .4s; }
+.wait-bar::after {
+  content: ""; position: absolute; inset: 0; width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+  animation: bar-sheen 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wait-orb, .wait-orb::before, .wait-dot, .wait-dots i, .wait-bar::after { animation: none; }
+}

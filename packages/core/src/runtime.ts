@@ -9,6 +9,7 @@ import {
   type ChatReply,
   type ConceptInfo,
   type LLMApi,
+  type LLMCallOptions,
   type LoadedTool,
   type RetrievedContext,
   type ToolContext,
@@ -26,6 +27,8 @@ export interface RunDeps {
   params?: Record<string, string | number>;
   today?: string;
   onProgress?: (pct: number, message: string) => void;
+  /** Output characters written by the model so far in this run (across all its LLM calls). */
+  onOutput?: (chars: number) => void;
   chat?: ToolContext["chat"];
   signal?: AbortSignal;
 }
@@ -46,6 +49,31 @@ export function conceptInfos(store: Store, courseId: number): ConceptInfo[] {
   }));
 }
 
+/** Wraps an LLM so every call reports cumulative output characters for the whole tool run. */
+function trackOutput(llm: LLMApi, onOutput: (chars: number) => void): LLMApi {
+  let done = 0; // characters written by calls that already finished
+  async function call<T>(opts: LLMCallOptions, fn: (o: LLMCallOptions) => Promise<T>): Promise<T> {
+    let current = 0;
+    try {
+      return await fn({
+        ...opts,
+        onOutput: (n) => {
+          current = n;
+          opts.onOutput?.(n);
+          onOutput(done + n);
+        },
+      });
+    } finally {
+      done += current;
+    }
+  }
+  return {
+    object: (schema, opts) => call(opts, (o) => llm.object(schema, o)),
+    text: (opts) => call(opts, (o) => llm.text(o)),
+    stream: (opts, onDelta) => call(opts, (o) => llm.stream({ ...opts, ...o }, onDelta)),
+  };
+}
+
 export function buildContext(tool: LoadedTool, deps: RunDeps, seen: Set<string>): ToolContext {
   const course = deps.store.course(deps.courseId);
   if (!course) throw new Error("course not found");
@@ -53,7 +81,7 @@ export function buildContext(tool: LoadedTool, deps: RunDeps, seen: Set<string>)
   return {
     course: { id: course.id, name: course.name, examDate: course.exam_date, language: "he" },
     params,
-    llm: deps.llm,
+    llm: deps.onOutput ? trackOutput(deps.llm, deps.onOutput) : deps.llm,
     baseSystemPrompt: BASE_SYSTEM_PROMPT,
     today: deps.today ?? new Date().toISOString().slice(0, 10),
     signal: deps.signal,

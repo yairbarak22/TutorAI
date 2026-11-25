@@ -86,6 +86,8 @@ export interface LLMCallOptions {
   /** Free-form label used for logging, cost tracking and demo-mode fixtures. */
   tag?: string;
   images?: { mediaType: "image/png" | "image/jpeg"; base64: string }[];
+  /** Called while the model writes, with the number of output characters so far (for progress UI). */
+  onOutput?: (chars: number) => void;
 }
 
 export interface ChatTurn {
