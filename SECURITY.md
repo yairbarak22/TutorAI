@@ -1,0 +1,12 @@
+# Security
+
+RuecAI Teacher has no server: course files, the database (`ruecai.db`) and the API key stay on the student's device, and model calls go directly from the browser to Anthropic.
+
+Design rules that every change must keep:
+- The API key is stored only in the browser (never in `ruecai.db`, never in logs, never sent anywhere except `api.anthropic.com`).
+- Model-generated code (interactive widgets) runs only in `<iframe sandbox="allow-scripts">` without `allow-same-origin`, under a CSP that blocks all network access.
+- All rendered model output (Markdown, Mermaid SVG) goes through DOMPurify.
+- Course material inside prompts is wrapped in `<section>` tags and treated as data, not instructions.
+- PR previews are built without secrets and deployed to a separate origin (Cloudflare Pages), never to the production origin.
+
+Found a vulnerability? Please **don't** open a public issue. Use GitHub's private "Report a vulnerability" (Security tab) instead.

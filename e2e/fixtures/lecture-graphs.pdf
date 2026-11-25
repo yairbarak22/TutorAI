@@ -1,0 +1,53 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 223 >>
+stream
+BT /F1 14 Tf 60 760 Td 18 TL
+(Lecture 4: Graphs) Tj T*
+(A graph G = \(V, E\) is a set of vertices V and edges E.) Tj T*
+(BFS explores vertices layer by layer using a queue.) Tj T*
+(BFS runs in O\(|V| + |E|\) time.) Tj T*
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Contents 2 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 268 >>
+stream
+BT /F1 14 Tf 60 760 Td 18 TL
+(DFS and topological sort) Tj T*
+(DFS uses a stack \(or recursion\) and visits deep first.) Tj T*
+(A DAG has a topological order; DFS finish times give it.) Tj T*
+(Common mistake: running topological sort on a graph with a cycle.) Tj T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000000353 00000 n 
+0000000479 00000 n 
+0000000798 00000 n 
+0000000924 00000 n 
+0000000987 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+1036
+%%EOF

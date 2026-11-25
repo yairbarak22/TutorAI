@@ -29,7 +29,8 @@ export type MasteryLevel = "new" | "weak" | "progress" | "strong";
 export function masteryLevel(p: number, attempts: number): MasteryLevel {
   if (attempts === 0) return "new";
   if (p < 0.4) return "weak";
-  if (p < 0.8) return "progress";
+  // "strong" needs evidence from several answers, not one lucky one.
+  if (p < 0.8 || attempts < 3) return "progress";
   return "strong";
 }
 

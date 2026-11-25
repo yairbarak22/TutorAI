@@ -67,7 +67,7 @@ export function buildStudyPlan({ concepts, today, examDate, minutesPerDay, title
   let cursor = 0;
   for (const c of ordered) {
     const m = c.mastery;
-    if (m >= 0.8 && c.attempts > 0) continue; // strong → only the final review
+    if (m >= 0.8 && c.attempts >= 3) continue; // strong → only the final review
     const learnDay =
       m < 0.4
         ? place(Math.min(cursor, lastStudyDay), { concept: c.name, activity: "learn", minutes: 30, reason: c.attempts ? "שליטה נמוכה" : "מושג חדש" })
@@ -88,7 +88,7 @@ export function buildStudyPlan({ concepts, today, examDate, minutesPerDay, title
 
   // Final day: review everything that is not strong.
   const finalDay = totalDays - 1;
-  for (const c of ordered.filter((c) => !(c.mastery >= 0.8 && c.attempts > 0)).slice(0, 12))
+  for (const c of ordered.filter((c) => !(c.mastery >= 0.8 && c.attempts >= 3)).slice(0, 12))
     days[finalDay].items.push({ concept: c.name, activity: "review", minutes: 10, reason: "חזרה לפני המבחן" });
 
   return {

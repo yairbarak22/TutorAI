@@ -1,0 +1,7 @@
+# Core engine, SDK and app shell need a core maintainer's review.
+*                     @yairbarak22
+/packages/            @yairbarak22
+/apps/                @yairbarak22
+/.github/             @yairbarak22
+# Discipline packs: add pack owners here as faculties join, e.g.
+# /plugins/law/       @law-pack-owner

@@ -20,9 +20,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "eval": "vitest run plugins",
-    "eval:live": "node --experimental-strip-types scripts/eval-live.ts",
+    "eval:live": "RUECAI_LIVE=1 vitest run plugins/evals.test.ts",
     "e2e": "playwright test",
-    "check": "npm run typecheck && npm run test"
+    "check": "npm run typecheck && npm run test && npm run e2e",
+    "fixtures": "node scripts/make-fixtures.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

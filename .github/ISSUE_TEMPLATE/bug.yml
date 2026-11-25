@@ -1,0 +1,14 @@
+name: 🐞 באג
+description: משהו לא עובד כמו שצריך
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: מה קרה?, description: מה עשיתם ומה ציפיתם שיקרה }
+    validations: { required: true }
+  - type: input
+    id: browser
+    attributes: { label: דפדפן ומערכת הפעלה, placeholder: "Chrome 140 / macOS" }
+  - type: textarea
+    id: error
+    attributes: { label: הודעת שגיאה (אם הופיעה), render: text }

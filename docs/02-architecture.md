@@ -1,6 +1,8 @@
 # 02 — ארכיטקטורה
 
-> גרסה 2: עברנו ל-**TypeScript בלבד ול-local-first בדפדפן**. הנימוקים המלאים בהחלטה על ההפצה: [04-distribution.md](04-distribution.md).
+> גרסה 3 (מצב מימוש). **TypeScript בלבד, local-first בדפדפן.** הנימוקים בהחלטה על ההפצה: [04-distribution.md](04-distribution.md).
+>
+> שינויים בזמן המימוש לעומת התכנון: npm workspaces במקום pnpm (בלי התקנה נוספת לתורמים); `sql.js` במקום SQLite-WASM עם Drizzle (ה-DB נשמר בזיכרון, ונכתב כקובץ `ruecai.db` שלם עם כל שינוי); ה-SDK הרשמי של Anthropic במקום Vercel AI SDK; GitHub Pages ל-production ו-Cloudflare Pages לתצוגות מקדימות.
 
 ## עקרונות מנחים
 
@@ -27,24 +29,24 @@
 │                     │                 │                                               │
 │                 Retrieval        LLM Gateway (Vercel AI SDK)                           │
 │        │                                                                              │
-│  platform-web:  SQLite-WASM → ~/Documents/RuecAI/ruecai.db · Workers · Pyodide (SymPy)  │
+│  platform-web:  sql.js → ~/Documents/RuecAI/ruecai.db · pdf.js worker · IndexedDB fallback │
 └───────────────────────────────────────┬───────────────────────────────────────────────┘
                                         │ HTTPS ישיר, עם המפתח של הסטודנט
                                         ▼
-              Anthropic / OpenAI / Google   (או Ollama ב-localhost, או proxy אוניברסיטאי)
+              Anthropic (Claude)   (בעתיד: ספקים נוספים / Ollama / proxy אוניברסיטאי)
 
-   האתר עצמו: קבצים סטטיים ב-Cloudflare Pages. אין backend.
+   האתר עצמו: קבצים סטטיים ב-GitHub Pages. אין backend.
 ```
 
 ## בחירות טכנולוגיות
 
 | שכבה | בחירה | נימוק |
 |---|---|---|
-| שפה וכלי פיתוח | **TypeScript, pnpm workspaces, Turborepo, Vite** | monorepo מהיר. כל סטודנט למדמ"ח מכיר. |
+| שפה וכלי פיתוח | **TypeScript, npm workspaces, Vite, Vitest, Playwright** | monorepo בלי כלים נוספים להתקנה |
 | UI | **React, Tailwind, shadcn/ui** (עם RTL), TanStack Router/Query | אקוסיסטם הכי גדול, RTL נתמך היטב |
 | מצב ו-DB | **SQLite-WASM** דרך **Drizzle ORM**. הקובץ `ruecai.db` נשמר **בתיקייה מקומית רגילה** שהסטודנט בוחר (File System Access API, ב-Chrome/Edge), ובשאר הדפדפנים ב-OPFS. | SQL אמיתי, קובץ שהסטודנט רואה ומגבה. אותה תיקייה תעבוד גם מ-Electron. פירוט: [04-distribution.md](04-distribution.md#איפה-הנתונים-נשמרים-תיקייה-מקומית-רגילה). |
 | קבצי מקור | קבצים רגילים בתיקיית הקורס (`courses/<course>/sources/`) | נשארים מקומית, אין העלאה לשרת |
-| LLM | **Vercel AI SDK** (`ai`) עם providers ל-Anthropic, OpenAI, Google ו-Ollama | `generateObject` עם סכמת Zod, streaming, tool calling, ממשק אחיד לכל הספקים |
+| LLM | **`@anthropic-ai/sdk`** (הרשמי) מהדפדפן, מאחורי ממשק `LLMApi` | פלט מובנה עם Zod (`betaZodOutputFormat`), streaming, prompt caching, fallback אוטומטי לסירובים. ספקים נוספים: ממשים `LLMApi`. |
 | סכמות | **Zod** | אותה סכמה משמשת ל-LLM output, ל-DB ול-UI |
 | קריאת מסמכים | **pdf.js** לטקסט ולמבנה, ושליחת ה-PDF עצמו ל-LLM כשיש נוסחאות או תמונות. **PPTX/DOCX**: קבצי ZIP+XML, מפורקים ב-JS (למשל JSZip). | בלי Python ובלי ML מקומי |
 | חיפוש | **אינדקס מבני** (קורס ← הרצאה ← סעיף ← מושג), **BM25** (MiniSearch), ו**הקשר ארוך עם prompt caching** | בקורס של עד ~300K טוקנים זה עדיף על RAG וקטורי ופשוט ממנו. האמבדינגס נשארים אופציה מאחורי `retrieve()`. |
@@ -53,7 +55,7 @@
 | ויזואליזציה | **Mermaid**, **three.js / react-three-fiber**, KaTeX, ווידג'טים ב-HTML/JS ב-iframe מבודד | |
 | תמלול | שלב ראשון: API תמלול. בגרסת דסקטופ: whisper.cpp עם מודלי ivrit.ai. | |
 | בדיקות | **Vitest**, **Playwright** (E2E) ו-evals ייעודיים | |
-| הפצה | Cloudflare Pages (preview לכל PR), PWA manifest + service worker | |
+| הפצה | GitHub Pages ל-production, Cloudflare Pages לתצוגה מקדימה לכל PR (origin נפרד), PWA | |
 
 ## מודל הנתונים (ליבה)
 
@@ -176,22 +178,19 @@ plugins/math/exercise-generator/
 ## מבנה הריפו
 
 ```
-RuecAI_Teacher/
-  apps/
-    web/                  # React app, ה-PWA (נפרס ל-Cloudflare Pages)
-    desktop/              # Electron (שלב מאוחר)
+RuecAI_Tutor/
+  apps/web/               # React PWA; src/platform = storage (folder / IndexedDB), secrets
   packages/
-    core/                 # domain, ingestion, retrieval, tool runtime, learner
-    sdk/                  # @ruecai/sdk: defineTool, types, ctx
-    platform/             # interfaces
-    platform-web/         # OPFS, sqlite-wasm, workers, pyodide
-    platform-desktop/     # (שלב מאוחר)
-    ui/                   # רנדררים ורכיבים משותפים
-    evals/                # תשתית הערכה
+    sdk/                  # @ruecai/sdk: artifact schemas, ToolManifest, defineTool, quality checks
+    core/                 # store (sql.js), parsers, ingest pipeline, search, retrieve, LLM, learner, runtime
   plugins/
-    core/  math/  cs/  law/  ...
+    registry.ts           # auto-discovery (import.meta.glob)
+    evals.test.ts         # quality gate for every plugin
+    _fixtures/            # demo/eval courses (probability, law) + core golden outputs
+    core/  law/  math/    # tools
+  e2e/                    # Playwright journeys + generated PDF/PPTX/DOCX fixtures
   docs/
-  .github/                # CODEOWNERS, templates, CI
+  .github/                # CI, deploy, previews, CODEOWNERS, templates
 ```
 
 ## פרטיות, זכויות יוצרים וטוהר אקדמי
