@@ -15,11 +15,11 @@ export function Button({
   className = "",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: "sm" | "md" | "lg" }) {
-  const sizes = { sm: "h-8 px-3 text-[13px]", md: "h-9 px-4 text-sm", lg: "h-11 px-6 text-[15px]" };
+  const sizes = { sm: "h-8 px-3 text-[13px]", md: "h-9 px-3.5 text-[13.5px]", lg: "h-11 px-5 text-[14.5px]" };
   return (
     <button
       {...props}
-      className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium transition-colors cursor-pointer disabled:cursor-not-allowed ${VARIANTS[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] font-medium transition-colors cursor-pointer disabled:cursor-not-allowed ${VARIANTS[variant]} ${sizes[size]} ${className}`}
     />
   );
 }
@@ -152,4 +152,41 @@ export function SectionLabel({ children, className = "" }: { children: ReactNode
 export function IconTile({ children, grad = 1, size = "md" }: { children: ReactNode; grad?: number; size?: "sm" | "md" | "lg" }) {
   const s = { sm: "h-8 w-8 rounded-lg", md: "h-11 w-11 rounded-xl", lg: "h-14 w-14 rounded-2xl" }[size];
   return <span className={`tile-grad-${((grad - 1) % 8) + 1} grid shrink-0 place-items-center text-ink/80 ${s}`}>{children}</span>;
+}
+
+/** Underline tabs (page-level sub navigation). */
+export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { id: T; label: ReactNode }[] }) {
+  return (
+    <div className="mt-4 flex gap-5 border-b border-black/[0.08]" role="tablist">
+      {items.map((it) => (
+        <button
+          key={it.id}
+          role="tab"
+          aria-selected={value === it.id}
+          onClick={() => onChange(it.id)}
+          className={`-mb-px border-b-2 pb-2.5 text-[13.5px] font-medium transition-colors ${
+            value === it.id ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"
+          }`}
+        >
+          {it.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** A settings-style row: title and muted description on one side, an action on the other. */
+export function Row({ title, desc, action, children, wide }: { title: ReactNode; desc?: ReactNode; action?: ReactNode; children?: ReactNode; wide?: boolean }) {
+  return (
+    <div className="border-b border-black/[0.06] py-5">
+      <div className={`flex gap-4 ${wide ? "flex-col" : "flex-wrap items-center justify-between"}`}>
+        <div className="min-w-0 flex-1">
+          <div className="text-[14px] font-medium text-ink">{title}</div>
+          {desc && <div className="mt-0.5 text-[13px] leading-relaxed text-muted">{desc}</div>}
+        </div>
+        {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}
+      </div>
+      {children}
+    </div>
+  );
 }

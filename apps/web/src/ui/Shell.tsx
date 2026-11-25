@@ -2,7 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import {
   BookOpen,
   ChartLine,
+  Check,
   ChevronLeft,
+  ChevronsUpDown,
   Cloud,
   CloudAlert,
   Code,
@@ -12,8 +14,10 @@ import {
   House,
   Layers,
   Menu,
+  MessageSquare,
   MessagesSquare,
   Network,
+  PanelRight,
   Plus,
   Settings as SettingsIcon,
   Sparkles,
@@ -83,21 +87,102 @@ function NavItem({
   );
 }
 
+const LAST_COURSE = "ruecai.lastCourse";
+const kvGet = (k: string) => {
+  try {
+    return localStorage.getItem(k);
+  } catch {
+    return null;
+  }
+};
+const kvSet = (k: string, v: string) => {
+  try {
+    localStorage.setItem(k, v);
+  } catch {
+    /* private mode */
+  }
+};
+
+const GROUPS: { label: string; ids: (typeof COURSE_SECTIONS)[number]["id"][] }[] = [
+  { label: "לימוד", ids: ["materials", "concepts", "tutor", "review"] },
+  { label: "יצירה", ids: ["studio", "artifacts"] },
+  { label: "מעקב", ids: ["progress"] },
+];
+
+/** Course switcher at the top of the sidebar (like a workspace switcher). */
+function CourseSwitcher({ currentId, onNavigate, onNewCourse }: { currentId: number | null; onNavigate: () => void; onNewCourse: () => void }) {
+  const engine = useEngine();
+  const [open, setOpen] = useState(false);
+  const courses = engine.store.courses();
+  const current = currentId ? engine.store.course(currentId) : null;
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [open]);
+  return (
+    <div className="relative mx-3 mb-4" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex h-10 w-full items-center gap-2.5 rounded-[10px] border border-black/10 bg-white px-2.5 text-start shadow-sm transition hover:border-black/20"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="בחירת קורס"
+      >
+        {current ? <CourseMark id={current.id} name={current.name} /> : <span className="grid h-5 w-5 place-items-center rounded-md bg-black/[0.06] text-muted"><BookOpen size={12} /></span>}
+        <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">{current?.name ?? "בחרו קורס"}</span>
+        <ChevronsUpDown size={14} className="text-muted" />
+      </button>
+      {open && (
+        <div className="absolute inset-x-0 top-11 z-50 rounded-xl border border-black/10 bg-white p-1 shadow-xl" role="listbox">
+          {courses.map((c) => (
+            <a
+              key={c.id}
+              href={href.course(c.id)}
+              role="option"
+              aria-selected={c.id === currentId}
+              onClick={() => (setOpen(false), onNavigate())}
+              className="flex h-9 items-center gap-2.5 rounded-lg px-2 text-[13.5px] hover:bg-black/[0.04]"
+            >
+              <CourseMark id={c.id} name={c.name} />
+              <span className="min-w-0 flex-1 truncate">{c.name}</span>
+              {c.id === currentId && <Check size={14} />}
+            </a>
+          ))}
+          {courses.length > 0 && <div className="my-1 h-px bg-black/[0.06]" />}
+          <button type="button" onClick={() => (setOpen(false), onNewCourse())} className="flex h-9 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] text-ink-2 hover:bg-black/[0.04]">
+            <Plus size={15} className="text-muted" /> קורס חדש
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCourse: () => void }) {
   const engine = useEngine();
   const route = useRoute();
-  const courses = engine.store.courses();
   const p = engine.persistence;
-  const now = new Date().toISOString();
-  const activeCourse = route.name === "course" ? route.id : null;
+  const courses = engine.store.courses();
+  if (route.name === "course" && engine.store.course(route.id)) kvSet(LAST_COURSE, String(route.id));
+  const remembered = Number(kvGet(LAST_COURSE));
+  const courseId =
+    route.name === "course" && engine.store.course(route.id)
+      ? route.id
+      : remembered && engine.store.course(remembered)
+        ? remembered
+        : (courses[0]?.id ?? null);
+  const due = courseId ? engine.store.dueCards(courseId, new Date().toISOString()).length : 0;
+  const inCourse = route.name === "course" && route.id === courseId;
   return (
     <div className="flex h-full flex-col">
-      <a href={href.home()} onClick={onNavigate} className="mx-3 mt-3 mb-4 flex h-10 items-center gap-2.5 rounded-lg px-1.5">
-        <span className="grid h-7 w-7 place-items-center rounded-lg bg-ink text-white">
-          <GraduationCap size={16} strokeWidth={2.2} />
-        </span>
-        <span className="text-[15px] font-semibold tracking-tight">RuecAI Teacher</span>
+      <a href={href.home()} onClick={onNavigate} className="mx-3 mt-3 mb-3 flex h-9 items-center gap-2 px-1.5">
+        <GraduationCap size={19} strokeWidth={2.1} />
+        <span className="text-[15.5px] font-semibold tracking-tight">RuecAI Teacher</span>
       </a>
+      <CourseSwitcher currentId={courseId} onNavigate={onNavigate} onNewCourse={onNewCourse} />
 
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="ניווט ראשי">
         <div className="space-y-0.5">
@@ -109,73 +194,59 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
           </NavItem>
         </div>
 
-        <div>
-          <div className="mb-1 px-2.5 text-[12px] font-medium text-muted">הקורסים שלי</div>
-          {courses.length === 0 && <div className="px-2.5 py-1 text-[13px] text-slate-400">עוד אין קורסים</div>}
-          <div className="space-y-0.5">
-            {courses.map((c) => {
-              const open = activeCourse === c.id;
-              const due = engine.store.dueCards(c.id, now).length;
-              return (
-                <div key={c.id}>
-                  <NavItem
-                    href={href.course(c.id)}
-                    icon={<CourseMark id={c.id} name={c.name} />}
-                    active={false}
-                    onClick={onNavigate}
-                    badge={!open && <ChevronLeft size={14} className="text-slate-300 opacity-0 group-hover:opacity-100" />}
-                  >
-                    <span className={open ? "font-medium text-ink" : ""}>{c.name}</span>
-                  </NavItem>
-                  {open && (
-                    <div className="relative mt-0.5 mb-1 space-y-0.5 ps-3" role="navigation" aria-label="לשוניות הקורס">
-                      <span className="absolute inset-y-1 start-[18px] w-px bg-black/[0.08]" aria-hidden />
-                      {COURSE_SECTIONS.map((s) => (
-                        <NavItem
-                          key={s.id}
-                          href={href.course(c.id, s.id)}
-                          icon={<s.icon size={15} />}
-                          active={route.name === "course" && route.tab === s.id}
-                          onClick={onNavigate}
-                          indent
-                          badge={
-                            s.id === "review" && due > 0 ? (
-                              <span className="rounded-full bg-ink px-1.5 text-[11px] font-medium leading-[18px] text-white">{due}</span>
-                            ) : undefined
-                          }
-                        >
-                          {s.label}
-                        </NavItem>
-                      ))}
-                    </div>
-                  )}
+        {courseId ? (
+          <div className="space-y-5" role="navigation" aria-label="לשוניות הקורס">
+            {GROUPS.map((g) => (
+              <div key={g.label}>
+                <div className="mb-1 px-2.5 text-[12px] font-medium text-muted">{g.label}</div>
+                <div className="space-y-0.5">
+                  {g.ids.map((id) => {
+                    const sec = COURSE_SECTIONS.find((x) => x.id === id)!;
+                    return (
+                      <NavItem
+                        key={id}
+                        href={href.course(courseId, id)}
+                        icon={<sec.icon size={16} />}
+                        active={inCourse && route.name === "course" && route.tab === id}
+                        onClick={onNavigate}
+                        badge={
+                          id === "review" && due > 0 ? (
+                            <span className="rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2">{due}</span>
+                          ) : id === "studio" ? (
+                            <span className="rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2">AI</span>
+                          ) : undefined
+                        }
+                      >
+                        {sec.label}
+                      </NavItem>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="px-2.5 text-[13px] leading-relaxed text-muted">צרו קורס או פתחו קורס לדוגמה כדי לראות כאן את הכלים.</div>
+        )}
       </nav>
 
-      <div className="space-y-2 border-t border-black/[0.06] px-3 py-3">
+      <div className="space-y-1 px-3 pt-2 pb-3">
         {engine.demo && (
           <a
             href={href.settings()}
             onClick={onNavigate}
-            className="block rounded-xl border border-black/[0.08] bg-white p-3 transition hover:bg-black/[0.02]"
+            className="mb-2 flex items-center gap-3 rounded-xl border border-black/[0.08] bg-white p-2.5 shadow-sm transition hover:border-black/15"
             title="התשובות מוקלטות מראש. הוסיפו מפתח API בהגדרות."
           >
-            <div className="flex items-center gap-2 text-[13px] font-semibold">
-              <span className="h-2 w-2 rounded-full bg-amber-400" />
-              מצב הדגמה
-            </div>
-            <div className="mt-0.5 text-[12px] text-muted">הוסיפו מפתח API כדי לעבוד עם החומרים שלכם</div>
+            <span className="tile-grad-4 h-9 w-9 shrink-0 rounded-full" />
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold">מצב הדגמה</span>
+              <span className="block truncate text-[12px] text-muted">הוסיפו מפתח API ←</span>
+            </span>
           </a>
         )}
         <NavItem href={href.settings()} icon={<SettingsIcon size={16} />} active={route.name === "settings"} onClick={onNavigate}>
           הגדרות
-        </NavItem>
-        <NavItem href="https://github.com/yairbarak22/RuecAI_Tutor" icon={<Code size={16} />}>
-          קוד פתוח ב-GitHub
         </NavItem>
         <div className="flex items-center gap-2 px-2.5 pt-1 text-[12px] text-muted" title={engine.root.files.label}>
           {p.lastError ? <CloudAlert size={14} className="text-red-500" /> : <Cloud size={14} />}
@@ -193,11 +264,17 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
   const engine = useEngine();
   const route = useRoute();
   const [drawer, setDrawer] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => kvGet("ruecai.sidebar") === "collapsed");
   useEffect(() => setDrawer(false), [route]);
+  const toggle = () => {
+    kvSet("ruecai.sidebar", collapsed ? "open" : "collapsed");
+    setCollapsed(!collapsed);
+  };
+  const topBtn = "hidden h-7 items-center gap-1.5 rounded-lg border border-black/10 bg-white px-2.5 text-[12.5px] font-medium text-ink-2 hover:bg-hover sm:inline-flex";
   return (
     <div className="min-h-screen bg-canvas">
       {/* Sidebar: fixed on desktop, drawer on mobile. */}
-      <aside className="fixed inset-y-0 start-0 z-40 hidden w-[252px] border-e border-black/[0.06] bg-sidebar md:block">
+      <aside className={`fixed inset-y-0 start-0 z-40 hidden w-[252px] border-e border-black/[0.06] bg-sidebar ${collapsed ? "" : "md:block"}`}>
         <Sidebar onNavigate={() => {}} onNewCourse={onNewCourse} />
       </aside>
       {drawer && (
@@ -216,12 +293,15 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
         </div>
       )}
 
-      <div className="md:ps-[252px]">
+      <div className={collapsed ? "" : "md:ps-[252px]"}>
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-black/[0.06] bg-white/85 px-4 backdrop-blur-md md:px-8">
-          <button className="grid h-9 w-9 place-items-center rounded-full hover:bg-hover md:hidden" onClick={() => setDrawer(true)} aria-label="תפריט">
+          <button className="grid h-9 w-9 place-items-center rounded-lg hover:bg-hover md:hidden" onClick={() => setDrawer(true)} aria-label="תפריט">
             <Menu size={18} />
           </button>
-          <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[13.5px] text-muted">{crumbs}</div>
+          <button className="hidden h-8 w-8 place-items-center rounded-lg text-muted hover:bg-hover hover:text-ink md:grid" onClick={toggle} aria-label={collapsed ? "הצגת התפריט" : "הסתרת התפריט"} title={collapsed ? "הצגת התפריט" : "הסתרת התפריט"}>
+            <PanelRight size={17} />
+          </button>
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] text-muted">{crumbs}</div>
           {engine.demo && (
             <a href={href.settings()} className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[12px] font-medium text-amber-800 md:hidden">
               מצב הדגמה
@@ -231,9 +311,15 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
             href="https://github.com/yairbarak22/RuecAI_Tutor/issues/new/choose"
             target="_blank"
             rel="noreferrer"
-            className="hidden h-8 items-center gap-1.5 rounded-full border border-black/10 px-3 text-[13px] font-medium text-ink-2 hover:bg-hover sm:inline-flex"
+            className={topBtn}
           >
-            <BookOpen size={14} /> משוב
+            <MessageSquare size={13} /> משוב
+          </a>
+          <a href="https://github.com/yairbarak22/RuecAI_Tutor/blob/main/docs/plugins.md" target="_blank" rel="noreferrer" className={topBtn}>
+            מדריך
+          </a>
+          <a href="https://github.com/yairbarak22/RuecAI_Tutor" target="_blank" rel="noreferrer" className={topBtn}>
+            <Code size={13} /> GitHub
           </a>
         </header>
 
@@ -268,7 +354,7 @@ export function Crumbs({ items }: { items: { label: string; href?: string }[] })
     <>
       {items.map((it, i) => (
         <span key={i} className="flex min-w-0 items-center gap-1.5">
-          {i > 0 && <span className="text-slate-300">/</span>}
+          {i > 0 && <ChevronLeft size={13} className="text-slate-400" />}
           {it.href && i < items.length - 1 ? (
             <a href={it.href} className="truncate hover:text-ink">
               {it.label}
