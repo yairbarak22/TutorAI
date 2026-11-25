@@ -1,7 +1,7 @@
 fixture: probability
-params: { count: 4, difficulty: בינונית, concept: "" }
+params: { count: 4, difficulty: medium, concept: "" }
 checks:
   min_items: 4
   min_citation_coverage: 1
   min_hebrew_ratio: 0.5
-  judge: "האם לכל שאלה אמריקאית יש תשובה נכונה אחת בלבד, והאם השאלות בודקות הבנה ולא רק שינון?"
+  judge: "Does every multiple-choice question have exactly one correct answer, and do the questions test understanding rather than memorization?"

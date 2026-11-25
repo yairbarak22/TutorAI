@@ -1,3 +1,4 @@
+import { t } from "@ruecai/sdk";
 import type { ConceptInfo, StudyPlan } from "@ruecai/sdk";
 
 export interface PlanInput {
@@ -70,18 +71,18 @@ export function buildStudyPlan({ concepts, today, examDate, minutesPerDay, title
     if (m >= 0.8 && c.attempts >= 3) continue; // strong → only the final review
     const learnDay =
       m < 0.4
-        ? place(Math.min(cursor, lastStudyDay), { concept: c.name, activity: "learn", minutes: 30, reason: c.attempts ? "שליטה נמוכה" : "מושג חדש" })
+        ? place(Math.min(cursor, lastStudyDay), { concept: c.name, activity: "learn", minutes: 30, reason: c.attempts ? t("שליטה נמוכה", "Low mastery") : t("מושג חדש", "New concept") })
         : cursor;
     cursor = Math.max(cursor, learnDay >= 0 ? learnDay : cursor);
     const practiceDay = place(Math.min(cursor + (m < 0.4 ? 1 : 0), lastStudyDay), {
       concept: c.name,
       activity: "practice",
       minutes: 20,
-      reason: m < 0.4 ? "תרגול אחרי למידה" : "חיזוק שליטה חלקית",
+      reason: m < 0.4 ? t("תרגול אחרי למידה", "Practice after learning") : t("חיזוק שליטה חלקית", "Strengthen partial mastery"),
     });
     for (const gap of [3, 7]) {
       const d = practiceDay + gap;
-      if (practiceDay >= 0 && d <= lastStudyDay) place(d, { concept: c.name, activity: "review", minutes: 10, reason: `חזרה מרווחת (+${gap} ימים)` });
+      if (practiceDay >= 0 && d <= lastStudyDay) place(d, { concept: c.name, activity: "review", minutes: 10, reason: t(`חזרה מרווחת (+${gap} ימים)`, `Spaced review (+${gap} days)`) });
     }
     if (load[cursor] >= minutesPerDay * 0.8) cursor = Math.min(cursor + 1, lastStudyDay);
   }
@@ -89,10 +90,10 @@ export function buildStudyPlan({ concepts, today, examDate, minutesPerDay, title
   // Final day: review everything that is not strong.
   const finalDay = totalDays - 1;
   for (const c of ordered.filter((c) => !(c.mastery >= 0.8 && c.attempts >= 3)).slice(0, 12))
-    days[finalDay].items.push({ concept: c.name, activity: "review", minutes: 10, reason: "חזרה לפני המבחן" });
+    days[finalDay].items.push({ concept: c.name, activity: "review", minutes: 10, reason: t("חזרה לפני המבחן", "Review before the exam") });
 
   return {
-    title: title ?? `תוכנית לימוד עד ${examDate}`,
+    title: title ?? t(`תוכנית לימוד עד ${examDate}`, `Study plan until ${examDate}`),
     exam_date: examDate,
     days: days.filter((d) => d.items.length > 0),
   };

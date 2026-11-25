@@ -1,14 +1,14 @@
-name: 🐞 באג
-description: משהו לא עובד כמו שצריך
+name: 🐞 Bug
+description: Something isn't working as it should
 labels: [bug]
 body:
   - type: textarea
     id: what
-    attributes: { label: מה קרה?, description: מה עשיתם ומה ציפיתם שיקרה }
+    attributes: { label: What happened?, description: What you did and what you expected to happen }
     validations: { required: true }
   - type: input
     id: browser
-    attributes: { label: דפדפן ומערכת הפעלה, placeholder: "Chrome 140 / macOS" }
+    attributes: { label: Browser and operating system, placeholder: "Chrome 140 / macOS" }
   - type: textarea
     id: error
-    attributes: { label: הודעת שגיאה (אם הופיעה), render: text }
+    attributes: { label: Error message (if one appeared), render: text }

@@ -1,3 +1,4 @@
+import { t } from "@ruecai/sdk";
 import { createEmptyCard, fsrs, Rating, type Card as FsrsCard, type Grade } from "ts-fsrs";
 
 /** Spaced repetition with FSRS (the algorithm modern Anki uses). */
@@ -31,14 +32,14 @@ export function reviewCard(fsrsJson: string, grade: ReviewGrade, now: Date): { f
   };
 }
 
-/** Preview of the next interval for each button ("10 דק'", "3 ימים"…). */
+/** Preview of the next interval for each button ("10 min", "3 d"…), in the UI language. */
 export function previewIntervals(fsrsJson: string, now: Date): Record<ReviewGrade, string> {
   const all = scheduler.repeat(revive(fsrsJson), now);
   const fmt = (d: Date) => {
     const mins = Math.round((d.getTime() - now.getTime()) / 60_000);
-    if (mins < 60) return `${Math.max(1, mins)} דק'`;
-    if (mins < 60 * 24) return `${Math.round(mins / 60)} שע'`;
-    return `${Math.round(mins / 1440)} ימים`;
+    if (mins < 60) return t(`${Math.max(1, mins)} דק'`, `${Math.max(1, mins)} min`);
+    if (mins < 60 * 24) return t(`${Math.round(mins / 60)} שע'`, `${Math.round(mins / 60)} h`);
+    return t(`${Math.round(mins / 1440)} ימים`, `${Math.round(mins / 1440)} d`);
   };
   return {
     again: fmt(all[Rating.Again].card.due),

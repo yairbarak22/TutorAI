@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS sections (
   course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   source_id INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
   ord INTEGER NOT NULL,
-  anchor TEXT NOT NULL,                             -- "עמ' 4" | "שקף 7" | "קטע 3"
+  anchor TEXT NOT NULL,                             -- "p. 4" | "Slide 7" | "Section 3" (or the Hebrew equivalents)
   page INTEGER,                                     -- 1-based page/slide number when known
   title TEXT NOT NULL DEFAULT '',
   summary TEXT NOT NULL DEFAULT '',

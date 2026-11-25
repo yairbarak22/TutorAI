@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import { clock, remainingText } from "../platform/timing.ts";
+import { fmtNumber, t } from "../i18n.tsx";
 
 export interface LongTaskProps {
   /** What is being made, e.g. "יוצר סיכום". */
@@ -86,7 +87,7 @@ export function LongTask(p: LongTaskProps) {
   const { elapsed, value, remaining, late } = useEstimate(p);
   const words = p.chars ? Math.round(p.chars / 6) : 0;
   const current = p.stages[Math.min(p.stage, p.stages.length - 1)];
-  const timeLine = late ? "לוקח קצת יותר מהרגיל, עדיין עובד…" : remainingText(remaining);
+  const timeLine = late ? t("לוקח קצת יותר מהרגיל, עדיין עובד…", "Taking a bit longer than usual, still working…") : remainingText(remaining);
 
   if (p.compact)
     return (
@@ -110,7 +111,12 @@ export function LongTask(p: LongTaskProps) {
           <div className="text-[16px] font-semibold tracking-tight">{p.title}</div>
           <div className="mt-0.5 text-[13.5px] text-ink-2">
             {p.detail ?? current}
-            {words > 20 && <span className="text-muted"> · נכתבו עד עכשיו כ-{words.toLocaleString("he-IL")} מילים</span>}
+            {words > 20 && (
+              <span className="text-muted">
+                {" · "}
+                {t(`נכתבו עד עכשיו כ-${fmtNumber(words)} מילים`, `About ${fmtNumber(words)} words written so far`)}
+              </span>
+            )}
           </div>
         </div>
         <div className="shrink-0 text-end">

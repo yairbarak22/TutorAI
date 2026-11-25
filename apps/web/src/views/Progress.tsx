@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { CalendarDays, ChartLine } from "lucide-react";
-import { conceptInfos, masteryLevel, MASTERY_LABEL } from "@ruecai/core";
+import { conceptInfos, masteryLevel } from "@ruecai/core";
 import type { StudyPlan } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Alert, Button, Card, Empty, Panel, ProgressBar, Spinner, errorMessage } from "../ui/components.tsx";
 import { daysUntil } from "./Home.tsx";
+import { masteryLabel } from "./Concepts.tsx";
+import { t } from "../i18n.tsx";
 
 export function ProgressView({ courseId }: { courseId: number }) {
   const engine = useEngine();
@@ -19,7 +21,7 @@ export function ProgressView({ courseId }: { courseId: number }) {
   const todayPlan = plan ? (plan.data as StudyPlan).days.find((d) => d.date === today) : undefined;
   const d = daysUntil(course.exam_date);
 
-  if (concepts.length === 0) return <Empty icon={<ChartLine size={26} strokeWidth={1.6} />} title="עוד אין נתונים">העלו חומר ותרגלו כדי לראות התקדמות.</Empty>;
+  if (concepts.length === 0) return <Empty icon={<ChartLine size={26} strokeWidth={1.6} />} title={t("עוד אין נתונים", "No data yet")}>{t("העלו חומר ותרגלו כדי לראות התקדמות.", "Upload material and practice to see your progress.")}</Empty>;
 
   const avg = concepts.reduce((n, c) => n + c.mastery, 0) / concepts.length;
   const makePlan = async () => {
@@ -39,51 +41,54 @@ export function ProgressView({ courseId }: { courseId: number }) {
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-3">
         <Panel className="p-4">
-          <div className="text-sm text-slate-500">שליטה ממוצעת</div>
+          <div className="text-sm text-slate-500">{t("שליטה ממוצעת", "Average mastery")}</div>
           <div className="mt-1 text-[28px] font-semibold tracking-tight text-ink">{Math.round(avg * 100)}%</div>
         </Panel>
         <Panel className="p-4">
-          <div className="text-sm text-slate-500">תשובות שנבדקו</div>
+          <div className="text-sm text-slate-500">{t("תשובות שנבדקו", "Answers checked")}</div>
           <div className="mt-1 text-[28px] font-semibold tracking-tight text-ink">{attempts.length}</div>
         </Panel>
         <Panel className="p-4">
-          <div className="text-sm text-slate-500">ימים למבחן</div>
+          <div className="text-sm text-slate-500">{t("ימים למבחן", "Days to exam")}</div>
           <div className="mt-1 text-[28px] font-semibold tracking-tight text-ink">{d ?? "—"}</div>
         </Panel>
       </div>
 
       <Panel className="space-y-3 p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="flex items-center gap-2 font-semibold"><CalendarDays size={16} /> היום בתוכנית</h2>
+          <h2 className="flex items-center gap-2 font-semibold"><CalendarDays size={16} /> {t("היום בתוכנית", "Today's plan")}</h2>
           <Button size="sm" className="ms-auto" onClick={makePlan} disabled={busy}>
-            {busy ? <Spinner label="בונה…" /> : plan ? "עדכון התוכנית לפי המצב הנוכחי" : "יצירת תוכנית לימוד"}
+            {busy ? <Spinner label={t("בונה…", "Building…")} /> : plan ? t("עדכון התוכנית לפי המצב הנוכחי", "Update the plan to where you are now") : t("יצירת תוכנית לימוד", "Create a study plan")}
           </Button>
         </div>
-        {!course.exam_date && <Alert kind="info">הגדירו תאריך מבחן (כפתור "עריכה" למעלה) כדי לבנות תוכנית.</Alert>}
+        {!course.exam_date && <Alert kind="info">{t('הגדירו תאריך מבחן (כפתור "עריכה" למעלה) כדי לבנות תוכנית.', 'Set an exam date ("Edit" button above) to build a plan.')}</Alert>}
         {error && <Alert kind="error">{error}</Alert>}
         {todayPlan ? (
           <ul className="space-y-1 text-sm">
             {todayPlan.items.map((it, i) => (
               <li key={i}>
-                • {it.activity === "learn" ? "ללמוד" : it.activity === "practice" ? "לתרגל" : "לחזור על"}{" "}
+                • {it.activity === "learn" ? t("ללמוד", "Learn") : it.activity === "practice" ? t("לתרגל", "Practice") : t("לחזור על", "Review")}{" "}
                 <a className="font-medium text-brand-700 hover:underline" href={href.course(courseId, "studio", `${it.activity === "learn" ? "explainer" : "quiz"}?concept=${encodeURIComponent(it.concept)}`)}>
                   {it.concept}
                 </a>{" "}
-                <span className="text-slate-400">({it.minutes} דק')</span>
+                <span className="text-slate-400">{t(`(${it.minutes} דק')`, `(${it.minutes} min)`)}</span>
               </li>
             ))}
           </ul>
         ) : (
           plan && (
             <p className="text-sm text-slate-500">
-              אין משימות להיום. <a className="underline" href={href.course(courseId, "artifacts", plan.id)}>לתוכנית המלאה</a>
+              {t("אין משימות להיום.", "Nothing planned for today.")}{" "}
+              <a className="underline" href={href.course(courseId, "artifacts", plan.id)}>
+                {t("לתוכנית המלאה", "See the full plan")}
+              </a>
             </p>
           )
         )}
       </Panel>
 
       <Card className="p-5">
-        <h2 className="mb-3 font-semibold">שליטה לפי מושג</h2>
+        <h2 className="mb-3 font-semibold">{t("שליטה לפי מושג", "Mastery by concept")}</h2>
         <div className="space-y-3">
           {concepts.map((c) => {
             const level = masteryLevel(c.mastery, c.attempts);
@@ -95,7 +100,7 @@ export function ProgressView({ courseId }: { courseId: number }) {
                 </a>
                 <ProgressBar value={c.attempts ? c.mastery : 0.02} color={color} />
                 <span className="w-24 text-xs text-slate-500">
-                  {MASTERY_LABEL[level]} {c.attempts > 0 && `· ${c.attempts}`}
+                  {masteryLabel(level)} {c.attempts > 0 && `· ${c.attempts}`}
                 </span>
               </div>
             );

@@ -1,13 +1,13 @@
-# קוד התנהגות
+# Code of Conduct
 
-הפרויקט הזה הוא של כל הסטודנטים, מכל הפקולטות ומכל רמות הניסיון. אנחנו מתחייבים לסביבה מכבדת, מסבירת פנים ונטולת הטרדה.
+This project belongs to all students, from every faculty and every level of experience. We are committed to a respectful, welcoming, harassment-free environment.
 
-**מצופה מכולם:** לכבד דעות שונות, לתת ולקבל ביקורת עניינית, לעזור למתחילים, ולזכור שמאחורי כל PR יש סטודנט/ית שהשקיעו מזמנם.
+**Expected of everyone:** respect differing opinions, give and accept constructive criticism, help newcomers, and remember that behind every PR is a student who gave their time.
 
-**לא מקובל:** הטרדה, השפלה, הערות על רקע אישי, פרסום מידע פרטי של אחרים, או התנהגות שאינה הולמת סביבה אקדמית.
+**Not acceptable:** harassment, humiliation, personal remarks, publishing other people's private information, or any behavior inappropriate for an academic environment.
 
-**יושרה אקדמית:** הכלי נועד ללמידה. לא נקבל תרומות שמטרתן לעקוף בחינות, לפתור מטלות להגשה במקום הסטודנט, או לשתף חומרי קורס מוגנים.
+**Academic integrity:** the tool is meant for learning. We will not accept contributions intended to bypass exams, solve assignments for submission on the student's behalf, or share protected course materials.
 
-דיווח על הפרה: פנו למתחזקי הפרויקט (רשומים ב-`.github/CODEOWNERS`). כל פנייה תטופל בדיסקרטיות.
+Reporting a violation: contact the project maintainers (listed in `.github/CODEOWNERS`). Every report will be handled discreetly.
 
-(מבוסס על הרוח של [Contributor Covenant](https://www.contributor-covenant.org/).)
+(Based on the spirit of the [Contributor Covenant](https://www.contributor-covenant.org/).)

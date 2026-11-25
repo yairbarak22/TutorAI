@@ -69,6 +69,8 @@ function injectCss() {
 }
 
 /* ------------------------------------------------------------------ helpers */
+/** The host sets <html lang> to the UI language; the kit's own small texts follow it. */
+const tr = (he: string, en: string) => (document.documentElement.lang === "en" ? en : he);
 type El = HTMLElement;
 function h<K extends keyof HTMLElementTagNameMap>(tag: K, cls = "", parent?: El | null, text?: string) {
   const e = document.createElement(tag);
@@ -762,7 +764,7 @@ export function scene3d(target: El | string, opts: Scene3DOptions = {}) {
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: false });
   } catch {
-    box.innerHTML = `<div class="viz-note" style="margin:12px">הדפדפן לא תומך בתלת-ממד (WebGL). נסו Chrome או Edge מעודכנים.</div>`;
+    box.innerHTML = `<div class="viz-note" style="margin:12px">${tr("הדפדפן לא תומך בתלת-ממד (WebGL). נסו Chrome או Edge מעודכנים.", "This browser does not support 3D (WebGL). Try an up-to-date Chrome or Edge.")}</div>`;
     throw new Error("WebGL is not available in this browser");
   }
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -773,7 +775,7 @@ export function scene3d(target: El | string, opts: Scene3DOptions = {}) {
   renderer.domElement.style.width = "100%";
   renderer.domElement.style.height = "100%";
   box.appendChild(renderer.domElement);
-  h("div", "viz-hint", box, "גררו לסיבוב · גלגלת לזום");
+  h("div", "viz-hint", box, tr("גררו לסיבוב · גלגלת לזום", "Drag to rotate · scroll to zoom"));
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(opts.background ?? "#fafafa");

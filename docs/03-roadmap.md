@@ -1,103 +1,105 @@
-# 03 — סדר מימוש (Roadmap)
+# 03 — Implementation order (Roadmap)
 
-> גרסה 2: מותאם להחלטה על אפליקציית ווב local-first ב-TypeScript ([04-distribution.md](04-distribution.md)).
+> Version 2: adapted to the decision on a local-first web app in TypeScript ([04-distribution.md](04-distribution.md)).
 
-## סטטוס (נובמבר 2026)
+## Status (November 2026)
 
-| שלב | סטטוס |
+| Phase | Status |
 |---|---|
-| 0: יסודות | ✅ הושלם |
-| 1: MVP | ✅ הושלם |
-| 2: לולאת הלמידה | ✅ הושלם |
-| 3: הסברים עשירים | ✅ חלקית: ווידג'טים, Mermaid, self-repair. עוד לא: three.js, Pyodide |
-| 4: הקלטות ודסקטופ | ⏳ פתוח: issues ב-GitHub |
-| **פיילוט עם סטודנטים** | ⏳ **הצעד הבא**: 10–20 סטודנטים בהסתברות ובמשפטים |
+| 0: Foundations | ✅ Done |
+| 1: MVP | ✅ Done |
+| 2: The learning loop | ✅ Done |
+| 3: Rich explanations | ✅ Partly: widgets with the Viz Kit (three.js 3D scenes, 2D plots, controls, KaTeX), Mermaid, self-repair. Not yet: Pyodide |
+| 4: Recordings and desktop | ⏳ Open: issues on GitHub |
+| **Student pilot** | ⏳ **Next step**: 10–20 students in probability and law |
 
-**העיקרון:** כל שלב מסתיים במשהו שסטודנט אמיתי משתמש בו **דרך קישור**. הפיילוט רץ על **קורס הסתברות אחד וקורס משפטים אחד**. שני תחומים כל כך שונים יוכיחו שהמערכת באמת גנרית.
+Also shipped beyond the original plan: the UI is available in Hebrew (RTL) and English (LTR), and AI-generated content follows the student's chosen language.
+
+**The principle:** every phase ends with something a real student uses **through a link**. The pilot runs on **one probability course and one law course**. Two fields this different will prove the system is truly generic.
 
 ---
 
-## שלב 0: יסודות (1–2 שבועות)
-המטרה: אתר ריק אבל חי, ותורם חיצוני יכול להתחיל לעבוד.
+## Phase 0: Foundations (1–2 weeks)
+Goal: an empty but live site, and an outside contributor can start working.
 
-- [ ] GitHub Organization, ריפו, רישיון Apache-2.0
-- [ ] monorepo: pnpm + Turborepo + Vite + React + TS, עם RTL ועברית מהיום הראשון
-- [ ] `packages/core`, `sdk`, `platform`, `platform-web` (שלדים)
-- [ ] SQLite-WASM + Drizzle, עם שמירה לתיקייה מקומית שהסטודנט בוחר (File System Access) ו-fallback ל-OPFS. כתיבה אטומית, נעילת `.lock`, בדיקה בתוך תיקיית Google Drive.
-- [ ] LLM Gateway (AI SDK) ומסך הגדרות: מפתח API ומיפוי של fast/smart
-- [ ] CI: lint, typecheck, Vitest. **Deploy אוטומטי ל-Cloudflare Pages, עם preview לכל PR.**
-- [ ] `README`, `CONTRIBUTING` (עברית ואנגלית), תבניות Issue/PR, CODEOWNERS
+- [ ] GitHub Organization, repo, Apache-2.0 license
+- [ ] Monorepo: pnpm + Turborepo + Vite + React + TS, with RTL and Hebrew from day one *(shipped with npm workspaces)*
+- [ ] `packages/core`, `sdk`, `platform`, `platform-web` (skeletons)
+- [ ] SQLite-WASM + Drizzle, saving to a local folder the student chooses (File System Access) with an OPFS fallback. Atomic writes, a `.lock` file, testing inside a Google Drive folder. *(shipped with sql.js and an IndexedDB fallback)*
+- [ ] LLM Gateway (AI SDK) and a settings screen: API key and fast/smart mapping *(shipped with the official Anthropic SDK)*
+- [ ] CI: lint, typecheck, Vitest. Automatic deploy. *(Originally planned as Cloudflare Pages with a preview per PR; shipped as GitHub Pages for production, and PRs are checked by CI only — no per-PR previews.)*
+- [ ] `README`, `CONTRIBUTING`, Issue/PR templates, CODEOWNERS
 
-## שלב 1: MVP, "העלה, הבן, תתרגל" (4–5 שבועות)
-המטרה: סטודנט בהסתברות פותח קישור, גורר 10 מצגות, ומקבל סיכום, טוטור מעוגן וחידון.
+## Phase 1: MVP, "upload, understand, practice" (4–5 weeks)
+Goal: a probability student opens a link, drags in 10 slide decks, and gets a summary, a grounded tutor, and a quiz.
 
-- [ ] Ingestion: PDF (pdf.js, ו-vision לדפים עם נוסחאות) ו-PPTX, הכול ב-Web Worker עם checkpoints
-- [ ] Sections, תקצירים, אינדקס BM25 ו-`retrieve()` עם הקשר ארוך ו-caching
-- [ ] ציטוטים: לחיצה פותחת את העמוד או השקף במציג
-- [ ] **Tool Runtime ו-SDK v0**, ועליו שלושת הכלים הראשונים *כפלאגינים*:
-  - `summary` (פלאגין הצהרתי)
-  - `quiz` (פלאגין הצהרתי, עם רנדרר מובנה)
-  - `tutor-chat` (פלאגין קוד, tool calling)
-- [ ] מסך "בחר תיקייה" באונבורדינג. ב-Safari/Firefox: אזהרה, `storage.persist()` וגיבוי לקובץ `.ruecai`.
-- [ ] PWA: manifest, service worker, כפתור "התקן"
-- [ ] תשתית evals ו-golden set לשלושת הכלים
-- [ ] **פיילוט עם 10–20 סטודנטים** ואיסוף משוב
+- [ ] Ingestion: PDF (pdf.js, plus vision for pages with formulas) and PPTX, all in a Web Worker with checkpoints
+- [ ] Sections, summaries, a BM25 index, and `retrieve()` with long context and caching
+- [ ] Citations: clicking opens the page or slide in the viewer
+- [ ] **Tool Runtime and SDK v0**, with the first three tools built on it *as plugins*:
+  - `summary` (declarative plugin)
+  - `quiz` (declarative plugin, with a built-in renderer)
+  - `tutor-chat` (code plugin, tool calling)
+- [ ] A "choose folder" screen in onboarding. In Safari/Firefox: a warning, `storage.persist()`, and backup to a `.ruecai` file.
+- [ ] PWA: manifest, service worker, "Install" button
+- [ ] Eval infrastructure and a golden set for the three tools
+- [ ] **Pilot with 10–20 students** and feedback collection
 
-## שלב 2: לולאת הלמידה (4–6 שבועות)
-המטרה: לדעת מה אני יודע ומה לא, לקראת המבחן.
+## Phase 2: The learning loop (4–6 weeks)
+Goal: know what I know and what I don't, ahead of the exam.
 
-- [ ] חילוץ מושגים וגרף מושגים
-- [ ] Attempts, Mastery (BKT), ודשבורד "חוזקות וחולשות"
-- [ ] `flashcards` ומסך חזרה יומי (ts-fsrs)
-- [ ] `exam-from-samples` (**המקרה של משפטים**): העלאת מבחנים לדוגמה, ניתוח המבנה, יצירת מבחן חדש באותו סגנון, בדיקה לפי מחוון ומשוב
-- [ ] `study-plan`: תאריך מבחן ותוכנית יומית
-- [ ] DOCX והערות חופשיות
-- [ ] **פתיחה לקהילה:** 15–20 issues מסומנים `good first plugin`, רובם הצהרתיים, ומדריך "הפלאגין הראשון שלי ב-30 דקות"
+- [ ] Concept extraction and a concept graph
+- [ ] Attempts, Mastery (BKT), and a "strengths and weaknesses" dashboard
+- [ ] `flashcards` and a daily review screen (ts-fsrs)
+- [ ] `exam-from-samples` (**the law use case**): upload sample exams, analyze their structure, generate a new exam in the same style, grade by rubric with feedback
+- [ ] `study-plan`: exam date and a daily plan
+- [ ] DOCX and free-form notes
+- [ ] **Opening up to the community:** 15–20 issues labelled `good first plugin`, mostly declarative, and a "My first plugin in 30 minutes" guide
 
-## שלב 3: הסברים עשירים (6–8 שבועות, הרבה עבודה במקביל)
-המטרה: אפקט ה"וואו", שבגללו סטודנטים מספרים לחברים.
+## Phase 3: Rich explanations (6–8 weeks, lots of parallel work)
+Goal: the "wow" effect that makes students tell their friends.
 
-- [ ] iframe sandbox (CSP, ספריות מותרות) וסוג התוצר `interactive_widget`
-- [ ] `interactive-explainer`: סימולציה עם סליידרים לכל מושג
-- [ ] `diagram` (Mermaid) ו-`scene_3d` (three.js)
-- [ ] Pyodide ו-SymPy: מחולל תרגילים עם פתרון מאומת
-- [ ] self-repair לקוד שנכשל ברנדור
-- [ ] חבילות תחום ראשונות: `math`, `cs`, `law`
+- [ ] iframe sandbox (CSP, allowed libraries) and the `interactive_widget` artifact type
+- [ ] `interactive-explainer`: a simulation with sliders for every concept
+- [ ] `diagram` (Mermaid) and `scene_3d` (three.js)
+- [ ] Pyodide and SymPy: an exercise generator with verified solutions
+- [ ] Self-repair for code that fails to render
+- [ ] First discipline packs: `math`, `cs`, `law`
 
-## שלב 4: הקלטות, ובמידת הצורך גם דסקטופ (4–6 שבועות)
-- [ ] תמלול הרצאות דרך API, וציטוט לפי דקה בהרצאה
-- [ ] תמיכה ב-Ollama מקומי (מ-localhost)
-- [ ] **החלטה לפי נתוני הפיילוט:** האם יש ביקוש אמיתי לאפליקציית דסקטופ? אם כן:
-  - [ ] `apps/desktop` ב-Electron ו-`platform-desktop` (אחסון בתיקייה, whisper.cpp עם ivrit.ai, עבודה ברקע)
-  - [ ] חתימת קוד ל-Mac ול-Windows (לבקש מימון מהאוניברסיטה), ו-auto-update מ-GitHub Releases
+## Phase 4: Recordings, and a desktop app if needed (4–6 weeks)
+- [ ] Lecture transcription via an API, and citations by lecture minute
+- [ ] Support for local Ollama (from localhost)
+- [ ] **A decision based on pilot data:** is there real demand for a desktop app? If so:
+  - [ ] `apps/desktop` in Electron and `platform-desktop` (folder storage, whisper.cpp with ivrit.ai, background work)
+  - [ ] Code signing for Mac and Windows (ask the university for funding), and auto-update from GitHub Releases
 
-## שלב 5: אקוסיסטם (שוטף)
-- [ ] גלריית פלאגינים בתוך האפליקציה
-- [ ] חבילות תחום נוספות, עם "שגריר" מכל פקולטה
-- [ ] proxy אוניברסיטאי (Cloudflare Worker, התחברות אוניברסיטאית ומכסות), אם האוניברסיטה מממנת מפתח
-- [ ] סנכרון אופציונלי ל-Drive או OneDrive של הסטודנט
-- [ ] אינטגרציה עם Moodle
-- [ ] מחקר השפעה על למידה, בשיתוף הסגל
+## Phase 5: Ecosystem (ongoing)
+- [ ] An in-app plugin gallery
+- [ ] More discipline packs, with an "ambassador" from each faculty
+- [ ] A university proxy (Cloudflare Worker, university login, and quotas), if the university funds a key
+- [ ] Optional sync to the student's Drive or OneDrive
+- [ ] Moodle integration
+- [ ] Research on learning impact, together with faculty
 
 ---
 
-## ניהול הקהילה
+## Community management
 
-| תפקיד | אחריות |
+| Role | Responsibility |
 |---|---|
-| **Core maintainers** (3–5) | core, sdk, platform, אבטחה. מאשרים שינויים בליבה. |
-| **Pack owners** | סטודנט אחד או יותר מכל תחום. CODEOWNERS של `plugins/<domain>/`. |
-| **Contributors** | כל סטודנט: פלאגין הצהרתי, פרומפט, מקרי evals, תרגום, באגים |
+| **Core maintainers** (3–5) | core, sdk, platform, security. Approve core changes. |
+| **Pack owners** | One or more students from each field. CODEOWNERS of `plugins/<domain>/`. |
+| **Contributors** | Any student: a declarative plugin, a prompt, eval cases, translation, bugs |
 
-- שינוי בליבה או ב-SDK מתחיל ב-RFC קצר.
-- ה-SDK מנוהל עם semver.
-- האקתון השקה: "פלאגין ב-24 שעות".
-- **סטודנטים למשפטים, פסיכולוגיה וכלכלה יכולים לתרום פלאגינים הצהרתיים בלי לכתוב שורת קוד.** זה היתרון הכי גדול של המבנה החדש.
+- A change to the core or SDK starts with a short RFC.
+- The SDK uses semver.
+- Launch hackathon: "A plugin in 24 hours".
+- **Law, psychology, and economics students can contribute declarative plugins without writing a line of code.** This is the biggest advantage of the new structure.
 
-## מה עושים עכשיו
+## What to do now
 
-1. לפתוח Organization וריפו ולהעלות את המסמכים.
-2. לבנות את שלב 0 (אני יכול לעשות את זה: שלד עובד עם deploy).
-3. לגייס 2–3 core maintainers ושגריר אחד ממשפטים.
-4. לבחור קורס פיילוט ולאסוף 10 קבצי חומר אמיתיים, באישור המרצה.
-5. לברר עם האוניברסיטה: מפתח API מרכזי, מדיניות טוהר אקדמי, ומימון חתימת קוד (רק אם יוחלט על דסקטופ).
+1. Open an Organization and a repo and upload the docs.
+2. Build Phase 0 (I can do this: a working skeleton with deploy).
+3. Recruit 2–3 core maintainers and one ambassador from law.
+4. Choose a pilot course and collect 10 real material files, with the lecturer's permission.
+5. Check with the university: a central API key, an academic integrity policy, and code-signing funding (only if a desktop app is decided on).

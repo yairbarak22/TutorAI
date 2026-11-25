@@ -1,8 +1,8 @@
 fixture: probability
-params: { length: בינוני, focus: "" }
+params: { length: medium, focus: "" }
 checks:
   min_items: 3
   min_citation_coverage: 0.9
   min_hebrew_ratio: 0.6
   must_mention: [בייס]
-  judge: "האם הסיכום נאמן לחומר, מסודר, ומכסה את המושגים המרכזיים (מרחב מדגם, הסתברות מותנית, בייס, אי-תלות, תוחלת)?"
+  judge: "Is the summary faithful to the material, well organized, and does it cover the main concepts (sample space, conditional probability, Bayes, independence, expectation)?"

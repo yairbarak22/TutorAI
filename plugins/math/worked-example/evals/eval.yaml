@@ -1,3 +1,3 @@
 fixture: probability
-params: { concept: נוסחת בייס, difficulty: בינונית }
+params: { concept: נוסחת בייס, difficulty: medium }
 checks: { min_items: 4, min_citation_coverage: 0.8, min_hebrew_ratio: 0.4 }

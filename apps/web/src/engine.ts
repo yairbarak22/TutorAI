@@ -23,7 +23,7 @@ import {
   type RunResult,
   type Source,
 } from "@ruecai/core";
-import type { ArtifactPayload, ChatTurn, LLMApi, LoadedTool } from "@ruecai/sdk";
+import { t, type ArtifactPayload, type ChatTurn, type LLMApi, type LoadedTool } from "@ruecai/sdk";
 import { courseFixtures, demoFixtures, getTool, tools } from "@ruecai/plugins";
 import { DB_FILE, Persistence, exportBackup, type DataRoot } from "./platform/storage.ts";
 import { secrets } from "./platform/secrets.ts";
@@ -121,17 +121,17 @@ export class Engine {
     const problems: string[] = [];
     for (const f of files) {
       if (!detectKind(f.name, f.type)) {
-        problems.push(`${f.name}: סוג קובץ לא נתמך (PDF, PPTX, DOCX, TXT, MD)`);
+        problems.push(t(`${f.name}: סוג קובץ לא נתמך (PDF, PPTX, DOCX, TXT, MD)`, `${f.name}: unsupported file type (PDF, PPTX, DOCX, TXT, MD)`));
         continue;
       }
       if (f.size > 60 * 1024 * 1024) {
-        problems.push(`${f.name}: הקובץ גדול מדי (מעל 60MB)`);
+        problems.push(t(`${f.name}: הקובץ גדול מדי (מעל 60MB)`, `${f.name}: file is too large (over 60MB)`));
         continue;
       }
       const bytes = new Uint8Array(await f.arrayBuffer());
       const hash = await sha256Hex(bytes);
       if (this.store.sourceByHash(courseId, hash)) {
-        problems.push(`${f.name}: הקובץ כבר קיים בקורס`);
+        problems.push(t(`${f.name}: הקובץ כבר קיים בקורס`, `${f.name}: this file is already in the course`));
         continue;
       }
       const path = `courses/${courseId}/sources/${hash.slice(0, 10)}-${safeFileName(f.name)}`;

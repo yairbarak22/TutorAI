@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { LLMApi } from "@ruecai/sdk";
+import { t } from "@ruecai/sdk";
 import { sectionKey, type Store } from "../db/store.ts";
 import type { FileStore } from "../files.ts";
 import { BASE_SYSTEM_PROMPT } from "../llm/prompts.ts";
@@ -43,7 +44,7 @@ export async function ingestSource(deps: IngestDeps, sourceId: number): Promise<
 
   try {
     store.setSourceStatus(sourceId, "parsing", 0.05);
-    report(0.05, "קורא את הקובץ…");
+    report(0.05, t("קורא את הקובץ…", "Reading the file…"));
     const bytes = await files.read(source.path);
     const kind = detectKind(source.name, source.mime);
     let units: RawUnit[];
@@ -53,7 +54,7 @@ export async function ingestSource(deps: IngestDeps, sourceId: number): Promise<
       if (deps.ocrSparsePages) {
         const sparse = units.filter((u) => u.sparse && u.page);
         for (const [i, u] of sparse.entries()) {
-          report(0.1 + (0.2 * i) / sparse.length, `מפענח עמוד ${u.page} (תמונה/נוסחאות)…`);
+          report(0.1 + (0.2 * i) / sparse.length, t(`מפענח עמוד ${u.page} (תמונה/נוסחאות)…`, `Reading page ${u.page} (images/formulas)…`));
           try {
             const png = await renderPdfPagePng(bytes, u.page!, deps.pdf);
             const text = await llm.text({
@@ -62,7 +63,7 @@ export async function ingestSource(deps: IngestDeps, sourceId: number): Promise<
               maxTokens: 4000,
               images: [{ mediaType: "image/png", base64: png }],
               prompt:
-                "תמלל את כל התוכן של העמוד הזה לטקסט. נוסחאות ב-LaTeX ($...$). תאר בקצרה תרשימים בסוגריים מרובעים. החזר רק את התוכן.",
+                "Transcribe all the content of this page as text, in its original language. Formulas in LaTeX ($...$). Briefly describe diagrams in square brackets. Return only the content.",
             });
             if (text.trim()) u.text = text.trim();
           } catch {
@@ -73,10 +74,10 @@ export async function ingestSource(deps: IngestDeps, sourceId: number): Promise<
     } else if (kind === "pptx") units = await parsePptx(bytes);
     else if (kind === "docx") units = await parseDocx(bytes);
     else if (kind === "text") units = parseText(new TextDecoder().decode(bytes));
-    else throw new Error("סוג קובץ לא נתמך. נתמכים: PDF, PPTX, DOCX, TXT/MD");
+    else throw new Error(t("סוג קובץ לא נתמך. נתמכים: PDF, PPTX, DOCX, TXT/MD", "Unsupported file type. Supported: PDF, PPTX, DOCX, TXT/MD"));
 
     units = units.filter((u) => u.text.trim().length > 0);
-    if (units.length === 0) throw new Error("לא נמצא טקסט בקובץ (ייתכן שזה סריקה ללא טקסט).");
+    if (units.length === 0) throw new Error(t("לא נמצא טקסט בקובץ (ייתכן שזה סריקה ללא טקסט).", "No text found in the file (it may be a scan without text)."));
 
     const ids = store.replaceSections(
       source.course_id,
@@ -84,15 +85,15 @@ export async function ingestSource(deps: IngestDeps, sourceId: number): Promise<
       units.map((u) => ({ anchor: u.anchor, page: u.page, title: u.title, text: u.text })),
     );
     store.setSourceStatus(sourceId, "analyzing", 0.35);
-    report(0.35, "מנתח נושאים ומושגים…");
+    report(0.35, t("מנתח נושאים ומושגים…", "Analyzing topics and concepts…"));
 
     await analyzeSource(deps, sourceId, (p) => {
       store.setSourceStatus(sourceId, "analyzing", 0.35 + 0.6 * p);
-      report(0.35 + 0.6 * p, "מנתח נושאים ומושגים…");
+      report(0.35 + 0.6 * p, t("מנתח נושאים ומושגים…", "Analyzing topics and concepts…"));
     });
     void ids;
     store.setSourceStatus(sourceId, "ready", 1);
-    report(1, "מוכן");
+    report(1, t("מוכן", "Done"));
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     store.setSourceStatus(sourceId, "error", 0, msg);
@@ -131,13 +132,13 @@ async function analyzeSource(deps: IngestDeps, sourceId: number, onPart: (p: num
       system: BASE_SYSTEM_PROMPT,
       context: formatSections(batch, names),
       prompt: [
-        `נתח את קטעי החומר מתוך "${source.name}"${isExam ? " (זהו מבחן לדוגמה)" : ""}.`,
-        "1. לכל קטע (לפי id): כותרת קצרה (עד 8 מילים) ותקציר של משפט-שניים.",
+        `Analyze the material sections from "${source.name}"${isExam ? " (this is a sample exam)" : ""}. Write titles, summaries, concept names and definitions in the language of the material itself.`,
+        "1. For each section (by id): a short title (up to 8 words) and a one-to-two sentence summary.",
         isExam
-          ? "2. מושגים: רק המושגים שהמבחן בודק (לא לחלץ מושגים חדשים שאינם נבדקים)."
-          : "2. מושגים: המושגים המרכזיים שנלמדים (5–20), עם הגדרה, דרישות קדם וציטוטים לקטעים.",
+          ? "2. Concepts: only the concepts the exam tests (do not extract new concepts that are not tested)."
+          : "2. Concepts: the main concepts taught (5–20), with a definition, prerequisites and citations to sections.",
         existing.length
-          ? `מושגים קיימים בקורס — אם מושג כבר קיים, השתמש בשם הקיים בדיוק: ${existing.join(" · ")}`
+          ? `Existing course concepts (if a concept already exists, use its exact existing name): ${existing.join(" · ")}`
           : "",
       ]
         .filter(Boolean)

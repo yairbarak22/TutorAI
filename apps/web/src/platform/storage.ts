@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import type { FileStore } from "@ruecai/core";
+import { t } from "@ruecai/sdk";
 
 /**
  * Where the student's data lives.
@@ -99,7 +100,9 @@ class FolderFileStore implements FileStore {
 
 class BrowserFileStore implements FileStore {
   kind = "browser" as const;
-  label = "אחסון הדפדפן";
+  get label() {
+    return t("אחסון הדפדפן", "Browser storage");
+  }
   async write(path: string, data: Uint8Array | Blob) {
     const bytes = data instanceof Uint8Array ? data : new Uint8Array(await data.arrayBuffer());
     await tx("files", "readwrite", (s) => s.put(bytes, path));
@@ -230,7 +233,10 @@ export class Persistence {
       const raw = new TextDecoder().decode(await this.root.files.read(LOCK_FILE));
       const lock = JSON.parse(raw) as { session: string; at: number; device: string };
       if (lock.session !== this.sessionId && Date.now() - lock.at < 90_000)
-        return `נראה שהנתונים פתוחים כרגע בחלון או מחשב אחר (${lock.device}). עבודה בו-זמנית משני מקומות עלולה לדרוס שינויים.`;
+        return t(
+          `נראה שהנתונים פתוחים כרגע בחלון או מחשב אחר (${lock.device}). עבודה בו-זמנית משני מקומות עלולה לדרוס שינויים.`,
+          `Your data seems to be open in another window or computer right now (${lock.device}). Working from two places at once may overwrite changes.`,
+        );
     } catch {
       /* no lock */
     }
@@ -286,7 +292,7 @@ export async function exportBackup(root: DataRoot, dbBytes: Uint8Array, paths: s
 export async function importBackup(root: DataRoot, file: Blob): Promise<Uint8Array> {
   const zip = await JSZip.loadAsync(file);
   const db = await zip.file(DB_FILE)?.async("uint8array");
-  if (!db) throw new Error("קובץ הגיבוי לא תקין (חסר ruecai.db)");
+  if (!db) throw new Error(t("קובץ הגיבוי לא תקין (חסר ruecai.db)", "Invalid backup file (ruecai.db is missing)"));
   for (const [path, entry] of Object.entries(zip.files)) {
     if (entry.dir || path === DB_FILE) continue;
     // Only source files in the exact layout we write; anything else in the archive is ignored.

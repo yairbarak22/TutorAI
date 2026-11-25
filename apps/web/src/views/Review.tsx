@@ -6,12 +6,13 @@ import { href } from "../router.ts";
 import { Button, Card, Empty, ProgressBar } from "../ui/components.tsx";
 import { Markdown } from "../ui/Markdown.tsx";
 import { CitationChips } from "../ui/Citations.tsx";
+import { t } from "../i18n.tsx";
 
-const BUTTONS: { g: ReviewGrade; label: string; cls: string }[] = [
-  { g: "again", label: "שוב", cls: "bg-red-600 hover:bg-red-700" },
-  { g: "hard", label: "קשה", cls: "bg-amber-600 hover:bg-amber-700" },
-  { g: "good", label: "טוב", cls: "bg-emerald-600 hover:bg-emerald-700" },
-  { g: "easy", label: "קל", cls: "bg-brand-600 hover:bg-brand-700" },
+const buttons = (): { g: ReviewGrade; label: string; cls: string }[] => [
+  { g: "again", label: t("שוב", "Again"), cls: "bg-red-600 hover:bg-red-700" },
+  { g: "hard", label: t("קשה", "Hard"), cls: "bg-amber-600 hover:bg-amber-700" },
+  { g: "good", label: t("טוב", "Good"), cls: "bg-emerald-600 hover:bg-emerald-700" },
+  { g: "easy", label: t("קל", "Easy"), cls: "bg-brand-600 hover:bg-brand-700" },
 ];
 
 /** Daily spaced-repetition session (FSRS). */
@@ -26,16 +27,16 @@ export function Review({ courseId }: { courseId: number }) {
 
   if (engine.store.cardCount(courseId) === 0)
     return (
-      <Empty icon={<Layers size={26} strokeWidth={1.6} />} title="עוד אין כרטיסיות">
+      <Empty icon={<Layers size={26} strokeWidth={1.6} />} title={t("עוד אין כרטיסיות", "No flashcards yet")}>
         <a className="underline" href={href.course(courseId, "studio", "flashcards")}>
-          צרו כרטיסיות מהחומר
+          {t("צרו כרטיסיות מהחומר", "Create flashcards from your material")}
         </a>
       </Empty>
     );
   if (!card)
     return (
-      <Empty icon={<CircleCheck size={26} strokeWidth={1.6} />} title="סיימתם את החזרה להיום!">
-        הכרטיסיות הבאות יחזרו בדיוק כשתהיו על סף לשכוח אותן.
+      <Empty icon={<CircleCheck size={26} strokeWidth={1.6} />} title={t("סיימתם את החזרה להיום!", "You're done reviewing for today!")}>
+        {t("הכרטיסיות הבאות יחזרו בדיוק כשתהיו על סף לשכוח אותן.", "The next cards will come back just as you're about to forget them.")}
       </Empty>
     );
 
@@ -60,11 +61,11 @@ export function Review({ courseId }: { courseId: number }) {
       </Card>
       {!shown ? (
         <Button size="lg" className="w-full" onClick={() => setShown(true)}>
-          הצגת התשובה
+          {t("הצגת התשובה", "Show answer")}
         </Button>
       ) : (
         <div className="grid grid-cols-4 gap-2">
-          {BUTTONS.map((b) => (
+          {buttons().map((b) => (
             <button
               key={b.g}
               className={`rounded-lg px-2 py-3 text-white ${b.cls}`}

@@ -3,6 +3,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { BetaContentBlockParam, BetaMessageParam, BetaTextBlockParam } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import type { z } from "zod";
 import type { ChatTurn, LLMApi, LLMCallOptions, Tier } from "@ruecai/sdk";
+import { t } from "@ruecai/sdk";
 
 export interface ModelConfig {
   fast: string;
@@ -56,7 +57,7 @@ export class AnthropicLLM implements LLMApi {
     if (opts.context)
       blocks.push({
         type: "text",
-        text: `חומר הקורס הרלוונטי:\n\n${opts.context}`,
+        text: `Relevant course material:\n\n${opts.context}`,
         cache_control: { type: "ephemeral" },
       });
     return blocks;
@@ -114,9 +115,9 @@ export class AnthropicLLM implements LLMApi {
       if (opts.onOutput) stream.on("text", (_delta, snapshot) => opts.onOutput!(snapshot.length));
       const res = await stream.finalMessage();
       this.track(opts.tag, params.model, res.usage);
-      if (res.stop_reason === "refusal") throw new LLMError("המודל סירב לבקשה הזו.", "refusal");
-      if (res.stop_reason === "max_tokens") throw new LLMError("התשובה נקטעה (ארוכה מדי). נסו היקף קטן יותר.", "invalid_output");
-      if (res.parsed_output == null) throw new LLMError("המודל החזיר תשובה במבנה לא תקין.", "invalid_output");
+      if (res.stop_reason === "refusal") throw new LLMError(t("המודל סירב לבקשה הזו.", "The model declined this request."), "refusal");
+      if (res.stop_reason === "max_tokens") throw new LLMError(t("התשובה נקטעה (ארוכה מדי). נסו היקף קטן יותר.", "The answer was cut off (too long). Try a smaller scope."), "invalid_output");
+      if (res.parsed_output == null) throw new LLMError(t("המודל החזיר תשובה במבנה לא תקין.", "The model returned an answer in an invalid format."), "invalid_output");
       return res.parsed_output as z.infer<S>;
     } catch (e) {
       throw toLLMError(e);
@@ -144,7 +145,7 @@ export class AnthropicLLM implements LLMApi {
       }
       const final = await stream.finalMessage();
       this.track(opts.tag, params.model, final.usage);
-      if (final.stop_reason === "refusal") throw new LLMError("המודל סירב לבקשה הזו.", "refusal");
+      if (final.stop_reason === "refusal") throw new LLMError(t("המודל סירב לבקשה הזו.", "The model declined this request."), "refusal");
       return text;
     } catch (e) {
       throw toLLMError(e);
@@ -154,11 +155,11 @@ export class AnthropicLLM implements LLMApi {
 
 function toLLMError(e: unknown): LLMError {
   if (e instanceof LLMError) return e;
-  if (e instanceof Anthropic.AuthenticationError) return new LLMError("מפתח ה-API לא תקין. בדקו אותו בהגדרות.", "auth");
-  if (e instanceof Anthropic.PermissionDeniedError) return new LLMError("למפתח אין הרשאה למודל הזה.", "auth");
-  if (e instanceof Anthropic.RateLimitError) return new LLMError("הגעתם למגבלת קצב/תקציב ב-API. נסו שוב בעוד דקה.", "rate_limit");
-  if (e instanceof Anthropic.APIConnectionError) return new LLMError("אין חיבור לשרת של Anthropic. בדקו את האינטרנט.", "network");
-  if (e instanceof Anthropic.APIError) return new LLMError(`שגיאת API (${e.status}): ${e.message}`, "other");
+  if (e instanceof Anthropic.AuthenticationError) return new LLMError(t("מפתח ה-API לא תקין. בדקו אותו בהגדרות.", "The API key is invalid. Check it in Settings."), "auth");
+  if (e instanceof Anthropic.PermissionDeniedError) return new LLMError(t("למפתח אין הרשאה למודל הזה.", "This key has no access to this model."), "auth");
+  if (e instanceof Anthropic.RateLimitError) return new LLMError(t("הגעתם למגבלת קצב/תקציב ב-API. נסו שוב בעוד דקה.", "You hit the API rate or spending limit. Try again in a minute."), "rate_limit");
+  if (e instanceof Anthropic.APIConnectionError) return new LLMError(t("אין חיבור לשרת של Anthropic. בדקו את האינטרנט.", "Can't reach Anthropic's servers. Check your internet connection."), "network");
+  if (e instanceof Anthropic.APIError) return new LLMError(`${t("שגיאת API", "API error")} (${e.status}): ${e.message}`, "other");
   return new LLMError(e instanceof Error ? e.message : String(e), "other");
 }
 

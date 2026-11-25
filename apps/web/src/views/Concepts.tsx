@@ -1,11 +1,22 @@
 import { useMemo, useState } from "react";
 import { Box, Layers, ListChecks, Network } from "lucide-react";
-import { masteryLevel, MASTERY_LABEL, conceptInfos, type MasteryLevel } from "@ruecai/core";
+import { masteryLevel, conceptInfos, type MasteryLevel } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Button, Card, Empty } from "../ui/components.tsx";
 import { CitationChips } from "../ui/Citations.tsx";
 import { MermaidView } from "../ui/Visuals.tsx";
+import { t } from "../i18n.tsx";
+
+/** Display name of a mastery level, in the current language. */
+export function masteryLabel(l: MasteryLevel): string {
+  return {
+    new: t("טרם תורגל", "Not practiced yet"),
+    weak: t("דורש חיזוק", "Needs work"),
+    progress: t("בתהליך", "In progress"),
+    strong: t("שולט", "Mastered"),
+  }[l];
+}
 
 const COLORS: Record<MasteryLevel, { fill: string; chip: string }> = {
   new: { fill: "#ffffff", chip: "bg-black/[0.05] text-ink-2" },
@@ -34,8 +45,12 @@ export function Concepts({ courseId }: { courseId: number }) {
 
   if (concepts.length === 0)
     return (
-      <Empty icon={<Network size={26} strokeWidth={1.6} />} title="עוד אין מושגים">
-        המושגים מחולצים אוטומטית מהחומרים שהעליתם. <a className="underline" href={href.course(courseId, "materials")}>העלו חומר</a>.
+      <Empty icon={<Network size={26} strokeWidth={1.6} />} title={t("עוד אין מושגים", "No concepts yet")}>
+        {t("המושגים מחולצים אוטומטית מהחומרים שהעליתם.", "Concepts are extracted automatically from the materials you upload.")}{" "}
+        <a className="underline" href={href.course(courseId, "materials")}>
+          {t("העלו חומר", "Upload material")}
+        </a>
+        .
       </Empty>
     );
 
@@ -44,17 +59,17 @@ export function Concepts({ courseId }: { courseId: number }) {
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {(Object.keys(COLORS) as MasteryLevel[]).map((l) => (
           <span key={l} className={`rounded-full px-2 py-0.5 ${COLORS[l].chip}`}>
-            {MASTERY_LABEL[l]}
+            {masteryLabel(l)}
           </span>
         ))}
         <Button size="sm" variant="ghost" className="ms-auto" onClick={() => setShowGraph(!showGraph)}>
-          {showGraph ? "הסתרת התרשים" : "הצגת התרשים"}
+          {showGraph ? t("הסתרת התרשים", "Hide diagram") : t("הצגת התרשים", "Show diagram")}
         </Button>
       </div>
       {showGraph && (
         <Card className="p-4">
           <MermaidView source={graph} />
-          <p className="mt-2 text-xs text-slate-500">חץ מ-א ל-ב = כדאי להבין את א לפני ב.</p>
+          <p className="mt-2 text-xs text-slate-500">{t("חץ מ-א ל-ב = כדאי להבין את א לפני ב.", "Arrow from A to B = understand A before B.")}</p>
         </Card>
       )}
       <div className="grid gap-3 md:grid-cols-2">
@@ -65,20 +80,20 @@ export function Concepts({ courseId }: { courseId: number }) {
                 <div className="font-semibold">{c.name}</div>
                 {c.name_en && <div className="text-xs text-slate-500" dir="ltr">{c.name_en}</div>}
               </div>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${COLORS[c.level].chip}`}>{MASTERY_LABEL[c.level]}</span>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${COLORS[c.level].chip}`}>{masteryLabel(c.level)}</span>
             </div>
             <p className="mt-2 text-sm text-slate-700">{c.definition}</p>
-            {c.prerequisites.length > 0 && <p className="mt-1 text-xs text-slate-500">דרישות קדם: {c.prerequisites.join(", ")}</p>}
+            {c.prerequisites.length > 0 && <p className="mt-1 text-xs text-slate-500">{t("דרישות קדם:", "Prerequisites:")} {c.prerequisites.join(", ")}</p>}
             <CitationChips ids={c.section_ids.slice(0, 4)} />
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" onClick={() => go(href.course(courseId, "studio", `quiz?concept=${encodeURIComponent(c.name)}`))}>
-                <ListChecks size={13} /> תרגול
+                <ListChecks size={13} /> {t("תרגול", "Practice")}
               </Button>
               <Button size="sm" variant="secondary" onClick={() => go(href.course(courseId, "studio", `explainer?concept=${encodeURIComponent(c.name)}`))}>
-                <Box size={13} /> הסבר אינטראקטיבי
+                <Box size={13} /> {t("הסבר אינטראקטיבי", "Interactive explainer")}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => go(href.course(courseId, "studio", `flashcards?concept=${encodeURIComponent(c.name)}`))}>
-                <Layers size={13} /> כרטיסיות
+                <Layers size={13} /> {t("כרטיסיות", "Flashcards")}
               </Button>
             </div>
           </Card>

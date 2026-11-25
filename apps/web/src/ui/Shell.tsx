@@ -17,6 +17,7 @@ import {
   MessageSquare,
   MessagesSquare,
   Network,
+  PanelLeft,
   PanelRight,
   Plus,
   Search,
@@ -25,17 +26,18 @@ import {
   X,
 } from "lucide-react";
 import { useEngine } from "../engine.ts";
+import { ChevronForward, isRTL, t, toolText } from "../i18n.tsx";
 import { href, useRoute } from "../router.ts";
 import { Alert } from "./components.tsx";
 
 export const COURSE_SECTIONS = [
-  { id: "materials", label: "חומרים", icon: FileText },
-  { id: "concepts", label: "מפת מושגים", icon: Network },
-  { id: "studio", label: "כלים", icon: Sparkles },
-  { id: "tutor", label: "טוטור", icon: MessagesSquare },
-  { id: "review", label: "חזרה", icon: Layers },
-  { id: "progress", label: "התקדמות", icon: ChartLine },
-  { id: "artifacts", label: "תוצרים", icon: FolderOpen },
+  { id: "materials", he: "חומרים", en: "Materials", icon: FileText, get label() { return t(this.he, this.en); } },
+  { id: "concepts", he: "מפת מושגים", en: "Concept map", icon: Network, get label() { return t(this.he, this.en); } },
+  { id: "studio", he: "כלים", en: "Tools", icon: Sparkles, get label() { return t(this.he, this.en); } },
+  { id: "tutor", he: "טוטור", en: "Tutor", icon: MessagesSquare, get label() { return t(this.he, this.en); } },
+  { id: "review", he: "חזרה", en: "Review", icon: Layers, get label() { return t(this.he, this.en); } },
+  { id: "progress", he: "התקדמות", en: "Progress", icon: ChartLine, get label() { return t(this.he, this.en); } },
+  { id: "artifacts", he: "תוצרים", en: "Outputs", icon: FolderOpen, get label() { return t(this.he, this.en); } },
 ] as const;
 
 export const sectionLabel = (id: string) => COURSE_SECTIONS.find((s) => s.id === id)?.label ?? "";
@@ -104,10 +106,10 @@ const kvSet = (k: string, v: string) => {
   }
 };
 
-const GROUPS: { label: string; ids: (typeof COURSE_SECTIONS)[number]["id"][] }[] = [
-  { label: "לימוד", ids: ["materials", "concepts", "tutor", "review"] },
-  { label: "יצירה", ids: ["studio", "artifacts"] },
-  { label: "מעקב", ids: ["progress"] },
+const GROUPS: { he: string; en: string; ids: (typeof COURSE_SECTIONS)[number]["id"][] }[] = [
+  { he: "לימוד", en: "Learn", ids: ["materials", "concepts", "tutor", "review"] },
+  { he: "יצירה", en: "Create", ids: ["studio", "artifacts"] },
+  { he: "מעקב", en: "Track", ids: ["progress"] },
 ];
 
 /** Course switcher at the top of the sidebar (like a workspace switcher). */
@@ -130,10 +132,10 @@ function CourseSwitcher({ currentId, onNavigate, onNewCourse }: { currentId: num
         className="flex h-10 w-full items-center gap-2.5 rounded-[10px] border border-black/10 bg-white px-2.5 text-start shadow-sm transition hover:border-black/20"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label="בחירת קורס"
+        aria-label={t("בחירת קורס", "Choose course")}
       >
         {current ? <CourseMark id={current.id} name={current.name} /> : <span className="grid h-5 w-5 place-items-center rounded-md bg-black/[0.06] text-muted"><BookOpen size={12} /></span>}
-        <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">{current?.name ?? "בחרו קורס"}</span>
+        <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">{current?.name ?? t("בחרו קורס", "Choose a course")}</span>
         <ChevronsUpDown size={14} className="text-muted" />
       </button>
       {open && (
@@ -154,7 +156,7 @@ function CourseSwitcher({ currentId, onNavigate, onNewCourse }: { currentId: num
           ))}
           {courses.length > 0 && <div className="my-1 h-px bg-black/[0.06]" />}
           <button type="button" onClick={() => (setOpen(false), onNewCourse())} className="flex h-9 w-full items-center gap-2.5 rounded-lg px-2 text-[13.5px] text-ink-2 hover:bg-black/[0.04]">
-            <Plus size={15} className="text-muted" /> קורס חדש
+            <Plus size={15} className="text-muted" /> {t("קורס חדש", "New course")}
           </button>
         </div>
       )}
@@ -185,21 +187,21 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
       </a>
       <CourseSwitcher currentId={courseId} onNavigate={onNavigate} onNewCourse={onNewCourse} />
 
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label="ניווט ראשי">
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4" aria-label={t("ניווט ראשי", "Main navigation")}>
         <div className="space-y-0.5">
           <NavItem href={href.home()} icon={<House size={16} />} active={route.name === "home"} onClick={onNavigate}>
-            בית
+            {t("בית", "Home")}
           </NavItem>
           <NavItem icon={<Plus size={16} />} onClick={onNewCourse}>
-            קורס חדש
+            {t("קורס חדש", "New course")}
           </NavItem>
         </div>
 
         {courseId ? (
-          <div className="space-y-5" role="navigation" aria-label="לשוניות הקורס">
+          <div className="space-y-5" role="navigation" aria-label={t("לשוניות הקורס", "Course sections")}>
             {GROUPS.map((g) => (
-              <div key={g.label}>
-                <div className="mb-1 px-2.5 text-[12px] font-medium text-muted">{g.label}</div>
+              <div key={g.en}>
+                <div className="mb-1 px-2.5 text-[12px] font-medium text-muted">{t(g.he, g.en)}</div>
                 <div className="space-y-0.5">
                   {g.ids.map((id) => {
                     const sec = COURSE_SECTIONS.find((x) => x.id === id)!;
@@ -227,7 +229,7 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
             ))}
           </div>
         ) : (
-          <div className="px-2.5 text-[13px] leading-relaxed text-muted">צרו קורס או פתחו קורס לדוגמה כדי לראות כאן את הכלים.</div>
+          <div className="px-2.5 text-[13px] leading-relaxed text-muted">{t("צרו קורס או פתחו קורס לדוגמה כדי לראות כאן את הכלים.", "Create a course or open a sample course to see its tools here.")}</div>
         )}
       </nav>
 
@@ -237,23 +239,23 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
             href={href.settings()}
             onClick={onNavigate}
             className="mb-2 flex items-center gap-3 rounded-xl border border-black/[0.08] bg-white p-2.5 shadow-sm transition hover:border-black/15"
-            title="התשובות מוקלטות מראש. הוסיפו מפתח API בהגדרות."
+            title={t("התשובות מוקלטות מראש. הוסיפו מפתח API בהגדרות.", "Answers are pre-recorded. Add an API key in Settings.")}
           >
             <span className="tile-grad-4 h-9 w-9 shrink-0 rounded-full" />
             <span className="min-w-0">
-              <span className="block text-[13px] font-semibold">מצב הדגמה</span>
-              <span className="block truncate text-[12px] text-muted">הוסיפו מפתח API ←</span>
+              <span className="block text-[13px] font-semibold">{t("מצב הדגמה", "Demo mode")}</span>
+              <span className="block truncate text-[12px] text-muted">{t("הוסיפו מפתח API", "Add an API key")}</span>
             </span>
           </a>
         )}
         <NavItem href={href.settings()} icon={<SettingsIcon size={16} />} active={route.name === "settings"} onClick={onNavigate}>
-          הגדרות
+          {t("הגדרות", "Settings")}
         </NavItem>
         <div className="flex items-center gap-2 px-2.5 pt-1 text-[12px] text-muted" title={engine.root.files.label}>
           {p.lastError ? <CloudAlert size={14} className="text-red-500" /> : <Cloud size={14} />}
           <span className="truncate">
-            {engine.root.mode === "folder" ? "תיקייה מקומית" : "בתוך הדפדפן"} ·{" "}
-            {p.lastError ? <span className="text-red-600">שמירה נכשלה</span> : p.lastSaved ? "נשמר" : "מוכן"}
+            {engine.root.mode === "folder" ? t("תיקייה מקומית", "Local folder") : t("בתוך הדפדפן", "In the browser")} ·{" "}
+            {p.lastError ? <span className="text-red-600">{t("שמירה נכשלה", "Save failed")}</span> : p.lastSaved ? t("נשמר", "Saved") : t("מוכן", "Ready")}
           </span>
         </div>
       </div>
@@ -280,12 +282,12 @@ function GlobalSearch() {
   }, []);
   const courseId = route.name === "course" ? route.id : Number(kvGet(LAST_COURSE)) || engine.store.courses()[0]?.id;
   const items: { label: string; hint: string; to: string }[] = [
-    ...engine.store.courses().map((c) => ({ label: c.name, hint: "קורס", to: href.course(c.id) })),
-    ...(courseId ? COURSE_SECTIONS.map((sec) => ({ label: sec.label, hint: "מדור", to: href.course(courseId, sec.id) })) : []),
+    ...engine.store.courses().map((c) => ({ label: c.name, hint: t("קורס", "Course"), to: href.course(c.id) })),
+    ...(courseId ? COURSE_SECTIONS.map((sec) => ({ label: sec.label, hint: t("מדור", "Section"), to: href.course(courseId, sec.id) })) : []),
     ...(courseId
-      ? engine.tools.filter((t) => t.manifest.output !== "chat").map((t) => ({ label: t.manifest.name, hint: "כלי", to: href.course(courseId, "studio", t.manifest.id) }))
+      ? engine.tools.filter((x) => x.manifest.output !== "chat").map((x) => ({ label: toolText(x.manifest).name, hint: t("כלי", "Tool"), to: href.course(courseId, "studio", x.manifest.id) }))
       : []),
-    { label: "הגדרות", hint: "עמוד", to: href.settings() },
+    { label: t("הגדרות", "Settings"), hint: t("עמוד", "Page"), to: href.settings() },
   ];
   const term = q.trim();
   const results = term ? items.filter((i) => i.label.includes(term)).slice(0, 8) : [];
@@ -306,11 +308,11 @@ function GlobalSearch() {
           }
           if (e.key === "Escape") ref.current?.blur();
         }}
-        placeholder="חיפוש…"
-        aria-label="חיפוש"
+        placeholder={t("חיפוש…", "Search…")}
+        aria-label={t("חיפוש", "Search")}
         className="h-8 w-full rounded-lg border border-black/10 bg-white ps-9 pe-14 text-[13px] outline-none placeholder:text-slate-400 focus:border-black/25"
       />
-      <span className="pointer-events-none absolute left-2 top-1/2 flex -translate-y-1/2 gap-0.5" dir="ltr">
+      <span className="pointer-events-none absolute end-2 top-1/2 flex -translate-y-1/2 gap-0.5">
         <kbd className="rounded border border-black/10 px-1 font-sans text-[10px] text-muted" style={{ fontFamily: "system-ui, -apple-system" }}>⌘</kbd>
         <kbd className="rounded border border-black/10 px-1 text-[10px] text-muted">K</kbd>
       </span>
@@ -353,7 +355,7 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
             <button
               className="absolute top-4 end-3 grid h-8 w-8 place-items-center rounded-full text-muted hover:bg-hover"
               onClick={() => setDrawer(false)}
-              aria-label="סגירת התפריט"
+              aria-label={t("סגירת התפריט", "Close menu")}
             >
               <X size={18} />
             </button>
@@ -366,33 +368,33 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
         {engine.root.mode === "browser" && !bannerClosed && (
           <div className="relative flex min-h-9 items-center justify-center bg-[linear-gradient(90deg,#3a2f2a,#24282f_45%,#2c3a35)] px-10 py-1.5 text-center text-[12.5px] text-white/90">
             <span>
-              הנתונים שמורים בתוך הדפדפן. מומלץ לגבות מדי פעם, או לעבור ל-Chrome/Edge כדי לשמור בתיקייה.{" "}
+              {t("הנתונים שמורים בתוך הדפדפן. מומלץ לגבות מדי פעם, או לעבור ל-Chrome/Edge כדי לשמור בתיקייה.", "Your data is stored in this browser. Back it up now and then, or switch to Chrome/Edge to save to a folder.")}{" "}
               <a href={href.settings()} className="font-medium text-white underline underline-offset-2">
-                לגיבוי
+                {t("לגיבוי", "Back up")}
               </a>
             </span>
             <button
               className="absolute end-3 grid h-6 w-6 place-items-center rounded text-white/70 hover:text-white"
               onClick={() => (kvSet("ruecai.banner", "closed"), setBannerClosed(true))}
-              aria-label="סגירת ההודעה"
+              aria-label={t("סגירת ההודעה", "Dismiss")}
             >
               <X size={15} />
             </button>
           </div>
         )}
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-black/[0.06] bg-white/85 px-4 backdrop-blur-md md:px-8">
-          <button className="grid h-9 w-9 place-items-center rounded-lg hover:bg-hover md:hidden" onClick={() => setDrawer(true)} aria-label="תפריט">
+          <button className="grid h-9 w-9 place-items-center rounded-lg hover:bg-hover md:hidden" onClick={() => setDrawer(true)} aria-label={t("תפריט", "Menu")}>
             <Menu size={18} />
           </button>
-          <button className="hidden h-8 w-8 place-items-center rounded-lg text-muted hover:bg-hover hover:text-ink md:grid" onClick={toggle} aria-label={collapsed ? "הצגת התפריט" : "הסתרת התפריט"} title={collapsed ? "הצגת התפריט" : "הסתרת התפריט"}>
-            <PanelRight size={17} />
+          <button className="hidden h-8 w-8 place-items-center rounded-lg text-muted hover:bg-hover hover:text-ink md:grid" onClick={toggle} aria-label={collapsed ? t("הצגת התפריט", "Show sidebar") : t("הסתרת התפריט", "Hide sidebar")} title={collapsed ? t("הצגת התפריט", "Show sidebar") : t("הסתרת התפריט", "Hide sidebar")}>
+            {isRTL() ? <PanelRight size={17} /> : <PanelLeft size={17} />}
           </button>
           <div className="flex min-w-0 items-center gap-1.5 text-[13px] text-muted">{crumbs}</div>
           <div className="flex-1" />
           <GlobalSearch />
           {engine.demo && (
             <a href={href.settings()} className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[12px] font-medium text-amber-800 md:hidden">
-              מצב הדגמה
+              {t("מצב הדגמה", "Demo mode")}
             </a>
           )}
           <a
@@ -401,10 +403,10 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
             rel="noreferrer"
             className={topBtn}
           >
-            <MessageSquare size={13} /> משוב
+            <MessageSquare size={13} /> {t("משוב", "Feedback")}
           </a>
           <a href="https://github.com/yairbarak22/RuecAI_Tutor/blob/main/docs/plugins.md" target="_blank" rel="noreferrer" className={topBtn}>
-            מדריך
+            {t("מדריך", "Guide")}
           </a>
           <a href="https://github.com/yairbarak22/RuecAI_Tutor" target="_blank" rel="noreferrer" className={topBtn}>
             <Code size={13} /> GitHub
@@ -413,7 +415,7 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
 
         {import.meta.env.VITE_PREVIEW && (
           <div className="bg-red-600 px-4 py-1.5 text-center text-sm text-white">
-            ⚠️ זו תצוגה מקדימה של שינוי שעוד לא אושר. השתמשו במצב הדגמה בלבד, ואל תזינו כאן מפתח API אמיתי.
+            {t("⚠️ זו תצוגה מקדימה של שינוי שעוד לא אושר. השתמשו במצב הדגמה בלבד, ואל תזינו כאן מפתח API אמיתי.", "⚠️ This is a preview of an unapproved change. Use demo mode only and do not enter a real API key here.")}
           </div>
         )}
         <main className="mx-auto max-w-[1120px] px-4 py-8 md:px-10">
@@ -435,7 +437,7 @@ export function Crumbs({ items }: { items: { label: string; href?: string }[] })
     <>
       {items.map((it, i) => (
         <span key={i} className="flex min-w-0 items-center gap-1.5">
-          {i > 0 && <ChevronLeft size={13} className="text-slate-400" />}
+          {i > 0 && <ChevronForward size={13} className="text-slate-400" />}
           {it.href && i < items.length - 1 ? (
             <a href={it.href} className="truncate hover:text-ink">
               {it.label}

@@ -1,19 +1,28 @@
 id: diagram
-name: תרשים
-description: תרשים Mermaid — מפת מושגים, תרשים זרימה להחלטה או ציר זמן.
+name: Diagram
+description: A Mermaid diagram of a topic, such as a concept map, a decision flowchart or a timeline.
 icon: "🗺️"
 pack: core
 kind: declarative
 output: diagram
 tier: smart
 inputs:
-  - { name: topic, label: "נושא", type: text, default: "", required: true }
+  - { name: topic, label: "Topic", type: text, default: "", required: true }
   - name: style
-    label: סוג תרשים
+    label: Diagram type
     type: select
-    options: [מפת מושגים, תרשים זרימה להחלטה, ציר זמן]
-    default: מפת מושגים
+    options: [concept-map, decision-flowchart, timeline]
+    default: concept-map
 retrieval:
   mode: search
   query: "{{params.topic}}"
 authors: [RuecAI core team]
+i18n:
+  he:
+    name: תרשים
+    description: תרשים Mermaid, כמו מפת מושגים, תרשים זרימה להחלטה או ציר זמן.
+    inputs:
+      topic: { label: נושא }
+      style:
+        label: סוג תרשים
+        options: { concept-map: מפת מושגים, decision-flowchart: תרשים זרימה להחלטה, timeline: ציר זמן }

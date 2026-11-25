@@ -1,3 +1,4 @@
+import { t } from "@ruecai/sdk";
 /**
  * Bayesian Knowledge Tracing — one probability per concept that the student "knows" it.
  * Same model OATutor (Berkeley) uses. Parameters are conservative defaults.
@@ -35,8 +36,16 @@ export function masteryLevel(p: number, attempts: number): MasteryLevel {
 }
 
 export const MASTERY_LABEL: Record<MasteryLevel, string> = {
-  new: "טרם תורגל",
-  weak: "דורש חיזוק",
-  progress: "בתהליך",
-  strong: "שולט",
+  get new() {
+    return t("טרם תורגל", "Not practiced");
+  },
+  get weak() {
+    return t("דורש חיזוק", "Needs work");
+  },
+  get progress() {
+    return t("בתהליך", "In progress");
+  },
+  get strong() {
+    return t("שולט", "Mastered");
+  },
 };

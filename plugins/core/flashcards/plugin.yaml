@@ -1,16 +1,24 @@
 id: flashcards
-name: כרטיסיות
-description: כרטיסיות לחזרה מרווחת (FSRS). נכנסות אוטומטית לחזרה היומית.
+name: Flashcards
+description: Spaced-repetition flashcards (FSRS). They go straight into your daily review.
 icon: "🃏"
 pack: core
 kind: declarative
 output: flashcards
 tier: fast
 inputs:
-  - { name: source, label: "מקור", type: source, default: all }
-  - { name: concept, label: "מושג (לא חובה)", type: concept, default: "" }
-  - { name: count, label: "מספר כרטיסיות", type: number, default: 15 }
+  - { name: source, label: "Source", type: source, default: all }
+  - { name: concept, label: "Concept (optional)", type: concept, default: "" }
+  - { name: count, label: "Number of cards", type: number, default: 15 }
 retrieval:
   mode: search
   query: "{{params.concept}}"
 authors: [RuecAI core team]
+i18n:
+  he:
+    name: כרטיסיות
+    description: כרטיסיות לחזרה מרווחת (FSRS). נכנסות אוטומטית לחזרה היומית.
+    inputs:
+      source: { label: מקור }
+      concept: { label: מושג (לא חובה) }
+      count: { label: מספר כרטיסיות }

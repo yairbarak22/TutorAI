@@ -1,3 +1,5 @@
+import { t } from "@ruecai/sdk";
+
 /**
  * Learns how long each kind of long task takes on this device / key / model, so waiting screens
  * can say "about 40 seconds left" instead of spinning forever. Stored per browser in localStorage
@@ -81,10 +83,13 @@ export function recordRun(key: string, seconds: number, chars?: number, demo = f
 /** "0:42" */
 export const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
 
-/** Friendly Hebrew remaining-time phrase. */
+/** Friendly remaining-time phrase in the UI language. */
 export function remainingText(sec: number): string {
-  if (sec <= 4) return "עוד רגע";
-  if (sec < 60) return `נשארו כ-${Math.max(5, Math.round(sec / 5) * 5)} שניות`;
+  if (sec <= 4) return t("עוד רגע", "Almost done");
+  if (sec < 60) {
+    const s = Math.max(5, Math.round(sec / 5) * 5);
+    return t(`נשארו כ-${s} שניות`, `About ${s} seconds left`);
+  }
   const m = Math.round(sec / 60);
-  return m === 1 ? "נשארה כדקה" : `נשארו כ-${m} דקות`;
+  return m === 1 ? t("נשארה כדקה", "About a minute left") : t(`נשארו כ-${m} דקות`, `About ${m} minutes left`);
 }

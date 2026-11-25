@@ -3,6 +3,7 @@ import { Paperclip } from "lucide-react";
 import { sectionIdFromKey } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { Button, Modal } from "./components.tsx";
+import { t } from "../i18n.tsx";
 
 const Ctx = createContext<{ open: (id: string) => void }>({ open: () => {} });
 export const useCitations = () => useContext(Ctx);
@@ -24,9 +25,9 @@ function SourceViewer({ sectionKey, onClose }: { sectionKey: string; onClose: ()
   const section = engine.store.section(sectionIdFromKey(sectionKey));
   const source = section ? engine.store.source(section.source_id) : undefined;
   return (
-    <Modal open onClose={onClose} title={source ? `${source.name} · ${section!.anchor}` : "מקור"} wide>
+    <Modal open onClose={onClose} title={source ? `${source.name} · ${section!.anchor}` : t("מקור", "Source")} wide>
       {!section || !source ? (
-        <p>המקור לא נמצא (ייתכן שהקובץ נמחק).</p>
+        <p>{t("המקור לא נמצא (ייתכן שהקובץ נמחק).", "Source not found (the file may have been deleted).")}</p>
       ) : (
         <div className="space-y-3">
           {section.title && <h3 className="text-lg font-semibold">{section.title}</h3>}
@@ -40,11 +41,12 @@ function SourceViewer({ sectionKey, onClose }: { sectionKey: string; onClose: ()
                 try {
                   window.open(await engine.sourceUrl(source.id, section.page), "_blank", "noopener");
                 } catch {
-                  alert("הקובץ המקורי לא נמצא בתיקייה.");
+                  alert(t("הקובץ המקורי לא נמצא בתיקייה.", "The original file was not found in the folder."));
                 }
               }}
             >
-              פתח את הקובץ המקורי {section.page && source.name.toLowerCase().endsWith(".pdf") ? `בעמוד ${section.page}` : ""}
+              {t("פתח את הקובץ המקורי", "Open the original file")}{" "}
+              {section.page && source.name.toLowerCase().endsWith(".pdf") ? t(`בעמוד ${section.page}`, `at page ${section.page}`) : ""}
             </Button>
           </div>
         </div>

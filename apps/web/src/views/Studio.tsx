@@ -1,15 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import type { InputSpec, LoadedTool } from "@ruecai/sdk";
+import type { InputSpec, LoadedTool, ToolManifest } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
-import { ArrowRight, ChevronLeft, Search, Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
+import { ArrowBack, ChevronForward, t, toolText } from "../i18n.tsx";
 import { Alert, Badge, Button, Card, Field, errorMessage, inputClass } from "../ui/components.tsx";
 import { ToolOrb, ToolTile } from "../ui/toolIcons.tsx";
 import { LongTask } from "../ui/LongTask.tsx";
 import { expectedChars, expectedSeconds, recordRun } from "../platform/timing.ts";
 
-const PACK_LABEL: Record<string, string> = { core: "כלי ליבה", law: "חבילת משפטים", math: "חבילת מתמטיקה וכמותי" };
-const PACK_CHIP: Record<string, string> = { core: "ליבה", law: "משפטים", math: "מתמטיקה" };
+const packLabel = (p: string): string =>
+  ({
+    core: t("כלי ליבה", "Core tools"),
+    law: t("חבילת משפטים", "Law pack"),
+    math: t("חבילת מתמטיקה וכמותי", "Math & quantitative pack"),
+  })[p] ?? t(`חבילת ${p}`, `${p} pack`);
+const packChip = (p: string): string => ({ core: t("ליבה", "Core"), law: t("משפטים", "Law"), math: t("מתמטיקה", "Math") })[p] ?? p;
 
 export function Studio({ courseId, preselect }: { courseId: number; preselect?: string }) {
   const engine = useEngine();
@@ -20,9 +26,9 @@ export function Studio({ courseId, preselect }: { courseId: number; preselect?: 
     setSelected(toolId || null);
   }, [toolId]);
 
-  const tools = engine.tools.filter((t) => t.manifest.output !== "chat");
-  const packs = [...new Set(tools.map((t) => t.manifest.pack))];
-  const tool = tools.find((t) => t.manifest.id === selected);
+  const tools = engine.tools.filter((x) => x.manifest.output !== "chat");
+  const packs = [...new Set(tools.map((x) => x.manifest.pack))];
+  const tool = tools.find((x) => x.manifest.id === selected);
   const [q, setQ] = useState("");
   const [pack, setPack] = useState("all");
   const hasMaterial = engine.store.sources(courseId).some((s) => s.status === "ready");
@@ -30,19 +36,23 @@ export function Studio({ courseId, preselect }: { courseId: number; preselect?: 
   if (tool) return <ToolRunner key={tool.manifest.id + JSON.stringify(preset)} courseId={courseId} tool={tool} preset={preset} onBack={() => go(href.course(courseId, "studio"))} />;
 
   const shown = tools.filter(
-    (t) => (pack === "all" || t.manifest.pack === pack) && (!q.trim() || `${t.manifest.name} ${t.manifest.description}`.includes(q.trim())),
+    (x) => (pack === "all" || x.manifest.pack === pack) && (!q.trim() || `${toolText(x.manifest).name} ${toolText(x.manifest).description}`.includes(q.trim())),
   );
   return (
     <div className="space-y-6">
       {!hasMaterial && (
         <Alert kind="info">
-          כדי שהכלים יעבדו על החומר שלכם, <a className="underline" href={href.course(courseId, "materials")}>העלו קבצים</a> קודם.
+          {t("כדי שהכלים יעבדו על החומר שלכם,", "For the tools to work on your material,")}{" "}
+          <a className="underline" href={href.course(courseId, "materials")}>
+            {t("העלו קבצים", "upload files")}
+          </a>{" "}
+          {t("קודם.", "first.")}
         </Alert>
       )}
       <div className="space-y-3">
         <div className="relative">
           <Search size={16} className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-muted" />
-          <input className={`${inputClass} h-10 ps-10`} placeholder="חיפוש כלים…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="חיפוש כלים" />
+          <input className={`${inputClass} h-10 ps-10`} placeholder={t("חיפוש כלים…", "Search tools…")} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t("חיפוש כלים", "Search tools")} />
         </div>
         <div className="flex flex-wrap gap-2">
           {["all", ...packs].map((p) => (
@@ -54,46 +64,46 @@ export function Studio({ courseId, preselect }: { courseId: number; preselect?: 
                 pack === p ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-ink-2 hover:bg-hover"
               }`}
             >
-              {p === "all" ? "כל הכלים" : (PACK_CHIP[p] ?? p)}
+              {p === "all" ? t("כל הכלים", "All tools") : packChip(p)}
             </button>
           ))}
         </div>
       </div>
       {packs
-        .filter((p) => shown.some((t) => t.manifest.pack === p))
+        .filter((p) => shown.some((x) => x.manifest.pack === p))
         .map((p) => (
           <section key={p}>
             <h2 className="mb-2 flex items-center gap-1 text-[16px] font-semibold tracking-tight">
-              {PACK_LABEL[p] ?? `חבילת ${p}`} <ChevronLeft size={16} className="text-muted" />
+              {packLabel(p)} <ChevronForward size={16} className="text-muted" />
             </h2>
             <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
               {shown
-                .filter((t) => t.manifest.pack === p)
-                .map((t) => (
+                .filter((x) => x.manifest.pack === p)
+                .map((x) => (
                   <a
-                    key={t.manifest.id}
-                    href={href.course(courseId, "studio", t.manifest.id)}
-                    data-testid={`tool-${t.manifest.id}`}
+                    key={x.manifest.id}
+                    href={href.course(courseId, "studio", x.manifest.id)}
+                    data-testid={`tool-${x.manifest.id}`}
                     className="-mx-2 flex items-start gap-3 rounded-xl p-2 transition hover:bg-black/[0.03]"
                   >
-                    <ToolOrb id={t.manifest.id} emoji={t.manifest.icon} />
+                    <ToolOrb id={x.manifest.id} emoji={x.manifest.icon} />
                     <span className="min-w-0 flex-1 pt-0.5">
                       <span className="flex items-center gap-2 text-[14px] font-medium text-ink">
-                        {t.manifest.name}
-                        {t.manifest.kind === "declarative" && <Badge>ללא קוד</Badge>}
+                        {toolText(x.manifest).name}
+                        {x.manifest.kind === "declarative" && <Badge>{t("ללא קוד", "No code")}</Badge>}
                       </span>
-                      <span className="mt-0.5 line-clamp-2 block text-[12.5px] leading-snug text-muted">{t.manifest.description}</span>
+                      <span className="mt-0.5 line-clamp-2 block text-[12.5px] leading-snug text-muted">{toolText(x.manifest).description}</span>
                     </span>
                   </a>
                 ))}
             </div>
           </section>
         ))}
-      {shown.length === 0 && <p className="py-8 text-center text-[13px] text-muted">לא נמצאו כלים.</p>}
+      {shown.length === 0 && <p className="py-8 text-center text-[13px] text-muted">{t("לא נמצאו כלים.", "No tools found.")}</p>}
       <p className="text-center text-[13px] text-muted">
-        רוצים להוסיף כלי? כל כלי הוא תיקייה עם קובץ הגדרות ופרומפט.{" "}
+        {t("רוצים להוסיף כלי? כל כלי הוא תיקייה עם קובץ הגדרות ופרומפט.", "Want to add a tool? Each tool is a folder with a settings file and a prompt.")}{" "}
         <a className="underline" href="https://github.com/yairbarak22/RuecAI_Tutor/blob/main/docs/plugins.md" target="_blank" rel="noreferrer">
-          המדריך לכתיבת כלי
+          {t("המדריך לכתיבת כלי", "Guide to writing a tool")}
         </a>
       </p>
     </div>
@@ -122,7 +132,7 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
     setError(null);
     const startedAt = Date.now();
     let chars = 0;
-    setRunning({ pct: 0.02, msg: "מתחיל…", chars: 0, startedAt });
+    setRunning({ pct: 0.02, msg: t("מתחיל…", "Starting…"), chars: 0, startedAt });
     try {
       const res = await engine.run(
         tool.manifest.id,
@@ -147,39 +157,43 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <button onClick={onBack} className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink">
-        <ArrowRight size={14} /> כל הכלים
+        <ArrowBack size={14} /> {t("כל הכלים", "All tools")}
       </button>
       <Card className="space-y-5 p-6">
         <div className="flex items-start gap-4">
           <ToolTile id={tool.manifest.id} emoji={tool.manifest.icon} size="lg" />
           <div>
-            <h2 className="text-[20px] font-semibold tracking-tight">{tool.manifest.name}</h2>
-            <p className="mt-1 text-[13.5px] text-muted">{tool.manifest.description}</p>
+            <h2 className="text-[20px] font-semibold tracking-tight">{toolText(tool.manifest).name}</h2>
+            <p className="mt-1 text-[13.5px] text-muted">{toolText(tool.manifest).description}</p>
           </div>
         </div>
         {tool.manifest.inputs.map((input) => (
-          <InputControl key={input.name} input={input} courseId={courseId} value={params[input.name] ?? ""} onChange={(v) => setParams({ ...params, [input.name]: v })} />
+          <InputControl key={input.name} input={input} manifest={tool.manifest} courseId={courseId} value={params[input.name] ?? ""} onChange={(v) => setParams({ ...params, [input.name]: v })} />
         ))}
         {error && <Alert kind="error">{error}</Alert>}
         {running ? (
           <LongTask
-            title={`יוצר ${tool.manifest.name}`}
-            stages={["אוסף חומר מהקורס", "Claude כותב", "בודק ציטוטים ושומר"]}
+            title={t(`יוצר ${toolText(tool.manifest).name}`, `Creating ${toolText(tool.manifest).name}`)}
+            stages={[t("אוסף חומר מהקורס", "Gathering course material"), t("Claude כותב", "Claude is writing"), t("בודק ציטוטים ושומר", "Checking citations and saving")]}
             stage={running.pct >= 1 ? 3 : running.chars > 0 || running.pct >= 0.2 ? 1 : 0}
-            detail={running.chars > 0 && running.msg === "יוצר…" ? "Claude כותב…" : running.msg}
+            detail={running.chars > 0 && ["יוצר…", "Generating…"].includes(running.msg) ? t("Claude כותב…", "Claude is writing…") : running.msg}
             startedAt={running.startedAt}
             expectedSec={expectedSeconds(key, engine.demo)}
             chars={running.chars}
             expectedChars={expectedChars(key)}
             hint={
               <>
-                אפשר להמשיך לעבוד בלשוניות אחרות בזמן הזה. כשזה יסתיים, התוצר יישמר בעמוד <a className="font-medium underline" href={href.course(courseId, "artifacts")}>תוצרים</a>.
+                {t("אפשר להמשיך לעבוד בלשוניות אחרות בזמן הזה. כשזה יסתיים, התוצר יישמר בעמוד", "You can keep working in other tabs meanwhile. When it's done, the result will be saved on the")}{" "}
+                <a className="font-medium underline" href={href.course(courseId, "artifacts")}>
+                  {t("תוצרים", "Outputs")}
+                </a>
+                {t(".", " page.")}
               </>
             }
           />
         ) : (
           <Button size="lg" className="w-full" onClick={run} disabled={missing.length > 0}>
-            <Sparkles size={16} /> יצירה
+            <Sparkles size={16} /> {t("יצירה", "Create")}
           </Button>
         )}
       </Card>
@@ -187,21 +201,36 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
   );
 }
 
-function InputControl({ input, value, onChange, courseId }: { input: InputSpec; value: string | number; onChange: (v: string | number) => void; courseId: number }) {
+function InputControl({
+  input,
+  manifest,
+  value,
+  onChange,
+  courseId,
+}: {
+  input: InputSpec;
+  manifest: ToolManifest;
+  value: string | number;
+  onChange: (v: string | number) => void;
+  courseId: number;
+}) {
   const engine = useEngine();
+  const tx = toolText(manifest);
   let control;
   if (input.type === "select")
     control = (
       <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
         {input.options?.map((o) => (
-          <option key={o}>{o}</option>
+          <option key={o} value={o}>
+            {tx.option(input.name, o)}
+          </option>
         ))}
       </select>
     );
   else if (input.type === "source")
     control = (
       <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="all">כל החומרים</option>
+        <option value="all">{t("כל החומרים", "All materials")}</option>
         {engine.store
           .sources(courseId)
           .filter((s) => s.status === "ready" && s.kind === "material")
@@ -215,7 +244,7 @@ function InputControl({ input, value, onChange, courseId }: { input: InputSpec; 
   else if (input.type === "concept")
     control = (
       <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">כל המושגים</option>
+        <option value="">{t("כל המושגים", "All concepts")}</option>
         {engine.store.concepts(courseId).map((c) => (
           <option key={c.id}>{c.name}</option>
         ))}
@@ -227,7 +256,7 @@ function InputControl({ input, value, onChange, courseId }: { input: InputSpec; 
     control = <textarea rows={6} className={inputClass} value={value} onChange={(e) => onChange(e.target.value)} />;
   else control = <input className={inputClass} value={value} onChange={(e) => onChange(e.target.value)} />;
   return (
-    <Field label={input.label + (input.required ? " *" : "")} help={input.help}>
+    <Field label={tx.label(input.name) + (input.required ? " *" : "")} help={tx.help(input.name)}>
       {control}
     </Field>
   );

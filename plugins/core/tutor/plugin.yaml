@@ -1,6 +1,6 @@
 id: tutor
-name: טוטור
-description: שיחה עם מורה פרטי שמכיר את חומר הקורס. מצב סוקרטי כברירת מחדל — שואל, מכוון ומצטט.
+name: Tutor
+description: "Chat with a private tutor who knows your course material. Socratic by default: it asks, guides and cites."
 icon: "🎓"
 pack: core
 kind: code
@@ -8,9 +8,17 @@ output: chat
 tier: smart
 inputs:
   - name: mode
-    label: מצב
+    label: Mode
     type: select
-    options: [סוקרטי, הסבר ישיר, בוחן אותי, פשוט כמו לילד בן 12]
-    default: סוקרטי
+    options: [socratic, direct, quiz-me, simple]
+    default: socratic
 retrieval: { mode: search }
 authors: [RuecAI core team]
+i18n:
+  he:
+    name: טוטור
+    description: שיחה עם מורה פרטי שמכיר את חומר הקורס. מצב סוקרטי כברירת מחדל — שואל, מכוון ומצטט.
+    inputs:
+      mode:
+        label: מצב
+        options: { socratic: סוקרטי, direct: הסבר ישיר, quiz-me: בוחן אותי, simple: פשוט כמו לילד בן 12 }

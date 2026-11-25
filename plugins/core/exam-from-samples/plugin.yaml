@@ -1,13 +1,20 @@
 id: exam-from-samples
-name: מבחן מתוך מבחנים לדוגמה
-description: לומד את המבנה והסגנון של המבחנים לדוגמה שהעליתם, ובונה מבחן חדש עם מחוון. אחרי הפתרון — בדיקה וציון לפי המחוון.
+name: Exam from sample exams
+description: Learns the structure and style of the sample exams you uploaded and builds a new exam with a rubric. After you answer, it grades you by the rubric.
 icon: "📝"
 pack: core
 kind: code
 output: exam_simulation
 tier: smart
 inputs:
-  - { name: count, label: "מספר שאלות", type: number, default: 0, help: "0 = כמו במבחנים לדוגמה" }
-  - { name: focus, label: "נושאים להדגשה (לא חובה)", type: text, default: "" }
+  - { name: count, label: "Number of questions", type: number, default: 0, help: "0 = same as the sample exams" }
+  - { name: focus, label: "Topics to emphasize (optional)", type: text, default: "" }
 retrieval: { mode: samples }
 authors: [RuecAI core team]
+i18n:
+  he:
+    name: מבחן מתוך מבחנים לדוגמה
+    description: לומד את המבנה והסגנון של המבחנים לדוגמה שהעליתם, ובונה מבחן חדש עם מחוון. אחרי הפתרון — בדיקה וציון לפי המחוון.
+    inputs:
+      count: { label: מספר שאלות, help: "0 = כמו במבחנים לדוגמה" }
+      focus: { label: נושאים להדגשה (לא חובה) }

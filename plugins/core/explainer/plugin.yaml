@@ -1,13 +1,20 @@
 id: explainer
-name: הסבר אינטראקטיבי
-description: סימולציה או ויזואליזציה אינטראקטיבית (סליידרים, אנימציה, דוגמאות) שרצה בסביבה מבודדת.
+name: Interactive explainer
+description: An interactive simulation or visualization (3D scenes, sliders, animation) that runs in an isolated sandbox.
 icon: "🧪"
 pack: core
 kind: code
 output: interactive_widget
 tier: smart
 inputs:
-  - { name: concept, label: "מושג", type: concept, default: "" }
-  - { name: idea, label: "מה להמחיש? (לא חובה)", type: text, default: "" }
+  - { name: concept, label: "Concept", type: concept, default: "" }
+  - { name: idea, label: "What to visualize? (optional)", type: text, default: "" }
 retrieval: { mode: search }
 authors: [RuecAI core team]
+i18n:
+  he:
+    name: הסבר אינטראקטיבי
+    description: סימולציה או ויזואליזציה אינטראקטיבית (תלת-ממד, סליידרים, אנימציה) שרצה בסביבה מבודדת.
+    inputs:
+      concept: { label: מושג }
+      idea: { label: מה להמחיש? (לא חובה) }

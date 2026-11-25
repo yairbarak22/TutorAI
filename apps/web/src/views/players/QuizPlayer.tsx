@@ -6,6 +6,7 @@ import { useEngine } from "../../engine.ts";
 import { Button, Card, Spinner, errorMessage, inputClass } from "../../ui/components.tsx";
 import { Markdown } from "../../ui/Markdown.tsx";
 import { CitationChips } from "../../ui/Citations.tsx";
+import { t } from "../../i18n.tsx";
 
 type Answer = { choice?: number; text?: string; checked?: boolean; correct?: boolean; grade?: GradeResult; grading?: boolean; error?: string };
 
@@ -64,20 +65,20 @@ export function QuizPlayer({ quiz, courseId, artifactId }: { quiz: Quiz; courseI
                 })}
               </div>
             ) : (
-              <textarea className={inputClass} rows={4} disabled={a.checked} placeholder="כתבו את תשובתכם…" value={a.text ?? ""} onChange={(e) => set(q.id, { text: e.target.value })} />
+              <textarea className={inputClass} rows={4} disabled={a.checked} placeholder={t("כתבו את תשובתכם…", "Write your answer…")} value={a.text ?? ""} onChange={(e) => set(q.id, { text: e.target.value })} />
             )}
             {!a.checked && (
               <Button size="sm" disabled={a.grading || (q.kind === "mcq" ? a.choice === undefined : !a.text?.trim())} onClick={() => check(q)}>
-                {a.grading ? <Thinking label={q.kind === "mcq" ? "בודק" : "בודק את התשובה מול התשובה לדוגמה"} /> : "בדיקה"}
+                {a.grading ? <Thinking label={q.kind === "mcq" ? t("בודק", "Checking") : t("בודק את התשובה מול התשובה לדוגמה", "Checking your answer against the model answer")} /> : t("בדיקה", "Check")}
               </Button>
             )}
             {a.error && <p className="text-sm text-red-700">{a.error}</p>}
             {a.checked && (
               <div className={`rounded-lg p-3 text-sm ${a.correct ? "bg-emerald-50" : "bg-amber-50"}`}>
-                <div className="mb-1 font-semibold">{a.correct ? "נכון!" : q.kind === "mcq" ? "לא מדויק" : "משוב"}</div>
-                {a.grade && <Markdown text={`**ציון: ${a.grade.score}/10** — ${a.grade.feedback}`} />}
+                <div className="mb-1 font-semibold">{a.correct ? t("נכון!", "Correct!") : q.kind === "mcq" ? t("לא מדויק", "Not quite") : t("משוב", "Feedback")}</div>
+                {a.grade && <Markdown text={t(`**ציון: ${a.grade.score}/10** — ${a.grade.feedback}`, `**Score: ${a.grade.score}/10** — ${a.grade.feedback}`)} />}
                 <Markdown text={q.explanation} />
-                {q.kind === "open" && <Markdown text={`**תשובה לדוגמה:** ${q.model_answer}`} />}
+                {q.kind === "open" && <Markdown text={t(`**תשובה לדוגמה:** ${q.model_answer}`, `**Model answer:** ${q.model_answer}`)} />}
                 <CitationChips ids={q.citations} />
               </div>
             )}
@@ -88,9 +89,9 @@ export function QuizPlayer({ quiz, courseId, artifactId }: { quiz: Quiz; courseI
         <Card className="p-5 text-center">
           <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl tile-grad-3 text-ink/80">{score / quiz.questions.length >= 0.7 ? <Trophy size={22} /> : <Dumbbell size={22} />}</div>
           <div className="text-xl font-semibold">
-            {score} מתוך {quiz.questions.length}
+            {t(`${score} מתוך ${quiz.questions.length}`, `${score} out of ${quiz.questions.length}`)}
           </div>
-          <p className="text-slate-600">התוצאות עודכנו במעקב השליטה שלכם.</p>
+          <p className="text-slate-600">{t("התוצאות עודכנו במעקב השליטה שלכם.", "Your results were added to your mastery tracking.")}</p>
         </Card>
       )}
     </div>

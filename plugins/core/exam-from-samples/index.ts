@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { defineTool, ExamSimulation } from "@ruecai/sdk";
+import { defineTool, ExamSimulation, t } from "@ruecai/sdk";
 
 const ExamStyle = z.object({
   question_count: z.number().int(),
   duration_minutes: z.number().int(),
-  question_types: z.array(z.string()).describe("e.g. שאלת אירוע, הוכחה, חישוב, אמריקאית"),
+  question_types: z.array(z.string()).describe("e.g. case question, proof, calculation, multiple choice"),
   points_pattern: z.string(),
   topics: z.array(z.string()),
   style_notes: z.string().describe("How questions are phrased, what graders look for, materials allowed"),
@@ -12,19 +12,19 @@ const ExamStyle = z.object({
 
 export default defineTool<"exam_simulation">({
   async run(ctx) {
-    ctx.progress(0.1, "קורא את המבחנים לדוגמה…");
+    ctx.progress(0.1, t("קורא את המבחנים לדוגמה…", "Reading the sample exams…"));
     const samples = await ctx.retrieve({ mode: "samples" });
-    if (samples.sections.length === 0) throw new Error("לא נמצאו מבחנים לדוגמה. העלו מבחן וסמנו אותו כ'מבחן לדוגמה'.");
+    if (samples.sections.length === 0) throw new Error(t("לא נמצאו מבחנים לדוגמה. העלו מבחן וסמנו אותו כ'מבחן לדוגמה'.", "No sample exams found. Upload an exam and mark it as a sample exam."));
     const style = await ctx.llm.object(ExamStyle, {
       system: ctx.baseSystemPrompt,
       context: samples.text,
       tier: "smart",
       tag: "exam-from-samples:analyze",
       maxTokens: 4000,
-      prompt: "נתח את המבחנים לדוגמה: מספר שאלות, משך, סוגי שאלות, חלוקת נקודות, נושאים, וסגנון הניסוח והבדיקה.",
+      prompt: "Analyze the sample exams: number of questions, duration, question types, how points are split, topics, and the style of phrasing and grading.",
     });
 
-    ctx.progress(0.4, "כותב מבחן חדש…");
+    ctx.progress(0.4, t("כותב מבחן חדש…", "Writing a new exam…"));
     const material = await ctx.retrieve({ mode: "scope", query: [String(ctx.params.focus || ""), ...style.topics].join(" ") });
     const count = Number(ctx.params.count) > 0 ? Number(ctx.params.count) : style.question_count;
     const concepts = (await ctx.concepts()).map((c) => c.name);
@@ -35,14 +35,14 @@ export default defineTool<"exam_simulation">({
       tag: "exam-from-samples",
       maxTokens: 24000,
       prompt: [
-        `כתוב מבחן חדש לקורס "${ctx.course.name}" בדיוק בסגנון המבחנים לדוגמה:`,
+        `Write a new exam for the course "${ctx.course.name}", exactly in the style of the sample exams:`,
         JSON.stringify(style, null, 2),
-        `מספר שאלות: ${count}. משך: ${style.duration_minutes} דקות.`,
-        ctx.params.focus ? `הדגש נושאים: ${ctx.params.focus}.` : "",
-        "השאלות חייבות להיות חדשות (עובדות/מספרים/תרחישים חדשים) — לא העתקה של המבחנים לדוגמה.",
-        "לכל שאלה: rubric מפורט שסכום הנקודות בו שווה ל-points, ו-model_answer מלא כפי שבודק היה מצפה.",
-        `concepts: מתוך הרשימה: ${concepts.join(" · ")}. citations: מזהי קטעים מחומר הקורס שמכסים את התשובה.`,
-        "style_notes: מה למדת מהמבחנים לדוגמה, במשפט-שניים לסטודנט.",
+        `Number of questions: ${count}. Duration: ${style.duration_minutes} minutes.`,
+        ctx.params.focus ? `Emphasize these topics: ${ctx.params.focus}.` : "",
+        "The questions must be new (new facts, numbers and scenarios), not copies of the sample exams.",
+        "For each question: a detailed rubric whose points add up to `points`, and a complete model_answer as a grader would expect.",
+        `concepts: from this list: ${concepts.join(" · ")}. citations: IDs of course-material sections that cover the answer.`,
+        "style_notes: what you learned from the sample exams, in one or two sentences for the student.",
       ]
         .filter(Boolean)
         .join("\n\n"),

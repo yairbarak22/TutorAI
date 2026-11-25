@@ -40,12 +40,31 @@ export const ToolManifest = z.object({
   output: z.enum([...ARTIFACT_TYPES, "chat"] as unknown as [ArtifactType | "chat", ...(ArtifactType | "chat")[]]),
   tier: z.enum(["fast", "smart"]).default("smart"),
   inputs: z.array(InputSpec).default([]),
+  /** Optional translations, e.g. `i18n: { he: { name, description, inputs: { topic: { label } } } }`. */
+  i18n: z.lazy(() => z.object({ he: ManifestI18n.optional(), en: ManifestI18n.optional() })).optional(),
   retrieval: RetrievalSpec.default({ mode: "scope" }),
   disciplines: z.array(z.string()).default(["all"]),
   sdk: z.string().default("^0.1"),
   authors: z.array(z.string()).default([]),
 });
 export type ToolManifest = z.infer<typeof ToolManifest>;
+
+/** Translations of a manifest's user-facing texts. English (the base fields) is the default. */
+export const ManifestI18n = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  inputs: z
+    .record(
+      z.string(),
+      z.object({
+        label: z.string().optional(),
+        help: z.string().optional(),
+        /** value → display label, for select inputs */
+        options: z.record(z.string(), z.string()).optional(),
+      }),
+    )
+    .optional(),
+});
 
 /* ------------------------------------------------------------------ */
 /* Runtime contract                                                    */
@@ -57,7 +76,7 @@ export interface SectionRef {
   id: string; // "S12"
   sourceId: number;
   sourceName: string;
-  anchor: string; // "עמ' 4" / "שקף 7"
+  anchor: string; // "p. 4" / "Slide 7" (in the UI language at ingestion time)
   title: string;
 }
 

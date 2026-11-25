@@ -4,6 +4,7 @@
  * include this text in their prompt so the model writes short code against a stable API.
  */
 export const WIDGET_KIT_API = `## Viz Kit — available as globals inside the widget (no imports, no network)
+All visible text (titles, labels, notes) must be in the output language given in the instructions.
 
 \`Viz\` (helpers) and \`THREE\` (three.js r187) are already loaded. Coordinates in 3D: z is UP.
 
@@ -14,9 +15,9 @@ const ui = Viz.app({ title, subtitle?, panel?: "side"|"below", columns?: 1|2 })
   ui.select({ label, options: ["a","b"] | [{value,label}], value? }, v => {...})
   ui.toggle({ label, value? }, checked => {...})
   ui.buttons([{ label, onClick, primary? }])
-  ui.readouts({ "שם": 0.12, "$P(A\\\\mid B)$": 0.5 }) → { set({...}) }   // live numbers; keys in $...$ render as LaTeX
+  ui.readouts({ "Name": 0.12, "$P(A\\\\mid B)$": 0.5 }) → { set({...}) }   // live numbers; keys in $...$ render as LaTeX
   ui.formula("P(A\\\\mid B)=\\\\frac{P(B\\\\mid A)P(A)}{P(B)}") → { set(tex) }   // LTR formula box (KaTeX)
-  ui.note("<b>מה לשים לב:</b> ... $x^2$ ...")   // amber callout under the stage; $...$ becomes math
+  ui.note("<b>What to notice:</b> ... $x^2$ ...")   // amber callout under the stage; $...$ becomes math
 
 ### 2D plot (crisp, responsive, axes + grid + hover coordinates + legend)
 const p = Viz.plot2d(card, { x: [a, b], y?: [c, d] /* auto if omitted */, height?: 300, xLabel?, yLabel?, equal? })
@@ -26,7 +27,7 @@ p.draw(g => {            // re-run on every p.redraw() and on resize
   g.bars([{ x, y, color? }], { w?, label? })
   g.points([[x, y], ...], { r?, color?, label? })
   g.line([[x, y], ...], { ... })   g.vline(x, {...})   g.hline(y, {...})
-  g.arrow([x0, y0], [x1, y1], { color? })   g.text(x, y, "טקסט", { color?, size?, bold? })
+  g.arrow([x0, y0], [x1, y1], { color? })   g.text(x, y, "Text", { color?, size?, bold? })
   // custom drawing: g.ctx (CanvasRenderingContext2D) with g.sx(x), g.sy(y) for pixel coords
 })
 p.redraw()   p.setRange(x?, y?)   p.toData(mouseEvent) → [x, y]   p.canvas
@@ -41,7 +42,7 @@ const s = Viz.scene3d(card, { height?: 380, camera?: [6,-7,5], target?: [0,0,0],
   s.points([[x,y,z], ...], { color?: "#hex" | (p,i)=>"#hex", size? })   // fast clouds (thousands)
   s.bar(x, y, height, { w?, color?, opacity? })                        // 3D histograms / joint PMFs
   s.plane([x,y,z], normal, { size?, color?, opacity? })
-  s.label("טקסט", [x,y,z], { color?, size? })
+  s.label("Text", [x,y,z], { color?, size? })
   s.clear()               // remove everything added (call before rebuilding on slider change)
   s.onFrame((t, dt) => {...})   s.setCamera(pos, target?)   s.add(anyThreeObject)   s.THREE, s.scene, s.camera
   Every method returns the three.js object, so you can update it (e.g. mesh.position.set(...), mesh.visible = false).
@@ -55,18 +56,18 @@ Viz.colormap(t∈[0,1]) → "#hex"   Viz.palette (8 colours)   Viz.fmt(number, d
 ### Skeleton
 <script>
 const ui = Viz.app({ title: "…", subtitle: "…" });
-const plot3 = Viz.scene3d(ui.card("משטח"), { axisLabels: ["x", "y", "f"] });
-const plot = Viz.plot2d(ui.card("חתך"), { x: [-3, 3], xLabel: "x" });
-const out = ui.readouts({ "ערך": 0 });
+const plot3 = Viz.scene3d(ui.card("Surface"), { axisLabels: ["x", "y", "f"] });
+const plot = Viz.plot2d(ui.card("Cross-section"), { x: [-3, 3], xLabel: "x" });
+const out = ui.readouts({ "Value": 0 });
 const eq = ui.formula("f(x,y)=…");
 let a = 1;
 function update() {
   plot3.clear();
   plot3.surface((x, y) => …);
   plot.draw(g => { g.fn(x => …, { label: "…" }); });
-  out.set({ "ערך": … });
+  out.set({ "Value": … });
 }
 ui.slider({ label: "a", min: 0, max: 3, step: 0.1, value: a }, v => { a = v; update(); });
-ui.note("<b>מה לשים לב:</b> …");
+ui.note("<b>What to notice:</b> …");
 update();
 </script>`;

@@ -5,6 +5,7 @@ import { CalendarDays, Pencil } from "lucide-react";
 import { Badge, Button, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
 import { COURSE_SECTIONS, CourseMark, sectionLabel } from "../ui/Shell.tsx";
 import { daysUntil } from "./Home.tsx";
+import { t } from "../i18n.tsx";
 import { Materials } from "./Materials.tsx";
 import { Concepts } from "./Concepts.tsx";
 import { Studio } from "./Studio.tsx";
@@ -19,9 +20,9 @@ export function CourseView({ id, tab, sub }: { id: number; tab: string; sub?: st
   const [edit, setEdit] = useState(false);
   if (!course)
     return (
-      <Empty icon="?" title="הקורס לא נמצא">
+      <Empty icon="?" title={t("הקורס לא נמצא", "Course not found")}>
         <a className="underline" href={href.home()}>
-          חזרה לרשימת הקורסים
+          {t("חזרה לרשימת הקורסים", "Back to the course list")}
         </a>
       </Empty>
     );
@@ -38,29 +39,29 @@ export function CourseView({ id, tab, sub }: { id: number; tab: string; sub?: st
             {d !== null && d >= 0 && (
               <Badge color={d <= 7 ? "amber" : "slate"}>
                 <CalendarDays size={12} />
-                {d === 0 ? "המבחן היום" : `${d} ימים למבחן`}
+                {d === 0 ? t("המבחן היום", "Exam today") : t(`${d} ימים למבחן`, `${d} ${d === 1 ? "day" : "days"} to exam`)}
               </Badge>
             )}
           </div>
         </div>
         <Button variant="secondary" size="sm" onClick={() => setEdit(true)}>
-          <Pencil size={13} /> עריכת קורס
+          <Pencil size={13} /> {t("עריכת קורס", "Edit course")}
         </Button>
       </div>
       {/* On small screens the course sections live here instead of the sidebar. */}
-      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 md:hidden" aria-label="לשוניות הקורס">
-        {COURSE_SECTIONS.map((t) => (
+      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 md:hidden" aria-label={t("לשוניות הקורס", "Course tabs")}>
+        {COURSE_SECTIONS.map((s) => (
           <a
-            key={t.id}
-            href={href.course(id, t.id)}
+            key={s.id}
+            href={href.course(id, s.id)}
             className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium ${
-              tab === t.id ? "bg-ink text-white" : "bg-black/[0.04] text-ink-2"
+              tab === s.id ? "bg-ink text-white" : "bg-black/[0.04] text-ink-2"
             }`}
-            aria-current={tab === t.id ? "page" : undefined}
+            aria-current={tab === s.id ? "page" : undefined}
           >
-            <t.icon size={14} />
-            {t.label}
-            {t.id === "review" && due > 0 && <span className="rounded-full bg-white/20 px-1.5 text-[11px]">{due}</span>}
+            <s.icon size={14} />
+            {s.label}
+            {s.id === "review" && due > 0 && <span className="rounded-full bg-white/20 px-1.5 text-[11px]">{due}</span>}
           </a>
         ))}
       </nav>
@@ -83,15 +84,15 @@ function EditCourse({ open, onClose, id }: { open: boolean; onClose: () => void;
   const [date, setDate] = useState(c.exam_date ?? "");
   const [minutes, setMinutes] = useState(c.minutes_per_day);
   return (
-    <Modal open={open} onClose={onClose} title="הגדרות הקורס">
+    <Modal open={open} onClose={onClose} title={t("הגדרות הקורס", "Course settings")}>
       <div className="space-y-4">
-        <Field label="שם">
+        <Field label={t("שם", "Name")}>
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
-        <Field label="תאריך המבחן">
+        <Field label={t("תאריך המבחן", "Exam date")}>
           <input type="date" className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
-        <Field label="זמן לימוד ביום (דקות)">
+        <Field label={t("זמן לימוד ביום (דקות)", "Study time per day (minutes)")}>
           <input type="number" min={15} max={600} className={inputClass} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} />
         </Field>
         <div className="flex justify-between gap-2">
@@ -101,18 +102,26 @@ function EditCourse({ open, onClose, id }: { open: boolean; onClose: () => void;
               onClose();
             }}
           >
-            שמירה
+            {t("שמירה", "Save")}
           </Button>
           <Button
             variant="danger"
             onClick={async () => {
-              if (!confirm(`למחוק את הקורס "${c.name}" וכל מה שבו? הקבצים יימחקו גם מהתיקייה. אי אפשר לבטל.`)) return;
+              if (
+                !confirm(
+                  t(
+                    `למחוק את הקורס "${c.name}" וכל מה שבו? הקבצים יימחקו גם מהתיקייה. אי אפשר לבטל.`,
+                    `Delete the course "${c.name}" and everything in it? The files will also be deleted from the folder. This cannot be undone.`,
+                  ),
+                )
+              )
+                return;
               for (const s of engine.store.sources(id)) await engine.deleteSource(s.id);
               engine.store.deleteCourse(id);
               go(href.home());
             }}
           >
-            מחיקת הקורס
+            {t("מחיקת הקורס", "Delete course")}
           </Button>
         </div>
       </div>

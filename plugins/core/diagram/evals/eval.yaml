@@ -1,3 +1,3 @@
 fixture: probability
-params: { topic: "הסתברות מותנית ובייס", style: מפת מושגים }
+params: { topic: "הסתברות מותנית ובייס", style: concept-map }
 checks: { min_items: 1, min_citation_coverage: 1, min_hebrew_ratio: 0.5 }

@@ -1,19 +1,22 @@
 import { defineTool, extractInlineCitations } from "@ruecai/sdk";
 
 const MODES: Record<string, string> = {
-  "סוקרטי":
-    "מצב סוקרטי: אל תיתן את התשובה מיד. שאל שאלה מנחה אחת בכל פעם, בנה על מה שהסטודנט כבר יודע, ותן רמז קטן כשהוא נתקע. אם הוא מבקש במפורש הסבר מלא — תן אותו.",
-  "הסבר ישיר": "מצב הסבר: הסבר בבהירות ובקצרה — אינטואיציה, הגדרה, דוגמה. סיים בשאלה קצרה שבודקת הבנה.",
-  "בוחן אותי":
-    "מצב בוחן: שאל שאלה אחת בכל פעם על החומר, חכה לתשובה, תן משוב קצר (נכון/חלקי/שגוי ולמה) ואז שאלה הבאה. התחל מהמושגים החלשים.",
-  "פשוט כמו לילד בן 12": "הסבר בשפה פשוטה מאוד, עם אנלוגיה מחיי היומיום, בלי ז'רגון — ואז הצג את המונח הרשמי.",
+  socratic:
+    "Socratic mode: don't give the answer right away. Ask one leading question at a time, build on what the student already knows, and give a small hint when they get stuck. If they explicitly ask for a full explanation, give it.",
+  direct: "Explanation mode: explain clearly and briefly (intuition, definition, example). End with a short question that checks understanding.",
+  "quiz-me":
+    "Quiz mode: ask one question at a time about the material, wait for the answer, give short feedback (correct / partly / wrong, and why), then the next question. Start with the weak concepts.",
+  simple: "Explain in very simple language, with an everyday analogy and no jargon, then introduce the official term.",
 };
+/** Mode names used before the options became English slugs. */
+const LEGACY: Record<string, string> = { "סוקרטי": "socratic", "הסבר ישיר": "direct", "בוחן אותי": "quiz-me", "פשוט כמו לילד בן 12": "simple" };
 
 export default defineTool<"chat">({
   async run(ctx) {
     const chat = ctx.chat;
     if (!chat) throw new Error("tutor requires a chat context");
-    const mode = String(ctx.params.mode || "סוקרטי");
+    const raw = String(ctx.params.mode || "socratic");
+    const mode = LEGACY[raw] ?? raw;
     const recent = chat.history.slice(-4).map((t) => t.content).join(" ");
     const material = await ctx.retrieve({ query: `${chat.message} ${recent}`.slice(0, 500) });
     const concepts = await ctx.concepts();
@@ -21,10 +24,10 @@ export default defineTool<"chat">({
 
     const system = [
       ctx.baseSystemPrompt,
-      MODES[mode] ?? MODES["סוקרטי"],
-      "ציטוטים: כשאתה מסתמך על החומר, הוסף בסוף המשפט את מזהה הקטע בסוגריים מרובעים, למשל [S12]. רק מזהים שמופיעים בהקשר.",
-      "תשובות קצרות (עד ~200 מילים) אלא אם התבקש אחרת. Markdown ו-LaTeX מותרים.",
-      weak.length ? `מושגים שהסטודנט חלש בהם (לפי התרגול): ${weak.join(", ")}.` : "",
+      MODES[mode] ?? MODES.socratic,
+      "Citations: when you rely on the material, add the section ID in square brackets at the end of the sentence, for example [S12]. Only IDs that appear in the context.",
+      "Keep answers short (up to ~200 words) unless asked otherwise. Markdown and LaTeX are allowed.",
+      weak.length ? `Concepts the student is weak in (from their practice): ${weak.join(", ")}.` : "",
     ]
       .filter(Boolean)
       .join("\n\n");

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Lock, Wrench } from "lucide-react";
 import DOMPurify from "dompurify";
+import { getLanguage, isRTL } from "@ruecai/sdk";
+import { t } from "../i18n.tsx";
 import { Alert, Button, Spinner } from "./components.tsx";
 
 let mermaidReady: Promise<typeof import("mermaid").default> | null = null;
@@ -42,10 +44,10 @@ export function MermaidView({ source }: { source: string }) {
   if (error)
     return (
       <Alert kind="warn">
-        לא הצלחתי לצייר את התרשים. <details><summary>פרטים</summary><pre dir="ltr" className="whitespace-pre-wrap text-xs">{source}</pre></details>
+        {t("לא הצלחתי לצייר את התרשים.", "Couldn't draw the diagram.")} <details><summary>{t("פרטים", "Details")}</summary><pre dir="ltr" className="whitespace-pre-wrap text-xs">{source}</pre></details>
       </Alert>
     );
-  if (!svg) return <Spinner label="מצייר…" />;
+  if (!svg) return <Spinner label={t("מצייר…", "Drawing…")} />;
   return <div className="mermaid-host overflow-x-auto" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
@@ -70,7 +72,9 @@ window.addEventListener('load',function(){setTimeout(hgt,50);if(window.ResizeObs
 export function buildWidgetDoc(html: string, kit = "") {
   const meta = `<meta http-equiv="Content-Security-Policy" content="${CSP}">`;
   const kitTag = kit ? `<script>${kit}</script>` : "";
-  return `<!doctype html><html dir="rtl" lang="he"><head>${meta}<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${REPORTER}${kitTag}</head><body>\n${html}`;
+  const lang = getLanguage();
+  const dir = isRTL(lang) ? "rtl" : "ltr";
+  return `<!doctype html><html dir="${dir}" lang="${lang}"><head>${meta}<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${REPORTER}${kitTag}</head><body>\n${html}`;
 }
 
 /** The Viz Kit (three.js + helpers) is ~700KB, so it is loaded only when a widget is shown. */
@@ -107,12 +111,12 @@ export function WidgetFrame({ html, onError, onRepair, repairing }: { html: stri
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [doc, onError]);
-  if (doc == null) return <Spinner label="טוען את מנוע ההמחשות…" />;
+  if (doc == null) return <Spinner label={t("טוען את מנוע ההמחשות…", "Loading the visualization engine…")} />;
   return (
     <div className="space-y-2">
       <iframe
         ref={ref}
-        title="הסבר אינטראקטיבי"
+        title={t("הסבר אינטראקטיבי", "Interactive explainer")}
         sandbox="allow-scripts"
         srcDoc={doc}
         className="w-full rounded-lg border border-slate-200 bg-white"
@@ -121,16 +125,20 @@ export function WidgetFrame({ html, onError, onRepair, repairing }: { html: stri
       {error && (
         <Alert kind="warn">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span>בווידג'ט יש שגיאה: {error}</span>
+            <span>
+              {t("בווידג'ט יש שגיאה:", "The widget has an error:")} {error}
+            </span>
             {onRepair && (
               <Button size="sm" variant="secondary" disabled={repairing} onClick={() => onRepair(error)}>
-                {repairing ? <Spinner label="מתקן…" /> : <><Wrench size={14} /> תקן אוטומטית</>}
+                {repairing ? <Spinner label={t("מתקן…", "Fixing…")} /> : <><Wrench size={14} /> {t("תקן אוטומטית", "Fix automatically")}</>}
               </Button>
             )}
           </div>
         </Alert>
       )}
-      <p className="flex items-center gap-1.5 text-xs text-slate-500"><Lock size={12} /> רץ בסביבה מבודדת: אין לו גישה לאינטרנט, לקבצים שלכם או למפתח ה-API.</p>
+      <p className="flex items-center gap-1.5 text-xs text-slate-500"><Lock size={12} />{" "}
+        {t("רץ בסביבה מבודדת: אין לו גישה לאינטרנט, לקבצים שלכם או למפתח ה-API.", "Runs in an isolated sandbox: no access to the internet, your files or your API key.")}
+      </p>
     </div>
   );
 }

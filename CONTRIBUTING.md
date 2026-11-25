@@ -1,70 +1,71 @@
-# מדריך תרומה ל-RuecAI Teacher
+# Contributing to RuecAI Teacher
 
-תודה שבאתם! 🙏 הפרויקט נבנה על ידי סטודנטים מכל הפקולטות. אין צורך להיות מתכנתים כדי לתרום.
+Thanks for being here! 🙏 The project is built by students from every faculty. You don't need to be a programmer to contribute.
 
-## דרכים לתרום
+## Ways to contribute
 
-| מי | מה אפשר לעשות |
+| Who | What you can do |
 |---|---|
-| **כל סטודנט/ית** | לפתוח [רעיון לכלי](https://github.com/yairbarak22/RuecAI_Tutor/issues/new?template=tool-idea.yml), לדווח על באג, לשפר ניסוח בממשק |
-| **סטודנטים ממשפטים, כלכלה, פסיכולוגיה…** | לכתוב **כלי הצהרתי** (YAML + פרומפט בעברית, בלי קוד), ולהוסיף דוגמאות ובדיקות איכות לתחום שלכם |
-| **סטודנטים למדמ"ח** | כלי קוד ב-TypeScript, רנדררים חדשים, שיפורים במנוע, בדיקות |
+| **Any student** | Open a [tool idea](https://github.com/yairbarak22/RuecAI_Tutor/issues/new?template=tool-idea.yml), report a bug, improve UI wording or translations (Hebrew and English) |
+| **Law, economics, psychology… students** | Write a **declarative tool** (YAML + an English prompt, no code), and add examples and quality checks (evals) for your field |
+| **CS students** | TypeScript code tools, new renderers, engine improvements, tests |
 
-## התקנה (5 דקות)
+## Setup (5 minutes)
 
-צריך [Node.js 22](https://nodejs.org) ו-git.
+You need [Node.js 22](https://nodejs.org) and git.
 
 ```bash
-git clone https://github.com/<your-user>/RuecAI_Tutor.git   # אחרי Fork
+git clone https://github.com/<your-user>/RuecAI_Tutor.git   # after forking
 cd RuecAI_Tutor
 npm install
 npm run dev
 ```
 
-פותחים את http://localhost:5173 ← "בתוך הדפדפן" ← "נסו במצב הדגמה" ← "קורס לדוגמה". אפשר לעבוד גם בלי מפתח API.
+Open http://localhost:5173, choose in-browser storage, then try demo mode with the sample course. You can work without an API key.
 
-## מבנה הריפו
+## Repo layout
 
-```
-apps/web/          האתר (React + Vite + Tailwind, RTL)
-packages/sdk/      @ruecai/sdk: סכמות התוצרים, החוזה של כלי, בדיקות איכות
-packages/core/     המנוע: DB (SQLite), קריאת קבצים, חיפוש, LLM, מודל הלומד, הרצת כלים
-plugins/<pack>/<tool>/   הכלים, כל כלי בתיקייה משלו
-e2e/               בדיקות בדפדפן אמיתי (Playwright)
-docs/              ארכיטקטורה, Roadmap, מדריכים
-```
+| Path | What |
+|---|---|
+| `apps/web/` | The static web app (React, Vite, Tailwind; Hebrew RTL and English LTR UI) |
+| `packages/sdk/` | `@ruecai/sdk`: artifact schemas, the tool contract, quality checks |
+| `packages/core/` | The engine: SQLite store (sql.js), parsers (PDF/PPTX/DOCX), retrieval, Claude client, learner model (BKT + FSRS), tool runtime |
+| `plugins/<pack>/<tool>/` | The tools, one folder per tool, auto-discovered |
+| `e2e/` | Real-browser tests (Playwright) |
+| `docs/` | Architecture, roadmap, guides |
 
-## כתיבת כלי חדש
+## Writing a new tool
 
-ראו **[docs/plugins.md](docs/plugins.md)**. בקצרה:
+See **[docs/plugins.md](docs/plugins.md)**. In short:
 
-1. יוצרים תיקייה `plugins/<pack>/<tool-id>/`.
-2. `plugin.yaml` (מה הכלי, אילו שדות, מה הוא מחזיר) ו-`prompt.he.md` (ההוראות למודל).
-3. `evals/eval.yaml` (קריטריוני איכות) ו-`evals/golden.json` (דוגמת פלט טובה).
-4. `npm test` ואז PR.
+1. Create a folder `plugins/<pack>/<tool-id>/`.
+2. Add `plugin.yaml` (what the tool is, its input fields, what it returns, with Hebrew translations under `i18n.he`), then either `prompt.md` (an English prompt for a declarative tool) or `index.ts` (a code tool).
+3. Add `evals/eval.yaml` (quality criteria) and `evals/golden.json` (an example of good output).
+4. Run `npm test`, then open a PR.
 
-הכלי מופיע אוטומטית בממשק. לא צריך לרשום אותו בשום מקום.
+The tool shows up in the UI automatically. You don't need to register it anywhere.
 
-## לפני PR
+## Before opening a PR
 
 ```bash
-npm run check   # typecheck + בדיקות יחידה + evals לכל הכלים + בדיקות דפדפן
+npm run check   # typecheck + unit tests + evals for every tool + browser E2E
 ```
 
-- **כלל ברזל:** אין merge לכלי בלי evals שעוברים.
-- שינויים ב-`packages/` (ליבה/SDK) מתחילים ב-issue עם תיוג `rfc`, כדי שנסכים על הכיוון לפני שכותבים קוד.
-- PR קטן וממוקד עדיף על PR ענק.
-- ממשק בעברית, קוד והערות באנגלית.
+- **Iron rule:** no tool is merged without passing evals.
+- Changes to `packages/` (core/SDK) start with an issue labelled `rfc`, so we agree on the direction before writing code.
+- A small, focused PR beats a huge one.
+- UI text is available in Hebrew and English: add both when you add UI strings. Code, comments, and plugin prompts are in English.
+- PRs are checked by CI only (typecheck, unit tests, recorded plugin evals, Playwright E2E). There are no per-PR preview deployments; to try a PR locally, check it out and run `npm run dev`.
 
-## עקרונות שלא מתפשרים עליהם
+## Non-negotiables
 
-1. **פרטיות:** אין שרת, אין טלמטריה. המפתח והחומרים לא יוצאים מהמחשב (חוץ מהקריאה ל-Anthropic).
-2. **עיגון:** כל טענה מהחומר מצוטטת.
-3. **פדגוגיה:** עוזרים ללמוד, לא עושים את העבודה במקום הסטודנט.
-4. **אבטחה:** ראו [SECURITY.md](SECURITY.md).
+1. **Privacy:** no server, no telemetry. The API key and course materials never leave the computer (except for the call to Anthropic).
+2. **Grounding:** every claim from the course material is cited.
+3. **Pedagogy:** help students learn; don't do their work for them.
+4. **Security:** see [SECURITY.md](SECURITY.md).
 
-## תיוגים
+## Labels
 
-`good first issue` (טוב למתחילים) · `no-code` (בלי תכנות) · `plugin-idea` (רעיון לכלי) · `pack:law` / `pack:math`… (לפי תחום) · `rfc` (שינוי בליבה)
+`good first issue` (good for newcomers) · `no-code` (no programming needed) · `plugin-idea` (tool idea) · `pack:law` / `pack:math`… (by field) · `rfc` (core change)
 
-שאלות? פתחו issue או כתבו בדיון. אין שאלות טיפשיות.
+Questions? Open an issue or start a discussion. There are no stupid questions.

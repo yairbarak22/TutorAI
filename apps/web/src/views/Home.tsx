@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ArrowUp, BookOpen, Box, CalendarDays, ChevronLeft, ClipboardCheck, Ellipsis, FileText, Layers, ListChecks, Plus, Workflow } from "lucide-react";
+import { ArrowUp, BookOpen, Box, CalendarDays, ClipboardCheck, Ellipsis, FileText, Layers, ListChecks, Plus, Workflow } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Badge, Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
+import { ChevronForward, t } from "../i18n.tsx";
 
 export function daysUntil(date: string | null): number | null {
   if (!date) return null;
@@ -11,18 +12,26 @@ export function daysUntil(date: string | null): number | null {
 
 function greeting() {
   const h = new Date().getHours();
-  return h < 5 ? "לילה טוב" : h < 12 ? "בוקר טוב" : h < 17 ? "צהריים טובים" : h < 21 ? "ערב טוב" : "לילה טוב";
+  return h < 5
+    ? t("לילה טוב", "Good night")
+    : h < 12
+      ? t("בוקר טוב", "Good morning")
+      : h < 17
+        ? t("צהריים טובים", "Good afternoon")
+        : h < 21
+          ? t("ערב טוב", "Good evening")
+          : t("לילה טוב", "Good night");
 }
 
-const QUICK = [
-  { id: "summary", label: "סיכום", icon: FileText },
-  { id: "quiz", label: "חידון", icon: ListChecks },
-  { id: "flashcards", label: "כרטיסיות", icon: Layers },
-  { id: "explainer", label: "הסבר 3D", icon: Box },
-  { id: "diagram", label: "תרשים", icon: Workflow },
-  { id: "exam-from-samples", label: "מבחן", icon: ClipboardCheck },
-  { id: "study-plan", label: "תוכנית", icon: CalendarDays },
-  { id: "", label: "עוד", icon: Ellipsis },
+const quick = () => [
+  { id: "summary", label: t("סיכום", "Summary"), icon: FileText },
+  { id: "quiz", label: t("חידון", "Quiz"), icon: ListChecks },
+  { id: "flashcards", label: t("כרטיסיות", "Flashcards"), icon: Layers },
+  { id: "explainer", label: t("הסבר 3D", "3D explainer"), icon: Box },
+  { id: "diagram", label: t("תרשים", "Diagram"), icon: Workflow },
+  { id: "exam-from-samples", label: t("מבחן", "Exam"), icon: ClipboardCheck },
+  { id: "study-plan", label: t("תוכנית", "Plan"), icon: CalendarDays },
+  { id: "", label: t("עוד", "More"), icon: Ellipsis },
 ];
 
 export function Home({ onNewCourse }: { onNewCourse: () => void }) {
@@ -52,7 +61,7 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
   return (
     <div className="space-y-12">
       <div className="mx-auto max-w-[640px] pt-[4vh] text-center">
-        <h1 className="text-[28px] font-medium tracking-tight">{greeting()}, מה לומדים היום?</h1>
+        <h1 className="text-[28px] font-medium tracking-tight">{greeting()}, {t("מה לומדים היום?", "what are we learning today?")}</h1>
         <form
           className="mt-6 flex h-12 items-center gap-2 rounded-full border border-black/10 bg-white ps-2 pe-2 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] focus-within:border-black/25"
           onSubmit={(e) => {
@@ -63,13 +72,13 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
           <span className="tile-grad-5 h-8 w-8 shrink-0 rounded-full shadow-[inset_0_-6px_10px_rgba(0,0,0,0.12)]" />
           <input
             className="min-w-0 flex-1 bg-transparent px-1 text-[14px] outline-none placeholder:text-slate-400"
-            placeholder={course ? `שאלו את הטוטור על ${course.name}…` : "צרו קורס כדי לשאול את הטוטור…"}
+            placeholder={course ? t(`שאלו את הטוטור על ${course.name}…`, `Ask the tutor about ${course.name}…`) : t("צרו קורס כדי לשאול את הטוטור…", "Create a course to ask the tutor…")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            aria-label="שאלה לטוטור"
+            aria-label={t("שאלה לטוטור", "Question for the tutor")}
           />
           {course && <span className="hidden rounded-md bg-black/[0.05] px-1.5 text-[11px] font-medium leading-5 text-ink-2 sm:inline">{course.name.split(" ")[0]}</span>}
-          <button type="submit" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-white disabled:bg-slate-300" disabled={!q.trim()} aria-label="שליחה">
+          <button type="submit" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-white disabled:bg-slate-300" disabled={!q.trim()} aria-label={t("שליחה", "Send")}>
             <ArrowUp size={16} />
           </button>
         </form>
@@ -77,10 +86,10 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
       </div>
 
       <div className="mx-auto grid max-w-[720px] grid-cols-4 gap-y-5 sm:grid-cols-8">
-        {QUICK.map((t) => (
+        {quick().map((x) => (
           <a
-            key={t.label}
-            href={course ? href.course(course.id, "studio", t.id || undefined) : "#/"}
+            key={x.label}
+            href={course ? href.course(course.id, "studio", x.id || undefined) : "#/"}
             onClick={(e) => {
               if (!course) {
                 e.preventDefault();
@@ -90,9 +99,9 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
             className="group flex flex-col items-center gap-2 text-[12.5px] font-medium text-ink-2"
           >
             <span className="grid h-11 w-11 place-items-center rounded-xl border border-black/10 bg-white text-ink shadow-sm transition group-hover:border-black/25 group-hover:shadow">
-              <t.icon size={18} strokeWidth={1.8} />
+              <x.icon size={18} strokeWidth={1.8} />
             </span>
-            {t.label}
+            {x.label}
           </a>
         ))}
       </div>
@@ -100,21 +109,21 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
       <div className="relative overflow-hidden rounded-2xl border border-black/[0.08] bg-white">
         <div className="grid items-center gap-6 p-6 md:grid-cols-[1fr_1.4fr_1fr]">
           <ul className="hidden space-y-1.5 text-[13px] text-muted md:block">
-            <li>מפת מושגים מכל החומר</li>
-            <li>טוטור שמצטט עמוד ושקף</li>
-            <li>חידונים וכרטיסיות חזרה</li>
-            <li>מבחן בסגנון המבחנים לדוגמה</li>
-            <li>הסברים אינטראקטיביים בתלת-ממד</li>
+            <li>{t("מפת מושגים מכל החומר", "A concept map of all your material")}</li>
+            <li>{t("טוטור שמצטט עמוד ושקף", "A tutor that cites page and slide")}</li>
+            <li>{t("חידונים וכרטיסיות חזרה", "Quizzes and review flashcards")}</li>
+            <li>{t("מבחן בסגנון המבחנים לדוגמה", "Exams in the style of past papers")}</li>
+            <li>{t("הסברים אינטראקטיביים בתלת-ממד", "Interactive 3D explainers")}</li>
           </ul>
           <div className="text-center">
-            <h2 className="text-[22px] font-medium tracking-tight">נסו קורס לדוגמה</h2>
-            <p className="mt-1 text-[13px] text-muted">חומרים אמיתיים, מוכנים לכל הכלים. בלי להעלות כלום.</p>
+            <h2 className="text-[22px] font-medium tracking-tight">{t("נסו קורס לדוגמה", "Try a sample course")}</h2>
+            <p className="mt-1 text-[13px] text-muted">{t("חומרים אמיתיים, מוכנים לכל הכלים. בלי להעלות כלום.", "Real materials, ready for every tool. Nothing to upload.")}</p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <Button size="sm" onClick={() => go(href.course(engine.loadDemoCourse("probability")))}>
-                קורס לדוגמה: הסתברות
+                {t("קורס לדוגמה: הסתברות", "Sample course: Probability")}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => go(href.course(engine.loadDemoCourse("law")))}>
-                קורס לדוגמה: דיני חוזים
+                {t("קורס לדוגמה: דיני חוזים", "Sample course: Contract law")}
               </Button>
             </div>
           </div>
@@ -130,16 +139,16 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="flex items-center gap-1 text-[16px] font-semibold tracking-tight">
-            הקורסים שלי <ChevronLeft size={16} className="text-muted" />
+            {t("הקורסים שלי", "My courses")} <ChevronForward size={16} className="text-muted" />
           </h2>
           <Button size="sm" variant="secondary" onClick={onNewCourse}>
-            <Plus size={14} /> קורס חדש
+            <Plus size={14} /> {t("קורס חדש", "New course")}
           </Button>
         </div>
         {courses.length === 0 ? (
           <Card>
-            <Empty icon={<BookOpen size={26} strokeWidth={1.6} />} title="עוד אין קורסים">
-              <p>צרו קורס והעלו אליו את חומרי הלימוד, או נסו את אחד מקורסי הדוגמה.</p>
+            <Empty icon={<BookOpen size={26} strokeWidth={1.6} />} title={t("עוד אין קורסים", "No courses yet")}>
+              <p>{t("צרו קורס והעלו אליו את חומרי הלימוד, או נסו את אחד מקורסי הדוגמה.", "Create a course and upload your study materials, or try one of the sample courses.")}</p>
             </Empty>
           </Card>
         ) : (
@@ -159,19 +168,19 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
                   <span className="min-w-0 flex-1 pt-0.5">
                     <span className="block truncate text-[14px] font-medium">{c.name}</span>
                     <span className="block text-[12.5px] text-muted">
-                      {sources.length} קבצים · {concepts} מושגים
+                      {t(`${sources.length} קבצים · ${concepts} מושגים`, `${sources.length} ${sources.length === 1 ? "file" : "files"} · ${concepts} ${concepts === 1 ? "concept" : "concepts"}`)}
                     </span>
                     <span className="mt-1 flex flex-wrap gap-1">
                       {d !== null && (
                         <Badge color={d > 0 && d <= 7 ? "amber" : "slate"}>
                           <CalendarDays size={11} />
-                          {d > 0 ? `${d} ימים למבחן` : d === 0 ? "המבחן היום" : "המבחן עבר"}
+                          {d > 0 ? t(`${d} ימים למבחן`, `${d} ${d === 1 ? "day" : "days"} to exam`) : d === 0 ? t("המבחן היום", "Exam today") : t("המבחן עבר", "Exam passed")}
                         </Badge>
                       )}
                       {due > 0 && (
                         <Badge>
                           <Layers size={11} />
-                          {due} לחזרה
+                          {t(`${due} לחזרה`, `${due} to review`)}
                         </Badge>
                       )}
                     </span>
@@ -188,7 +197,7 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
 
 function totalDueLine(engine: ReturnType<typeof useEngine>, courses: { id: number }[], now: string) {
   const n = courses.reduce((a, c) => a + engine.store.dueCards(c.id, now).length, 0);
-  return n > 0 ? <p className="mt-3 text-[13px] text-muted">יש לכם {n} כרטיסיות לחזרה היום.</p> : null;
+  return n > 0 ? <p className="mt-3 text-[13px] text-muted">{t(`יש לכם ${n} כרטיסיות לחזרה היום.`, `You have ${n} ${n === 1 ? "flashcard" : "flashcards"} to review today.`)}</p> : null;
 }
 
 export function NewCourse({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -196,7 +205,7 @@ export function NewCourse({ open, onClose }: { open: boolean; onClose: () => voi
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   return (
-    <Modal open={open} onClose={onClose} title="קורס חדש">
+    <Modal open={open} onClose={onClose} title={t("קורס חדש", "New course")}>
       <form
         className="space-y-4"
         onSubmit={(e) => {
@@ -209,14 +218,14 @@ export function NewCourse({ open, onClose }: { open: boolean; onClose: () => voi
           go(href.course(id));
         }}
       >
-        <Field label="שם הקורס">
-          <input autoFocus className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="למשל: הסתברות למדמ״ח" />
+        <Field label={t("שם הקורס", "Course name")}>
+          <input autoFocus className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("למשל: הסתברות למדמ״ח", "e.g. Probability for CS")} />
         </Field>
-        <Field label="תאריך המבחן (לא חובה)" help="משמש לתוכנית הלימוד ולספירה לאחור">
+        <Field label={t("תאריך המבחן (לא חובה)", "Exam date (optional)")} help={t("משמש לתוכנית הלימוד ולספירה לאחור", "Used for the study plan and the countdown")}>
           <input type="date" className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
         </Field>
         <Button type="submit" className="w-full" disabled={!name.trim()}>
-          יצירה
+          {t("יצירה", "Create")}
         </Button>
       </form>
     </Modal>

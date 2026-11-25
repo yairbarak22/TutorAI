@@ -1,9 +1,9 @@
-## מה השינוי?
-<!-- תיאור קצר. אם זה כלי חדש: לאיזה קורס/תחום הוא עוזר? -->
+## What changed?
+<!-- A short description. If it's a new tool: which course or field does it help with? -->
 
-## איך בדקתי
-- [ ] `npm run check` עובר מקומית (typecheck + בדיקות + evals + E2E)
-- [ ] כלי חדש/שונה: יש `evals/eval.yaml` ו-`evals/golden.json`
-- [ ] בדקתי בממשק (במצב הדגמה או עם מפתח)
+## How I tested
+- [ ] `npm run check` passes locally (typecheck + tests + evals + E2E)
+- [ ] New/changed tool: has `evals/eval.yaml` and `evals/golden.json`
+- [ ] Tried it in the UI (in demo mode or with an API key)
 
-## צילום מסך (אם יש שינוי בממשק)
+## Screenshot (if the UI changed)

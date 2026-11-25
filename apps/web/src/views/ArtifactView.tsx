@@ -12,27 +12,29 @@ import { CitationChips } from "../ui/Citations.tsx";
 import { MermaidView, WidgetFrame } from "../ui/Visuals.tsx";
 import { ToolTile } from "../ui/toolIcons.tsx";
 import { QuizPlayer } from "./players/QuizPlayer.tsx";
+import { ArrowBack, fmtDate, locale, t } from "../i18n.tsx";
 import { ExamPlayer } from "./players/ExamPlayer.tsx";
 
-const TYPE_LABEL: Record<string, string> = {
-  markdown_doc: "מסמך",
-  quiz: "חידון",
-  flashcards: "כרטיסיות",
-  diagram: "תרשים",
-  exam_simulation: "מבחן",
-  study_plan: "תוכנית לימוד",
-  interactive_widget: "אינטראקטיבי",
-  concept_map: "מפת מושגים",
-};
+const typeLabel = (type: string): string =>
+  ({
+    markdown_doc: t("מסמך", "Document"),
+    quiz: t("חידון", "Quiz"),
+    flashcards: t("כרטיסיות", "Flashcards"),
+    diagram: t("תרשים", "Diagram"),
+    exam_simulation: t("מבחן", "Exam"),
+    study_plan: t("תוכנית לימוד", "Study plan"),
+    interactive_widget: t("אינטראקטיבי", "Interactive"),
+    concept_map: t("מפת מושגים", "Concept map"),
+  })[type] ?? type;
 
 export function ArtifactList({ courseId }: { courseId: number }) {
   const engine = useEngine();
   const items = engine.store.artifacts(courseId);
   if (!items.length)
     return (
-      <Empty icon={<FolderOpen size={26} strokeWidth={1.6} />} title="עוד לא נוצרו תוצרים">
+      <Empty icon={<FolderOpen size={26} strokeWidth={1.6} />} title={t("עוד לא נוצרו תוצרים", "No outputs created yet")}>
         <a className="underline" href={href.course(courseId, "studio")}>
-          צרו סיכום, חידון או מבחן בלשונית הכלים
+          {t("צרו סיכום, חידון או מבחן בלשונית הכלים", "Create a summary, quiz or exam in the Tools tab")}
         </a>
       </Empty>
     );
@@ -44,8 +46,8 @@ export function ArtifactList({ courseId }: { courseId: number }) {
           <span className="flex-1 font-medium" dir="auto">
             {a.title}
           </span>
-          <Badge>{TYPE_LABEL[a.type] ?? a.type}</Badge>
-          <span className="text-xs text-slate-400">{new Date(a.created_at + "Z").toLocaleDateString("he-IL")}</span>
+          <Badge>{typeLabel(a.type)}</Badge>
+          <span className="text-xs text-slate-400">{fmtDate(a.created_at + "Z")}</span>
         </a>
       ))}
     </Card>
@@ -55,27 +57,27 @@ export function ArtifactList({ courseId }: { courseId: number }) {
 export function ArtifactView({ courseId, artifactId }: { courseId: number; artifactId: number }) {
   const engine = useEngine();
   const a = engine.store.artifact(artifactId);
-  if (!a) return <Empty icon="?" title="התוצר לא נמצא" />;
+  if (!a) return <Empty icon="?" title={t("התוצר לא נמצא", "Output not found")} />;
   return (
     <div className={`mx-auto space-y-4 ${a.type === "interactive_widget" ? "max-w-6xl" : "max-w-3xl"}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <a href={href.course(courseId, "artifacts")} className="text-sm text-slate-500 hover:text-slate-800">
-          → כל התוצרים
+        <a href={href.course(courseId, "artifacts")} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
+          <ArrowBack size={14} /> {t("כל התוצרים", "All outputs")}
         </a>
         <span className="ms-auto" />
         <Button size="sm" variant="ghost" onClick={() => window.print()}>
-          <Printer size={14} /> הדפסה
+          <Printer size={14} /> {t("הדפסה", "Print")}
         </Button>
         <Button
           size="sm"
           variant="ghost"
           onClick={() => {
-            if (!confirm("למחוק את התוצר?")) return;
+            if (!confirm(t("למחוק את התוצר?", "Delete this output?"))) return;
             engine.store.deleteArtifact(a.id);
             go(href.course(courseId, "artifacts"));
           }}
         >
-          <Trash2 size={14} /> מחיקה
+          <Trash2 size={14} /> {t("מחיקה", "Delete")}
         </Button>
       </div>
       <h1 className="text-2xl font-semibold" dir="auto">
@@ -128,9 +130,14 @@ function CardsView({ cards, courseId }: { cards: Flashcards; courseId: number })
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <p className="text-slate-600">{cards.cards.length} כרטיסיות נוספו לחזרה המרווחת.</p>
+        <p className="text-slate-600">
+          {t(
+            `${cards.cards.length} כרטיסיות נוספו לחזרה המרווחת.`,
+            cards.cards.length === 1 ? "1 card was added to spaced review." : `${cards.cards.length} cards were added to spaced review.`,
+          )}
+        </p>
         <Button size="sm" onClick={() => go(href.course(courseId, "review"))}>
-          לחזרה עכשיו
+          {t("לחזרה עכשיו", "Review now")}
         </Button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -138,7 +145,7 @@ function CardsView({ cards, courseId }: { cards: Flashcards; courseId: number })
           <Card key={i} className="cursor-pointer p-4" onClick={() => setFlipped(new Set(flipped.has(i) ? [...flipped].filter((x) => x !== i) : [...flipped, i]))}>
             <Markdown text={flipped.has(i) ? c.back : c.front} />
             <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
-              <span>{flipped.has(i) ? "תשובה" : "לחצו להפוך"}</span>
+              <span>{flipped.has(i) ? t("תשובה", "Answer") : t("לחצו להפוך", "Click to flip")}</span>
               <span>{c.concept}</span>
             </div>
           </Card>
@@ -200,8 +207,8 @@ function WidgetView({ w, artifactId }: { w: InteractiveWidget; artifactId: numbe
       />
       {repair && (
         <LongTask
-          title="מתקן את ההסבר האינטראקטיבי"
-          stages={["קורא את השגיאה", "Claude כותב קוד מתוקן", "טוען מחדש"]}
+          title={t("מתקן את ההסבר האינטראקטיבי", "Fixing the interactive explainer")}
+          stages={[t("קורא את השגיאה", "Reading the error"), t("Claude כותב קוד מתוקן", "Claude is writing fixed code"), t("טוען מחדש", "Reloading")]}
           stage={repair.chars > 0 ? 1 : 0}
           startedAt={repair.startedAt}
           expectedSec={expectedSeconds("repair:explainer", engine.demo)}
@@ -214,28 +221,33 @@ function WidgetView({ w, artifactId }: { w: InteractiveWidget; artifactId: numbe
   );
 }
 
-const ACTIVITY = { learn: "ללמוד", practice: "לתרגל", review: "לחזור" } as const;
+const activityLabel = (a: "learn" | "practice" | "review") =>
+  ({ learn: t("ללמוד", "Learn"), practice: t("לתרגל", "Practice"), review: t("לחזור", "Review") })[a];
 
 function PlanView({ plan, courseId }: { plan: StudyPlan; courseId: number }) {
   const today = new Date().toISOString().slice(0, 10);
   return (
     <div className="space-y-3">
-      <p className="text-slate-600">מבחן ב-{new Date(plan.exam_date).toLocaleDateString("he-IL")}. התוכנית מתעדכנת לפי התרגול: צרו אותה מחדש מדי כמה ימים.</p>
+      <p className="text-slate-600">
+        {t("מבחן ב-", "Exam on ")}
+        {fmtDate(plan.exam_date)}.{" "}
+        {t("התוכנית מתעדכנת לפי התרגול: צרו אותה מחדש מדי כמה ימים.", "The plan adapts to your practice: regenerate it every few days.")}
+      </p>
       {plan.days.map((d) => (
         <Card key={d.date} className={`p-4 ${d.date === today ? "border-brand-500 ring-2 ring-brand-100" : ""}`}>
           <div className="mb-2 flex items-center gap-2 font-semibold">
-            {new Date(d.date).toLocaleDateString("he-IL", { weekday: "long", day: "numeric", month: "numeric" })}
-            {d.date === today && <Badge color="blue">היום</Badge>}
-            <span className="ms-auto text-xs font-normal text-slate-500">{d.items.reduce((n, i) => n + i.minutes, 0)} דק'</span>
+            {new Date(d.date).toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "numeric" })}
+            {d.date === today && <Badge color="blue">{t("היום", "Today")}</Badge>}
+            <span className="ms-auto text-xs font-normal text-slate-500">{d.items.reduce((n, i) => n + i.minutes, 0)} {t("דק'", "min")}</span>
           </div>
           <ul className="space-y-1 text-sm">
             {d.items.map((it, i) => (
               <li key={i} className="flex flex-wrap items-center gap-2">
-                <span className="w-20 shrink-0">{ACTIVITY[it.activity]}</span>
+                <span className="w-20 shrink-0">{activityLabel(it.activity)}</span>
                 <a className="font-medium text-brand-700 hover:underline" href={href.course(courseId, "studio", `${it.activity === "learn" ? "explainer" : "quiz"}?concept=${encodeURIComponent(it.concept)}`)}>
                   {it.concept}
                 </a>
-                <span className="text-slate-400">· {it.minutes} דק' · {it.reason}</span>
+                <span className="text-slate-400">· {it.minutes} {t("דק'", "min")} · {it.reason}</span>
               </li>
             ))}
           </ul>

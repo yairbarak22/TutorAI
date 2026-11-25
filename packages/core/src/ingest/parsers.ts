@@ -1,3 +1,4 @@
+import { t } from "@ruecai/sdk";
 import JSZip from "jszip";
 
 /** One addressable unit of a document: a PDF page, a slide, or a block of a text document. */
@@ -60,8 +61,8 @@ export async function parsePptx(bytes: Uint8Array): Promise<RawUnit[]> {
     const notesXml = await zip.file(`ppt/notesSlides/notesSlide${n}.xml`)?.async("string");
     const notes = notesXml ? drawingParagraphs(notesXml).filter((p) => !/^\d+$/.test(p)) : [];
     const title = paragraphs[0] ?? "";
-    const text = [...paragraphs, ...(notes.length ? ["", "הערות מרצה:", ...notes] : [])].join("\n").trim();
-    units.push({ anchor: `שקף ${n}`, page: n, title, text });
+    const text = [...paragraphs, ...(notes.length ? ["", t("הערות מרצה:", "Speaker notes:"), ...notes] : [])].join("\n").trim();
+    units.push({ anchor: t(`שקף ${n}`, `Slide ${n}`), page: n, title, text });
   }
   return units;
 }
@@ -82,7 +83,7 @@ function drawingParagraphs(xml: string): string[] {
 export async function parseDocx(bytes: Uint8Array): Promise<RawUnit[]> {
   const zip = await JSZip.loadAsync(bytes);
   const xml = await zip.file("word/document.xml")?.async("string");
-  if (!xml) throw new Error("קובץ DOCX לא תקין");
+  if (!xml) throw new Error(t("קובץ DOCX לא תקין", "Invalid DOCX file"));
   const paras: { text: string; heading: boolean }[] = [];
   for (const p of xml.match(/<w:p\b[\s\S]*?<\/w:p>/g) ?? []) {
     const text = [...p.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((m) => decodeXml(m[1])).join("").trim();
@@ -110,7 +111,7 @@ function blocksFromParagraphs(paras: { text: string; heading: boolean }[], maxCh
   const flush = () => {
     if (cur && cur.lines.join("").trim()) {
       const n = units.length + 1;
-      units.push({ anchor: `קטע ${n}`, page: null, title: cur.title, text: cur.lines.join("\n") });
+      units.push({ anchor: t(`קטע ${n}`, `Section ${n}`), page: null, title: cur.title, text: cur.lines.join("\n") });
     }
     cur = null;
   };
@@ -124,7 +125,7 @@ function blocksFromParagraphs(paras: { text: string; heading: boolean }[], maxCh
     if (cur.lines.join("\n").length + p.text.length > maxChars && cur.lines.length) {
       const title: string = cur.title;
       flush();
-      cur = { title: title ? `${title} (המשך)` : "", lines: [] };
+      cur = { title: title ? `${title} (${t("המשך", "cont.")})` : "", lines: [] };
     }
     cur.lines.push(p.text);
   }
@@ -158,7 +159,7 @@ export async function parsePdf(bytes: Uint8Array, { pdfjs }: PdfDeps): Promise<R
     }
     text = text.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
     const title = text.split("\n").find((l) => l.trim().length > 3)?.trim().slice(0, 80) ?? "";
-    units.push({ anchor: `עמ' ${i}`, page: i, title, text, sparse: text.replace(/\s/g, "").length < 80 });
+    units.push({ anchor: t(`עמ' ${i}`, `p. ${i}`), page: i, title, text, sparse: text.replace(/\s/g, "").length < 80 });
   }
   await doc.destroy();
   return units;

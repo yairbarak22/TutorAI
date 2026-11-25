@@ -1,15 +1,15 @@
-name: 💡 רעיון לכלי חדש
-description: כלי למידה שהייתם רוצים (גם בלי לדעת לתכנת!)
+name: 💡 New tool idea
+description: A study tool you'd like to have (even if you can't code!)
 labels: [plugin-idea]
 body:
   - type: input
     id: course
-    attributes: { label: לאיזה קורס / תחום?, placeholder: "דיני חוזים, מבוא לכלכלה, מבני נתונים…" }
+    attributes: { label: Which course or field?, placeholder: "Contract law, Intro to Economics, Data Structures…" }
     validations: { required: true }
   - type: textarea
     id: what
-    attributes: { label: מה הכלי עושה?, description: מה מעלים, ומה מקבלים בסוף }
+    attributes: { label: What does the tool do?, description: "What you upload, and what you get at the end" }
     validations: { required: true }
   - type: textarea
     id: example
-    attributes: { label: דוגמה לפלט טוב, description: איך הייתם רוצים שהתוצאה תיראה }
+    attributes: { label: Example of good output, description: What you'd like the result to look like }

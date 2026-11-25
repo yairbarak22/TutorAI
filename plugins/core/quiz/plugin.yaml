@@ -1,21 +1,32 @@
 id: quiz
-name: חידון
-description: שאלות אמריקאיות ופתוחות עם משוב והסבר — מעדכן את מעקב השליטה שלך.
+name: Quiz
+description: Multiple-choice and open questions with feedback and explanations. Updates your mastery tracking.
 icon: "❓"
 pack: core
 kind: declarative
 output: quiz
 tier: smart
 inputs:
-  - { name: source, label: "מקור", type: source, default: all }
-  - { name: concept, label: "מושג (לא חובה)", type: concept, default: "" }
-  - { name: count, label: "מספר שאלות", type: number, default: 6 }
+  - { name: source, label: "Source", type: source, default: all }
+  - { name: concept, label: "Concept (optional)", type: concept, default: "" }
+  - { name: count, label: "Number of questions", type: number, default: 6 }
   - name: difficulty
-    label: רמת קושי
+    label: Difficulty
     type: select
-    options: [בסיסית, בינונית, מאתגרת]
-    default: בינונית
+    options: [basic, medium, challenging]
+    default: medium
 retrieval:
   mode: search
   query: "{{params.concept}}"
 authors: [RuecAI core team]
+i18n:
+  he:
+    name: חידון
+    description: שאלות אמריקאיות ופתוחות עם משוב והסבר — מעדכן את מעקב השליטה שלך.
+    inputs:
+      source: { label: מקור }
+      concept: { label: מושג (לא חובה) }
+      count: { label: מספר שאלות }
+      difficulty:
+        label: רמת קושי
+        options: { basic: בסיסית, medium: בינונית, challenging: מאתגרת }

@@ -3,6 +3,7 @@ import { marked } from "marked";
 import katex from "katex";
 import DOMPurify from "dompurify";
 import { useCitations } from "./Citations.tsx";
+import { getLanguage, t, useLanguage } from "../i18n.tsx";
 
 marked.setOptions({ gfm: true, breaks: true });
 
@@ -36,7 +37,7 @@ const LATIN_RUN = /[A-Za-z][A-Za-z0-9 .,:;'’()[\]{}+\-*/=<>^_|!?%]*[A-Za-z0-9)
 
 /** Wraps runs of Latin text (English terms, plain-text formulas) in <bdi dir="ltr"> so punctuation stays put. */
 function isolateLatin(html: string): string {
-  if (typeof document === "undefined" || !/[A-Za-z]/.test(html)) return html;
+  if (typeof document === "undefined" || getLanguage() !== "he" || !/[A-Za-z]/.test(html)) return html;
   const tpl = document.createElement("template");
   tpl.innerHTML = html;
   const walker = document.createTreeWalker(tpl.content, NodeFilter.SHOW_TEXT);
@@ -76,7 +77,8 @@ function safeKatex(tex: string, display: boolean) {
 }
 
 export function Markdown({ text, className = "" }: { text: string; className?: string }) {
-  const html = useMemo(() => renderMarkdown(text), [text]);
+  const lang = useLanguage();
+  const html = useMemo(() => renderMarkdown(text), [text, lang]); // lang: bidi isolation depends on the UI language
   const { open } = useCitations();
   return (
     <div
@@ -90,6 +92,7 @@ export function Markdown({ text, className = "" }: { text: string; className?: s
         if (box?.dataset.tex && e.detail === 2) {
           // Double-click a formula box → copy its LaTeX source.
           void navigator.clipboard?.writeText(decodeURIComponent(box.dataset.tex));
+          box.dataset.copied = t("הועתק ✓", "Copied ✓");
           box.classList.add("copied");
           setTimeout(() => box.classList.remove("copied"), 1200);
         }

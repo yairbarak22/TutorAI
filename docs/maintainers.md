@@ -1,28 +1,28 @@
-# מדריך למתחזקים
+# Maintainer guide
 
-## פריסה (Production)
+## Deployment (production)
 
-- כל push ל-`main` מריץ את `.github/workflows/deploy.yml`: בדיקות, build, ופריסה ל-**GitHub Pages**.
-- כתובת: https://yairbarak22.github.io/RuecAI_Tutor/
-- חד-פעמי: ב-Settings ← Pages, תחת Source, לבחור **GitHub Actions**.
-- כדאי בהמשך: דומיין משלכם (למשל `ruecai.app`), כדי שלאתר יהיה origin נפרד מאתרי GitHub Pages אחרים של אותו משתמש.
+- Every push to `main` runs `.github/workflows/deploy.yml`: tests, build, and deploy to **GitHub Pages**.
+- URL: https://yairbarak22.github.io/RuecAI_Tutor/
+- One-time setup: in Settings → Pages, under Source, choose **GitHub Actions**.
+- Worth doing later: a custom domain (for example `ruecai.app`), so the site has an origin separate from other GitHub Pages sites of the same user.
 
-## בדיקת PR
+## Checking a PR
 
-אין קישור תצוגה מקדימה לכל PR: הוחלט לוותר על Cloudflare. כל PR עובר CI (typecheck, בדיקות יחידה, evals מוקלטים ו-E2E). כדי לנסות PR מקומית: `gh pr checkout <מספר> && npm i && npm run dev`.
+There are no per-PR preview links: Cloudflare was dropped. Every PR goes through CI (typecheck, unit tests, recorded plugin evals, and Playwright E2E). To try a PR locally: `gh pr checkout <number> && npm i && npm run dev`.
 
-**אבטחה:** לעולם לא פורסים build של PR ל-origin של האתר האמיתי, כי PR זדוני היה יכול לקרוא מפתחות API שסטודנטים שמרו בדפדפן.
+**Security:** never deploy a PR build to the real site's origin, because a malicious PR could read API keys that students saved in their browser.
 
-## Evals חיים (מודל אמיתי)
+## Live evals (real model)
 
-אם מגדירים secret בשם `ANTHROPIC_API_KEY`, כל push ל-`main` מריץ את בדיקות האיכות של כל הכלים מול Claude, עם המודל הזול (`claude-haiku-5-5`) לשתי הרמות. אפשר להחליף מודל עם `RUECAI_EVAL_MODEL`. העלות היא סנטים בודדים לריצה. ב-PR רצים רק ה-evals המוקלטים, בלי עלות.
+If a secret named `ANTHROPIC_API_KEY` is set, every push to `main` runs every tool's quality checks against Claude, using the cheap model (`claude-haiku-5-5`) for both tiers. You can switch the model with `RUECAI_EVAL_MODEL`. A run costs a few cents. PRs run only the recorded evals, at no cost.
 
 ## Review
 
-- **כלי חדש:** לוודא שיש `evals/` שעוברים, שהפרומפט בעברית טובה, שאין `fetch` חיצוני, ושהכלי לא פותר מטלות במקום הסטודנט.
-- **ליבה/SDK:** רק אחרי RFC מוסכם. שינוי שובר ב-SDK מעלה גרסה.
-- **אבטחה:** כל שינוי ב-`Visuals.tsx` (iframe/CSP), `Markdown.tsx` (sanitize), `secrets.ts` או ב-workflows דורש review של מתחזק ליבה.
+- **New tool:** make sure it has passing `evals/`, a clear English prompt (`prompt.md`) and Hebrew translations in the manifest's `i18n.he` block, no external `fetch`, and that the tool doesn't solve assignments for the student.
+- **Core/SDK:** only after an agreed RFC. A breaking SDK change bumps the version.
+- **Security:** any change to `Visuals.tsx` (iframe/CSP), `Markdown.tsx` (sanitizing), `secrets.ts`, or the workflows requires review by a core maintainer.
 
-## שחרור גרסה
+## Releases
 
-הפריסה רציפה (כל merge). מדי פעם מתייגים `vX.Y.Z` ב-git וכותבים release notes בעברית.
+Deployment is continuous (every merge). Every so often, tag `vX.Y.Z` in git and write release notes.
