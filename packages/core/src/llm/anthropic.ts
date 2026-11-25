@@ -102,13 +102,17 @@ export class AnthropicLLM implements LLMApi {
   async object<S extends z.ZodType>(schema: S, opts: LLMCallOptions): Promise<z.infer<S>> {
     const params = this.common(opts);
     try {
-      const res = await this.client.beta.messages.parse({
-        ...params,
-        output_config: {
-          format: betaZodOutputFormat(schema),
-          effort: opts.tier === "fast" ? "low" : "medium",
-        },
-      });
+      // Streamed even though we only need the final result: large max_tokens requests
+      // are refused by the SDK unless streamed (long-request timeout guard).
+      const res = await this.client.beta.messages
+        .stream({
+          ...params,
+          output_config: {
+            format: betaZodOutputFormat(schema),
+            effort: opts.tier === "fast" ? "low" : "medium",
+          },
+        })
+        .finalMessage();
       this.track(opts.tag, params.model, res.usage);
       if (res.stop_reason === "refusal") throw new LLMError("המודל סירב לבקשה הזו.", "refusal");
       if (res.stop_reason === "max_tokens") throw new LLMError("התשובה נקטעה (ארוכה מדי). נסו היקף קטן יותר.", "invalid_output");
