@@ -7,26 +7,15 @@
 - חד-פעמי: ב-Settings ← Pages, תחת Source, לבחור **GitHub Actions**.
 - כדאי בהמשך: דומיין משלכם (למשל `ruecai.app`), כדי שלאתר יהיה origin נפרד מאתרי GitHub Pages אחרים של אותו משתמש.
 
-## תצוגה מקדימה לכל PR
+## בדיקת PR
 
-מנגנון בשני שלבים, בטוח גם ל-PR מ-fork:
+אין קישור תצוגה מקדימה לכל PR: הוחלט לוותר על Cloudflare. כל PR עובר CI (typecheck, בדיקות יחידה, evals מוקלטים ו-E2E). כדי לנסות PR מקומית: `gh pr checkout <מספר> && npm i && npm run dev`.
 
-1. `preview-build.yml`: בונה את ה-PR בלי סודות, עם הרשאות קריאה בלבד, ומעלה את ה-build כ-artifact.
-2. `preview-deploy.yml`: מריץ קוד של ה-main בלבד, מוריד את ה-artifact, פורס אותו ל-**Cloudflare Pages** ומגיב ב-PR עם הקישור.
-
-**למה Cloudflare ולא GitHub Pages?** כל תצוגה מקדימה צריכה origin משלה. אם PR זדוני היה רץ על אותו origin כמו האתר האמיתי, הוא היה יכול לקרוא מפתחות API שסטודנטים שמרו בדפדפן.
-
-**הגדרה חד-פעמית (כ-5 דקות):**
-1. יוצרים חשבון חינמי ב-https://dash.cloudflare.com.
-2. Workers & Pages ← Create ← Pages ← Direct Upload, בשם הפרויקט `ruecai-previews`.
-3. My Profile ← API Tokens ← Create Token, עם הרשאת **Cloudflare Pages: Edit**.
-4. בריפו: Settings ← Secrets and variables ← Actions, ומוסיפים `CLOUDFLARE_API_TOKEN` ו-`CLOUDFLARE_ACCOUNT_ID`.
-
-עד שהסודות מוגדרים, ה-workflow מדלג על הפריסה בלי להיכשל, וה-build זמין להורדה כ-artifact.
+**אבטחה:** לעולם לא פורסים build של PR ל-origin של האתר האמיתי, כי PR זדוני היה יכול לקרוא מפתחות API שסטודנטים שמרו בדפדפן.
 
 ## Evals חיים (מודל אמיתי)
 
-אם מגדירים secret בשם `ANTHROPIC_API_KEY`, כל push ל-`main` מריץ את בדיקות האיכות של כל הכלים מול Claude. העלות היא סנטים בודדים לריצה. ב-PR רצים רק ה-evals המוקלטים, בלי עלות.
+אם מגדירים secret בשם `ANTHROPIC_API_KEY`, כל push ל-`main` מריץ את בדיקות האיכות של כל הכלים מול Claude, עם המודל הזול (`claude-haiku-5-5`) לשתי הרמות. אפשר להחליף מודל עם `RUECAI_EVAL_MODEL`. העלות היא סנטים בודדים לריצה. ב-PR רצים רק ה-evals המוקלטים, בלי עלות.
 
 ## Review
 

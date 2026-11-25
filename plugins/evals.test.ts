@@ -8,8 +8,9 @@
  *  3. the output passes the plugin's checks: schema, citation grounding, item count, Hebrew ratio, keywords.
  *
  * Live mode (real model, costs money): `ANTHROPIC_API_KEY=... npm run eval:live`
+ * Uses the cheap model for both tiers by default; override with RUECAI_EVAL_MODEL.
  */
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import initSqlJs from "sql.js";
 import { collectText, countItems, hebrewRatio, type LLMApi } from "@ruecai/sdk";
 import { AnthropicLLM, MockLLM, runTool, seedCourse, Store } from "@ruecai/core";
@@ -18,8 +19,19 @@ import { courseFixtures, demoFixtures, pluginErrors, tools } from "./registry.ts
 const LIVE = process.env.RUECAI_LIVE === "1" && !!process.env.ANTHROPIC_API_KEY;
 const SQL = await initSqlJs();
 
+const EVAL_MODEL = process.env.RUECAI_EVAL_MODEL || "claude-haiku-5-5";
+const usage = { input: 0, output: 0, calls: 0 };
+afterAll(() => {
+  if (LIVE) console.log(`[live evals] model=${EVAL_MODEL} calls=${usage.calls} input_tokens=${usage.input} output_tokens=${usage.output}`);
+});
+
 function llmFor(): LLMApi {
-  return LIVE ? new AnthropicLLM(process.env.ANTHROPIC_API_KEY!) : new MockLLM(demoFixtures());
+  if (!LIVE) return new MockLLM(demoFixtures());
+  return new AnthropicLLM(process.env.ANTHROPIC_API_KEY!, { fast: EVAL_MODEL, smart: EVAL_MODEL }, (u) => {
+    usage.calls++;
+    usage.input += u.input + u.cacheRead;
+    usage.output += u.output;
+  });
 }
 
 describe("plugin registry", () => {

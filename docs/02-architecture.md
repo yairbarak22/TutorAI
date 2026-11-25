@@ -55,7 +55,7 @@
 | ויזואליזציה | **Mermaid**, **three.js / react-three-fiber**, KaTeX, ווידג'טים ב-HTML/JS ב-iframe מבודד | |
 | תמלול | שלב ראשון: API תמלול. בגרסת דסקטופ: whisper.cpp עם מודלי ivrit.ai. | |
 | בדיקות | **Vitest**, **Playwright** (E2E) ו-evals ייעודיים | |
-| הפצה | GitHub Pages ל-production, Cloudflare Pages לתצוגה מקדימה לכל PR (origin נפרד), PWA | |
+| הפצה | GitHub Pages ל-production, PWA. בלי תצוגה מקדימה לכל PR (הוחלט לוותר על Cloudflare) | |
 
 ## מודל הנתונים (ליבה)
 
@@ -190,7 +190,7 @@ RuecAI_Tutor/
     core/  law/  math/    # tools
   e2e/                    # Playwright journeys + generated PDF/PPTX/DOCX fixtures
   docs/
-  .github/                # CI, deploy, previews, CODEOWNERS, templates
+  .github/                # CI, deploy, CODEOWNERS, templates
 ```
 
 ## פרטיות, זכויות יוצרים וטוהר אקדמי

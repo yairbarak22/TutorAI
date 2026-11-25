@@ -7,6 +7,6 @@ Design rules that every change must keep:
 - Model-generated code (interactive widgets) runs only in `<iframe sandbox="allow-scripts">` without `allow-same-origin`, under a CSP that blocks all network access.
 - All rendered model output (Markdown, Mermaid SVG) goes through DOMPurify.
 - Course material inside prompts is wrapped in `<section>` tags and treated as data, not instructions.
-- PR previews are built without secrets and deployed to a separate origin (Cloudflare Pages), never to the production origin.
+- PR builds are never deployed to the production origin; PRs are checked by CI only.
 
 Found a vulnerability? Please **don't** open a public issue. Use GitHub's private "Report a vulnerability" (Security tab) instead.
