@@ -57,23 +57,41 @@ const CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-i
 const REPORTER = `<script>(function(){var sent=false;function r(m){if(sent)return;sent=true;parent.postMessage({ruecaiWidgetError:String(m).slice(0,800)},'*')}
 window.addEventListener('error',function(e){r((e.message||'error')+(e.lineno?' (line '+e.lineno+')':''))});
 window.addEventListener('unhandledrejection',function(e){r(e.reason&&e.reason.message||e.reason)});
-window.addEventListener('load',function(){setTimeout(function(){parent.postMessage({ruecaiWidgetOk:true,height:document.documentElement.scrollHeight},'*')},50)});})();</script>`;
+function hgt(){var b=document.body;if(!b)return;var cs=getComputedStyle(b);parent.postMessage({ruecaiWidgetOk:true,height:Math.ceil(b.getBoundingClientRect().bottom+parseFloat(cs.marginBottom||0))},'*')}
+window.addEventListener('load',function(){setTimeout(hgt,50);if(window.ResizeObserver)new ResizeObserver(function(){hgt()}).observe(document.body)});})();</script>`;
 
 /**
  * Our CSP <meta> is always the very first element of the document, before any model output,
  * so no generated markup can precede or displace it (extra policies can only tighten CSP).
  * The model's own <!doctype>/<html>/<head> that follow are merged/ignored by the HTML parser.
  */
-export function buildWidgetDoc(html: string) {
+export function buildWidgetDoc(html: string, kit = "") {
   const meta = `<meta http-equiv="Content-Security-Policy" content="${CSP}">`;
-  return `<!doctype html><html dir="rtl" lang="he"><head>${meta}<meta charset="utf-8">${REPORTER}\n${html}`;
+  const kitTag = kit ? `<script>${kit}</script>` : "";
+  return `<!doctype html><html dir="rtl" lang="he"><head>${meta}<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${REPORTER}${kitTag}</head><body>\n${html}`;
+}
+
+/** The Viz Kit (three.js + helpers) is ~700KB, so it is loaded only when a widget is shown. */
+let kitPromise: Promise<string> | null = null;
+const loadKit = () => (kitPromise ??= import("virtual:widget-kit").then((m) => m.default));
+function useKit() {
+  const [kit, setKit] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loadKit().then((k) => alive && setKit(k));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return kit;
 }
 
 export function WidgetFrame({ html, onError, onRepair, repairing }: { html: string; onError?: (e: string) => void; onRepair?: (e: string) => void; repairing?: boolean }) {
   const ref = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState(520);
+  const [height, setHeight] = useState(560);
   const [error, setError] = useState<string | null>(null);
-  const doc = useMemo(() => buildWidgetDoc(html), [html]);
+  const kit = useKit();
+  const doc = useMemo(() => (kit == null ? null : buildWidgetDoc(html, kit)), [html, kit]);
   useEffect(() => {
     setError(null);
     const onMsg = (e: MessageEvent) => {
@@ -82,11 +100,12 @@ export function WidgetFrame({ html, onError, onRepair, repairing }: { html: stri
         setError(e.data.ruecaiWidgetError);
         onError?.(e.data.ruecaiWidgetError);
       }
-      if (e.data?.ruecaiWidgetOk && e.data.height) setHeight(Math.min(900, Math.max(320, e.data.height + 8)));
+      if (e.data?.ruecaiWidgetOk && e.data.height) setHeight(Math.min(1400, Math.max(320, e.data.height + 8)));
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [doc, onError]);
+  if (doc == null) return <Spinner label="טוען את מנוע ההמחשות…" />;
   return (
     <div className="space-y-2">
       <iframe

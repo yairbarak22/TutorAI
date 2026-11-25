@@ -2,12 +2,14 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { widgetKit } from "./widget-kit-plugin.ts";
 
 export default defineConfig({
-  // Relative base: the same build works at /, /RuecAI_Tutor/ and /pr-preview/pr-12/.
+  // Relative base: the same build works at / and /RuecAI_Tutor/.
   base: "./",
   plugins: [
     react(),
+    widgetKit(),
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",

@@ -114,7 +114,8 @@ test("interactive explainer runs sandboxed without errors", async ({ page }) => 
   await page.getByRole("combobox").first().selectOption("נוסחת בייס");
   await page.getByRole("button", { name: /יצירה/ }).click();
   const frame = page.frameLocator('iframe[title="הסבר אינטראקטיבי"]');
-  await expect(frame.locator("#post")).toHaveText(/%/);
+  await expect(frame.locator(".viz-readouts dd").last()).toHaveText(/%/);
+  await expect(frame.locator("canvas")).toHaveCount(2); // 3D scene + 2D plot
   await expect(page.locator("iframe")).toHaveAttribute("sandbox", "allow-scripts");
   await expect(page.getByText("בווידג'ט יש שגיאה")).toHaveCount(0);
 });

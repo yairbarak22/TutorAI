@@ -10,7 +10,7 @@ export interface ModelConfig {
 }
 
 /** Defaults: the current Opus for quality work, the current Haiku for bulk extraction. */
-export const DEFAULT_MODELS: ModelConfig = { fast: "claude-haiku-5-5", smart: "claude-opus-5-5" };
+export const DEFAULT_MODELS: ModelConfig = { fast: "claude-haiku-5-5", smart: "claude-sonnet-5-5" };
 
 export interface UsageEvent {
   tag: string;

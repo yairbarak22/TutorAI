@@ -53,7 +53,7 @@ export function ArtifactView({ courseId, artifactId }: { courseId: number; artif
   const a = engine.store.artifact(artifactId);
   if (!a) return <Empty icon="🤷" title="התוצר לא נמצא" />;
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className={`mx-auto space-y-4 ${a.type === "interactive_widget" ? "max-w-6xl" : "max-w-3xl"}`}>
       <div className="flex flex-wrap items-center gap-2">
         <a href={href.course(courseId, "artifacts")} className="text-sm text-slate-500 hover:text-slate-800">
           → כל התוצרים
