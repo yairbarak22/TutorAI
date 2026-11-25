@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
-import { Button, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
+import { CalendarDays, Pencil } from "lucide-react";
+import { Badge, Button, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
+import { COURSE_SECTIONS, CourseMark, sectionLabel } from "../ui/Shell.tsx";
 import { daysUntil } from "./Home.tsx";
 import { Materials } from "./Materials.tsx";
 import { Concepts } from "./Concepts.tsx";
@@ -11,23 +13,13 @@ import { Tutor } from "./Tutor.tsx";
 import { Review } from "./Review.tsx";
 import { ProgressView } from "./Progress.tsx";
 
-const TABS = [
-  { id: "materials", label: "📄 חומרים" },
-  { id: "concepts", label: "🗺️ מפת מושגים" },
-  { id: "studio", label: "✨ כלים" },
-  { id: "tutor", label: "🎓 טוטור" },
-  { id: "review", label: "🃏 חזרה" },
-  { id: "progress", label: "📈 התקדמות" },
-  { id: "artifacts", label: "🗂️ תוצרים" },
-];
-
 export function CourseView({ id, tab, sub }: { id: number; tab: string; sub?: string }) {
   const engine = useEngine();
   const course = engine.store.course(id);
   const [edit, setEdit] = useState(false);
   if (!course)
     return (
-      <Empty icon="🤷" title="הקורס לא נמצא">
+      <Empty icon="?" title="הקורס לא נמצא">
         <a className="underline" href={href.home()}>
           חזרה לרשימת הקורסים
         </a>
@@ -36,29 +28,39 @@ export function CourseView({ id, tab, sub }: { id: number; tab: string; sub?: st
   const d = daysUntil(course.exam_date);
   const due = engine.store.dueCards(id, new Date().toISOString()).length;
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <a href={href.home()} className="text-slate-500 hover:text-slate-800" aria-label="חזרה">
-          →
-        </a>
-        <h1 className="text-2xl font-bold">{course.name}</h1>
-        {d !== null && d >= 0 && <span className="rounded-full bg-amber-50 px-3 py-0.5 text-sm text-amber-800">⏳ {d === 0 ? "המבחן היום" : `${d} ימים למבחן`}</span>}
-        <Button variant="ghost" size="sm" onClick={() => setEdit(true)}>
-          עריכה
+        <CourseMark id={id} name={course.name} size="md" />
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[24px] font-semibold leading-tight tracking-tight">{course.name}</h1>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[13px] text-muted">
+            <span>{sectionLabel(tab)}</span>
+            {d !== null && d >= 0 && (
+              <Badge color={d <= 7 ? "amber" : "slate"}>
+                <CalendarDays size={12} />
+                {d === 0 ? "המבחן היום" : `${d} ימים למבחן`}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <Button variant="secondary" size="sm" onClick={() => setEdit(true)}>
+          <Pencil size={13} /> עריכת קורס
         </Button>
       </div>
-      <nav className="flex gap-1 overflow-x-auto border-b border-slate-200" aria-label="לשוניות הקורס">
-        {TABS.map((t) => (
+      {/* On small screens the course sections live here instead of the sidebar. */}
+      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 md:hidden" aria-label="לשוניות הקורס">
+        {COURSE_SECTIONS.map((t) => (
           <a
             key={t.id}
             href={href.course(id, t.id)}
-            className={`whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium ${
-              tab === t.id ? "border-brand-600 text-brand-700" : "border-transparent text-slate-600 hover:text-slate-900"
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium ${
+              tab === t.id ? "bg-ink text-white" : "bg-black/[0.04] text-ink-2"
             }`}
             aria-current={tab === t.id ? "page" : undefined}
           >
+            <t.icon size={14} />
             {t.label}
-            {t.id === "review" && due > 0 && <span className="ms-1 rounded-full bg-amber-500 px-1.5 text-xs text-white">{due}</span>}
+            {t.id === "review" && due > 0 && <span className="rounded-full bg-white/20 px-1.5 text-[11px]">{due}</span>}
           </a>
         ))}
       </nav>

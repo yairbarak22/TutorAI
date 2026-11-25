@@ -27,7 +27,7 @@ test("onboarding takes under a minute and needs no install", async ({ page }) =>
 
 test("upload PDF, PPTX, DOCX and a sample exam → all processed", async ({ page }) => {
   await onboard(page);
-  await page.getByRole("button", { name: "+ קורס חדש" }).click();
+  await page.getByRole("main").getByRole("button", { name: "קורס חדש", exact: true }).click();
   await page.getByPlaceholder(/למשל/).fill("קורס בדיקה");
   await page.getByRole("button", { name: "יצירה" }).click();
   await page
@@ -59,7 +59,7 @@ test("concept map, tools, quiz → mastery, flashcards → review, tutor with ci
   await page.getByRole("button", { name: /יצירה/ }).click();
   await expect(page.getByRole("heading", { name: /סיכום/ })).toBeVisible();
   await expect(page.locator(".katex").first()).toBeVisible();
-  await page.getByRole("button", { name: /📎/ }).first().click();
+  await page.getByTestId("cite-chip").first().click();
   await expect(page.getByRole("dialog")).toContainText("עמ'");
   await page.keyboard.press("Escape");
 
@@ -89,7 +89,7 @@ test("concept map, tools, quiz → mastery, flashcards → review, tutor with ci
   await page.keyboard.press("Enter");
   const answer = page.getByTestId("msg-assistant").last();
   await expect(answer).toContainText("שאלה מנחה");
-  await expect(answer.getByRole("button", { name: /📎/ }).first()).toBeVisible();
+  await expect(answer.getByTestId("cite-chip").first()).toBeVisible();
 });
 
 test("law: new exam from sample exams, graded by rubric", async ({ page }) => {

@@ -1,81 +1,123 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { ArrowLeft, BookOpen, CalendarDays, KeyRound, Layers, Plus, Scale, Sigma } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
-import { Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
+import { Badge, Button, Card, Empty, Field, IconTile, Modal, SectionLabel, inputClass } from "../ui/components.tsx";
+import { CourseMark } from "../ui/Shell.tsx";
 
 export function daysUntil(date: string | null): number | null {
   if (!date) return null;
   return Math.ceil((Date.parse(date + "T00:00:00") - Date.now()) / 86_400_000);
 }
 
-export function Home() {
+function greeting() {
+  const h = new Date().getHours();
+  return h < 5 ? "לילה טוב" : h < 12 ? "בוקר טוב" : h < 17 ? "צהריים טובים" : h < 21 ? "ערב טוב" : "לילה טוב";
+}
+
+function ActionTile({ grad, icon, title, desc, onClick, href: to }: { grad: number; icon: ReactNode; title: string; desc: string; onClick?: () => void; href?: string }) {
+  const inner = (
+    <>
+      <IconTile grad={grad}>{icon}</IconTile>
+      <span className="min-w-0">
+        <span className="block text-[14px] font-medium text-ink">{title}</span>
+        <span className="mt-0.5 block text-[12.5px] leading-snug text-muted">{desc}</span>
+      </span>
+    </>
+  );
+  const cls = "flex w-full items-start gap-3 rounded-2xl border border-black/[0.08] bg-white p-4 text-start transition hover:border-black/15 hover:bg-black/[0.015]";
+  return to ? (
+    <a href={to} className={cls}>
+      {inner}
+    </a>
+  ) : (
+    <button type="button" onClick={onClick} className={cls}>
+      {inner}
+    </button>
+  );
+}
+
+export function Home({ onNewCourse }: { onNewCourse: () => void }) {
   const engine = useEngine();
   const courses = engine.store.courses();
-  const [open, setOpen] = useState(false);
   const now = new Date().toISOString();
+  const totalDue = courses.reduce((n, c) => n + engine.store.dueCards(c.id, now).length, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">הקורסים שלי</h1>
-        <Button onClick={() => setOpen(true)}>+ קורס חדש</Button>
+    <div className="space-y-10">
+      <div>
+        <p className="text-[13px] text-muted">סביבת הלמידה שלכם</p>
+        <h1 className="mt-1 text-[30px] font-semibold leading-tight tracking-tight">{greeting()}</h1>
+        {totalDue > 0 && <p className="mt-1 text-sm text-muted">יש לכם {totalDue} כרטיסיות לחזרה היום.</p>}
       </div>
 
-      {courses.length === 0 ? (
-        <Card>
-          <Empty icon="🎒" title="עוד אין קורסים">
-            <p>צרו קורס והעלו אליו את חומרי הלימוד: מצגות, סיכומים ומבחנים לדוגמה.</p>
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              <Button onClick={() => setOpen(true)}>יצירת קורס</Button>
-              <Button variant="secondary" onClick={() => go(href.course(engine.loadDemoCourse("probability")))}>
-                קורס לדוגמה: הסתברות
-              </Button>
-              <Button variant="secondary" onClick={() => go(href.course(engine.loadDemoCourse("law")))}>
-                קורס לדוגמה: דיני חוזים
-              </Button>
-            </div>
-          </Empty>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {courses.map((c) => {
-            const sources = engine.store.sources(c.id);
-            const concepts = engine.store.concepts(c.id).length;
-            const due = engine.store.dueCards(c.id, now).length;
-            const d = daysUntil(c.exam_date);
-            return (
-              <a key={c.id} href={href.course(c.id)} className="block">
-                <Card className="h-full p-5 transition hover:border-brand-500 hover:shadow">
-                  <div className="text-lg font-bold">{c.name}</div>
-                  <div className="mt-2 space-y-1 text-sm text-slate-600">
-                    <div>📄 {sources.length} קבצים · 🧠 {concepts} מושגים</div>
-                    {d !== null && <div>{d > 0 ? `⏳ ${d} ימים למבחן` : d === 0 ? "🔥 המבחן היום!" : "✅ המבחן עבר"}</div>}
-                    {due > 0 && <div className="font-medium text-amber-700">🃏 {due} כרטיסיות לחזרה היום</div>}
-                  </div>
-                </Card>
-              </a>
-            );
-          })}
+      <section>
+        <SectionLabel>התחלה מהירה</SectionLabel>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ActionTile grad={1} icon={<Plus size={20} />} title="קורס חדש" desc="יוצרים קורס וגוררים אליו מצגות, סיכומים ומבחנים" onClick={onNewCourse} />
+          <ActionTile grad={3} icon={<Sigma size={20} />} title="קורס לדוגמה: הסתברות" desc="הרצאות לדוגמה, מושגים וכלים מוכנים לנסות" onClick={() => go(href.course(engine.loadDemoCourse("probability")))} />
+          <ActionTile grad={4} icon={<Scale size={20} />} title="קורס לדוגמה: דיני חוזים" desc="מבחנים לדוגמה ומבחן חדש באותו סגנון" onClick={() => go(href.course(engine.loadDemoCourse("law")))} />
+          <ActionTile grad={6} icon={<KeyRound size={20} />} title="מפתח API ומודלים" desc={engine.demo ? "עוברים ממצב הדגמה לעבודה אמיתית" : "מודל, עלויות, גיבוי ושחזור"} href={href.settings()} />
         </div>
-      )}
-      {courses.length > 0 && (
-        <p className="text-center text-sm text-slate-500">
-          רוצים לראות דוגמה?{" "}
-          <button className="underline" onClick={() => go(href.course(engine.loadDemoCourse("probability")))}>
-            קורס הסתברות לדוגמה
-          </button>{" "}
-          ·{" "}
-          <button className="underline" onClick={() => go(href.course(engine.loadDemoCourse("law")))}>
-            קורס דיני חוזים לדוגמה
-          </button>
-        </p>
-      )}
-      <NewCourse open={open} onClose={() => setOpen(false)} />
+      </section>
+
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-[17px] font-semibold tracking-tight">הקורסים שלי</h2>
+          <Button size="sm" variant="secondary" onClick={onNewCourse}>
+            <Plus size={14} /> קורס חדש
+          </Button>
+        </div>
+        {courses.length === 0 ? (
+          <Card>
+            <Empty icon={<BookOpen size={26} strokeWidth={1.6} />} title="עוד אין קורסים">
+              <p>צרו קורס והעלו אליו את חומרי הלימוד, או נסו את אחד מקורסי הדוגמה למעלה.</p>
+            </Empty>
+          </Card>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {courses.map((c) => {
+              const sources = engine.store.sources(c.id);
+              const concepts = engine.store.concepts(c.id).length;
+              const due = engine.store.dueCards(c.id, now).length;
+              const d = daysUntil(c.exam_date);
+              return (
+                <a key={c.id} href={href.course(c.id)} className="group block rounded-2xl border border-black/[0.08] bg-white p-4 transition hover:border-black/15 hover:shadow">
+                  <div className="flex items-start gap-3">
+                    <CourseMark id={c.id} name={c.name} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[15px] font-medium">{c.name}</div>
+                      <div className="mt-0.5 text-[12.5px] text-muted">
+                        {sources.length} קבצים · {concepts} מושגים
+                      </div>
+                    </div>
+                    <ArrowLeft size={16} className="mt-1 text-slate-300 transition group-hover:-translate-x-0.5 group-hover:text-ink" />
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {d !== null && (
+                      <Badge color={d > 0 && d <= 7 ? "amber" : "slate"}>
+                        <CalendarDays size={12} />
+                        {d > 0 ? `${d} ימים למבחן` : d === 0 ? "המבחן היום" : "המבחן עבר"}
+                      </Badge>
+                    )}
+                    {due > 0 && (
+                      <Badge color="blue">
+                        <Layers size={12} />
+                        {due} לחזרה היום
+                      </Badge>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
-function NewCourse({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function NewCourse({ open, onClose }: { open: boolean; onClose: () => void }) {
   const engine = useEngine();
   const [name, setName] = useState("");
   const [date, setDate] = useState("");

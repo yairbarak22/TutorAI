@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Bot, Download, HardDrive, Info, Upload } from "lucide-react";
 import { DEFAULT_MODELS, verifyApiKey } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { download, forgetStorage, importBackup } from "../platform/storage.ts";
@@ -30,11 +31,11 @@ export function Settings() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <h1 className="text-2xl font-bold">הגדרות</h1>
+      <h1 className="text-2xl font-semibold">הגדרות</h1>
       {msg && <Alert kind={msg.kind}>{msg.text}</Alert>}
 
       <Card className="space-y-4 p-5">
-        <h2 className="font-bold">🤖 מודל ה-AI</h2>
+        <h2 className="flex items-center gap-2 font-semibold"><Bot size={16} /> מודל ה-AI</h2>
         <p className="text-sm text-slate-600">
           {engine.demo ? "כרגע במצב הדגמה (תשובות מוקלטות)." : "מחובר ל-Claude עם המפתח שלכם."} המפתח נשמר רק בדפדפן הזה.
         </p>
@@ -113,7 +114,7 @@ export function Settings() {
       </Card>
 
       <Card className="space-y-3 p-5">
-        <h2 className="font-bold">💾 הנתונים שלכם</h2>
+        <h2 className="flex items-center gap-2 font-semibold"><HardDrive size={16} /> הנתונים שלכם</h2>
         <p className="text-sm text-slate-600">
           {engine.root.mode === "folder" ? (
             <>
@@ -130,10 +131,10 @@ export function Settings() {
             variant="secondary"
             onClick={async () => download(await engine.backup(), `ruecai-backup-${new Date().toISOString().slice(0, 10)}.ruecai`)}
           >
-            ⬇️ הורדת גיבוי (.ruecai)
+            <Download size={14} /> הורדת גיבוי (.ruecai)
           </Button>
           <Button variant="secondary" onClick={() => restoreInput.current?.click()}>
-            ⬆️ שחזור מגיבוי
+            <Upload size={14} /> שחזור מגיבוי
           </Button>
           <input
             ref={restoreInput}
@@ -169,7 +170,7 @@ export function Settings() {
       </Card>
 
       <Card className="space-y-2 p-5 text-sm text-slate-600">
-        <h2 className="font-bold text-slate-900">ℹ️ אודות</h2>
+        <h2 className="flex items-center gap-2 font-semibold"><Info size={16} /> אודות</h2>
         <p>
           RuecAI Teacher הוא פרויקט קוד פתוח (Apache-2.0) של סטודנטים באוניברסיטת רייכמן. אין שרת ואין איסוף נתונים: הקבצים נשמרים אצלכם, והבקשות ל-AI נשלחות ישירות
           ל-Anthropic.

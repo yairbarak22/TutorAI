@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { ChartLine, ClipboardCheck, FolderOpen, Globe, GraduationCap, Lock, Network, Sparkles, Upload } from "lucide-react";
 import { verifyApiKey } from "@ruecai/core";
 import { folderSupported, pickFolder, useBrowserStorage, type DataRoot } from "../platform/storage.ts";
 import { secrets } from "../platform/secrets.ts";
-import { Alert, Button, Card, Spinner, errorMessage, inputClass } from "../ui/components.tsx";
+import { Alert, Badge, Button, Field, IconTile, Spinner, errorMessage, inputClass } from "../ui/components.tsx";
 
 /** Three steps, under 3 minutes: storage → API key → start. */
 export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
@@ -38,108 +39,144 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
     onDone(root);
   };
 
+  const optionCls =
+    "flex w-full items-start gap-3 rounded-xl border border-black/10 bg-white p-4 text-start transition hover:border-black/25 hover:bg-black/[0.015]";
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <div className="mb-8 text-center">
-        <img src="./icon.svg" alt="" className="mx-auto mb-3 h-16 w-16" />
-        <h1 className="text-3xl font-bold text-brand-700">RuecAI Teacher</h1>
-        <p className="mt-2 text-slate-600">עוזר לימודים מבוסס AI לסטודנטים של רייכמן. קוד פתוח, והחומרים נשארים אצלכם.</p>
-      </div>
-      <ol className="mb-6 flex justify-center gap-2 text-sm" aria-label="שלבים">
-        {["ברוכים הבאים", "איפה לשמור", "מפתח AI"].map((t, i) => (
-          <li key={t} className={`rounded-full px-3 py-1 ${step === i + 1 ? "bg-brand-600 text-white" : step > i + 1 ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-500"}`}>
-            {i + 1}. {t}
-          </li>
-        ))}
-      </ol>
-
-      {error && (
-        <div className="mb-4">
-          <Alert kind="error">{error}</Alert>
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto flex max-w-[440px] flex-col px-5 pt-[8vh] pb-12">
+        <div className="mb-8 flex items-center justify-center gap-2">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink text-white">
+            <GraduationCap size={18} strokeWidth={2.2} />
+          </span>
+          <h1 className="text-[18px] font-semibold tracking-tight">RuecAI Teacher</h1>
         </div>
-      )}
 
-      {step === 1 && (
-        <Card className="space-y-4 p-6">
-          <h2 className="text-xl font-bold">מה זה עושה?</h2>
-          <ul className="space-y-2 text-slate-700">
-            <li>📚 מעלים מצגות, סיכומים ומבחנים לדוגמה מכל קורס</li>
-            <li>🧠 מקבלים מפת מושגים, סיכומים, טוטור שמצטט את החומר, חידונים וכרטיסיות</li>
-            <li>📝 מבחנים חדשים בסגנון המבחנים לדוגמה, עם בדיקה לפי מחוון</li>
-            <li>📈 מעקב שליטה לפי מושג ותוכנית לימוד עד המבחן</li>
-          </ul>
-          <Alert kind="info">
-            🔒 <b>פרטיות:</b> אין לנו שרת. הקבצים נשמרים במחשב שלכם, והבקשות ל-AI נשלחות ישירות מהדפדפן ל-Anthropic עם המפתח שלכם.
-          </Alert>
-          <Button size="lg" className="w-full" onClick={() => setStep(2)}>
-            בואו נתחיל
-          </Button>
-        </Card>
-      )}
+        <div className="mb-6 flex items-center justify-center gap-1.5" aria-label="שלבים">
+          {[1, 2, 3].map((i) => (
+            <span key={i} className={`h-1.5 rounded-full transition-all ${step === i ? "w-6 bg-ink" : step > i ? "w-1.5 bg-ink/40" : "w-1.5 bg-black/10"}`} />
+          ))}
+        </div>
 
-      {step === 2 && (
-        <Card className="space-y-4 p-6">
-          <h2 className="text-xl font-bold">איפה לשמור את הנתונים?</h2>
-          {canFolder ? (
-            <>
-              <button
-                onClick={() => choose("folder")}
-                className="w-full rounded-xl border-2 border-brand-500 bg-brand-50 p-4 text-start hover:bg-brand-100"
-              >
-                <div className="font-bold">📁 בתיקייה במחשב (מומלץ)</div>
-                <div className="text-sm text-slate-600">
-                  בחרו או צרו תיקייה, למשל <code>מסמכים/RuecAI</code>. כל הנתונים יישמרו בה כקבצים רגילים (<code>ruecai.db</code>). אם התיקייה בתוך Google Drive או OneDrive, הנתונים גם מגובים וזמינים בכל מחשב.
-                </div>
-              </button>
-              <button onClick={() => choose("browser")} className="w-full rounded-xl border border-slate-200 p-4 text-start hover:bg-slate-50">
-                <div className="font-semibold">🌐 בתוך הדפדפן</div>
-                <div className="text-sm text-slate-600">בלי בחירת תיקייה. פחות עמיד: ניקוי נתוני גלישה ימחק הכול, לכן צריך לגבות ידנית.</div>
-              </button>
-            </>
-          ) : (
-            <>
-              <Alert kind="warn">
-                הדפדפן הזה (Safari/Firefox) לא מאפשר שמירה בתיקייה. הנתונים יישמרו בתוך הדפדפן, ותוכלו לגבות אותם לקובץ. <b>מומלץ להשתמש ב-Chrome או Edge.</b>
-              </Alert>
-              <Button size="lg" className="w-full" onClick={() => choose("browser")}>
-                המשך עם שמירה בדפדפן
-              </Button>
-            </>
-          )}
-        </Card>
-      )}
-
-      {step === 3 && (
-        <Card className="space-y-4 p-6">
-          <h2 className="text-xl font-bold">מפתח API של Claude</h2>
-          <p className="text-sm text-slate-600">
-            המערכת משתמשת במודלים של Anthropic (Claude). צרו מפתח ב-
-            <a className="text-brand-600 underline" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">
-              console.anthropic.com
-            </a>{" "}
-            והדביקו אותו כאן. המפתח נשמר רק בדפדפן הזה, לא בתיקיית הנתונים.
-          </p>
-          <input
-            type="password"
-            dir="ltr"
-            autoComplete="off"
-            placeholder="sk-ant-..."
-            className={inputClass}
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            aria-label="מפתח API"
-          />
-          <Button size="lg" className="w-full" disabled={!key.trim() || checking} onClick={() => finish(false)}>
-            {checking ? <Spinner label="בודק את המפתח…" /> : "סיום והתחלה"}
-          </Button>
-          <div className="border-t border-slate-100 pt-4 text-center">
-            <button className="text-sm text-slate-600 underline" onClick={() => finish(true)}>
-              אין לי מפתח עדיין: נסו במצב הדגמה
-            </button>
-            <p className="mt-1 text-xs text-slate-500">במצב הדגמה התשובות מוקלטות מראש ולא מבוססות על החומר שלכם.</p>
+        {error && (
+          <div className="mb-4">
+            <Alert kind="error">{error}</Alert>
           </div>
-        </Card>
-      )}
+        )}
+
+        {step === 1 && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-[26px] font-semibold leading-tight tracking-tight">ללמוד חכם יותר, מהחומר שלכם</h2>
+              <p className="mt-2 text-[14px] text-muted">עוזר לימודים מבוסס AI לסטודנטים של רייכמן. קוד פתוח, והחומרים נשארים אצלכם.</p>
+            </div>
+            <ul className="space-y-2">
+              {[
+                { icon: <Upload size={18} />, g: 6, t: "מעלים מצגות, סיכומים ומבחנים לדוגמה מכל קורס" },
+                { icon: <Network size={18} />, g: 3, t: "מפת מושגים, סיכומים, טוטור שמצטט את החומר, חידונים וכרטיסיות" },
+                { icon: <ClipboardCheck size={18} />, g: 5, t: "מבחנים חדשים בסגנון המבחנים לדוגמה, עם בדיקה לפי מחוון" },
+                { icon: <ChartLine size={18} />, g: 1, t: "מעקב שליטה לפי מושג ותוכנית לימוד עד המבחן" },
+              ].map((f) => (
+                <li key={f.t} className="flex items-center gap-3 rounded-xl border border-black/[0.06] p-3 text-[13.5px] text-ink-2">
+                  <IconTile grad={f.g} size="sm">
+                    {f.icon}
+                  </IconTile>
+                  {f.t}
+                </li>
+              ))}
+            </ul>
+            <p className="flex items-start gap-2 text-[12.5px] leading-relaxed text-muted">
+              <Lock size={14} className="mt-0.5 shrink-0" />
+              <span>
+                <b className="font-medium text-ink-2">פרטיות:</b> אין לנו שרת. הקבצים נשמרים במחשב שלכם, והבקשות ל-AI נשלחות ישירות מהדפדפן ל-Anthropic עם המפתח שלכם.
+              </span>
+            </p>
+            <Button size="lg" className="w-full" onClick={() => setStep(2)}>
+              בואו נתחיל
+            </Button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-5">
+            <div className="text-center">
+              <h2 className="text-[26px] font-semibold leading-tight tracking-tight">איפה לשמור את הנתונים?</h2>
+              <p className="mt-2 text-[14px] text-muted">הכול נשמר אצלכם. אפשר לשנות את זה אחר כך בהגדרות.</p>
+            </div>
+            {canFolder ? (
+              <div className="space-y-2.5">
+                <button onClick={() => choose("folder")} className={`${optionCls} ring-1 ring-ink/80`}>
+                  <IconTile grad={6} size="sm">
+                    <FolderOpen size={16} />
+                  </IconTile>
+                  <span>
+                    <span className="flex items-center gap-2 text-[14px] font-medium text-ink">
+                      בתיקייה במחשב <Badge>מומלץ</Badge>
+                    </span>
+                    <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">
+                      בחרו או צרו תיקייה, למשל <code>מסמכים/RuecAI</code>. הנתונים יישמרו בה כקבצים רגילים (<code>ruecai.db</code>). תיקייה בתוך Google Drive או OneDrive גם מגובה וזמינה בכל מחשב.
+                    </span>
+                  </span>
+                </button>
+                <button onClick={() => choose("browser")} className={optionCls}>
+                  <IconTile grad={2} size="sm">
+                    <Globe size={16} />
+                  </IconTile>
+                  <span>
+                    <span className="block text-[14px] font-medium text-ink">בתוך הדפדפן</span>
+                    <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">בלי בחירת תיקייה. פחות עמיד: ניקוי נתוני גלישה ימחק הכול, לכן צריך לגבות ידנית.</span>
+                  </span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <Alert kind="warn">
+                  הדפדפן הזה (Safari/Firefox) לא מאפשר שמירה בתיקייה. הנתונים יישמרו בתוך הדפדפן, ותוכלו לגבות אותם לקובץ. <b>מומלץ להשתמש ב-Chrome או Edge.</b>
+                </Alert>
+                <Button size="lg" className="w-full" onClick={() => choose("browser")}>
+                  המשך עם שמירה בדפדפן
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-5">
+            <div className="text-center">
+              <h2 className="text-[26px] font-semibold leading-tight tracking-tight">מפתח API של Claude</h2>
+              <p className="mt-2 text-[14px] text-muted">
+                צרו מפתח ב-
+                <a className="font-medium text-ink underline underline-offset-2" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">
+                  console.anthropic.com
+                </a>{" "}
+                והדביקו אותו כאן. המפתח נשמר רק בדפדפן הזה.
+              </p>
+            </div>
+            <Field label="מפתח API">
+              <input
+                type="password"
+                dir="ltr"
+                autoComplete="off"
+                placeholder="sk-ant-..."
+                className={`${inputClass} h-11`}
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                aria-label="מפתח API"
+              />
+            </Field>
+            <Button size="lg" className="w-full" disabled={!key.trim() || checking} onClick={() => finish(false)}>
+              {checking ? <Spinner label="בודק את המפתח…" /> : "סיום והתחלה"}
+            </Button>
+            <div className="flex items-center gap-3 text-[12px] text-slate-400">
+              <span className="h-px flex-1 bg-black/[0.08]" /> או <span className="h-px flex-1 bg-black/[0.08]" />
+            </div>
+            <Button variant="secondary" size="lg" className="w-full" onClick={() => finish(true)}>
+              <Sparkles size={16} /> אין לי מפתח עדיין: נסו במצב הדגמה
+            </Button>
+            <p className="text-center text-[12px] text-muted">במצב הדגמה התשובות מוקלטות מראש ולא מבוססות על החומר שלכם.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Lightbulb, Timer } from "lucide-react";
 import type { ExamSimulation, GradeResult } from "@ruecai/sdk";
 import { useEngine } from "../../engine.ts";
 import { Alert, Button, Card, ProgressBar, Spinner, inputClass } from "../../ui/components.tsx";
@@ -66,15 +67,15 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
     <div className="space-y-4">
       <Card className="space-y-2 p-5">
         <Markdown text={exam.instructions} />
-        {exam.style_notes && <p className="text-sm text-slate-500">💡 {exam.style_notes}</p>}
+        {exam.style_notes && <p className="flex items-start gap-1.5 text-sm text-slate-500"><Lightbulb size={15} className="mt-0.5 shrink-0" /> {exam.style_notes}</p>}
         <div className="flex flex-wrap items-center gap-3 pt-2">
           <span className="text-sm text-slate-600">
             {exam.questions.length} שאלות · {total} נק' · {exam.duration_minutes} דק'
           </span>
-          {!started && !grades && <Button onClick={() => setStarted(Date.now())}>▶️ התחלת המבחן (טיימר)</Button>}
+          {!started && !grades && <Button onClick={() => setStarted(Date.now())}><Timer size={15} /> התחלת המבחן (טיימר)</Button>}
           {started && !grades && (
-            <span className={`ms-auto font-mono text-lg font-bold ${left < 600 ? "text-red-600" : "text-brand-700"}`} aria-live="polite">
-              ⏱️ {fmt(left)}
+            <span className={`ms-auto font-mono text-lg font-semibold ${left < 600 ? "text-red-600" : "text-brand-700"}`} aria-live="polite">
+              <Timer size={14} className="inline" /> {fmt(left)}
             </span>
           )}
         </div>
@@ -83,7 +84,7 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
       {grades && (
         <Card className="p-5 text-center">
           <div className="text-sm text-slate-500">ציון</div>
-          <div className="text-4xl font-bold text-brand-700">
+          <div className="text-4xl font-semibold text-brand-700">
             {Math.round((score / total) * 100)}
             <span className="text-lg text-slate-500"> / 100</span>
           </div>
@@ -96,7 +97,7 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
         return (
           <Card key={q.id} className="space-y-3 p-5" data-testid="exam-question">
             <div className="flex items-baseline gap-2">
-              <span className="font-bold">שאלה {i + 1}</span>
+              <span className="font-semibold">שאלה {i + 1}</span>
               <span className="text-sm text-slate-500">({q.points} נק')</span>
             </div>
             <Markdown text={q.prompt} />
@@ -110,7 +111,7 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
             />
             {g && (
               <div className="space-y-2 rounded-lg bg-slate-50 p-4 text-sm">
-                <div className="font-bold">
+                <div className="font-semibold">
                   {g.score} / {q.points} נק'
                 </div>
                 <ul className="space-y-1">

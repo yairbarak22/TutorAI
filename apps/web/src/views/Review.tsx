@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { CircleCheck, Layers } from "lucide-react";
 import { previewIntervals, type ReviewGrade } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { href } from "../router.ts";
@@ -25,7 +26,7 @@ export function Review({ courseId }: { courseId: number }) {
 
   if (engine.store.cardCount(courseId) === 0)
     return (
-      <Empty icon="🃏" title="עוד אין כרטיסיות">
+      <Empty icon={<Layers size={26} strokeWidth={1.6} />} title="עוד אין כרטיסיות">
         <a className="underline" href={href.course(courseId, "studio", "flashcards")}>
           צרו כרטיסיות מהחומר
         </a>
@@ -33,7 +34,7 @@ export function Review({ courseId }: { courseId: number }) {
     );
   if (!card)
     return (
-      <Empty icon="🎉" title="סיימתם את החזרה להיום!">
+      <Empty icon={<CircleCheck size={26} strokeWidth={1.6} />} title="סיימתם את החזרה להיום!">
         הכרטיסיות הבאות יחזרו בדיוק כשתהיו על סף לשכוח אותן.
       </Empty>
     );
@@ -72,7 +73,7 @@ export function Review({ courseId }: { courseId: number }) {
                 setShown(false);
               }}
             >
-              <div className="font-bold">{b.label}</div>
+              <div className="font-semibold">{b.label}</div>
               <div className="text-xs opacity-80">{intervals?.[b.g]}</div>
             </button>
           ))}

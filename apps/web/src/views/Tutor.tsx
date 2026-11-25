@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MessagesSquare, SquarePen } from "lucide-react";
 import { extractInlineCitations, type ChatTurn } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
 import { Alert, Button, Card, Spinner, errorMessage, inputClass } from "../ui/components.tsx";
@@ -63,7 +64,7 @@ export function Tutor({ courseId }: { courseId: number }) {
             setMessages([]);
           }}
         >
-          🆕 שיחה חדשה
+          <SquarePen size={14} /> שיחה חדשה
         </Button>
       </div>
 
@@ -72,7 +73,7 @@ export function Tutor({ courseId }: { courseId: number }) {
       <div className="space-y-3" aria-live="polite">
         {messages.length === 0 && streaming === null && (
           <Card className="p-6 text-center">
-            <div className="text-4xl">🎓</div>
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl tile-grad-1 text-ink/80"><MessagesSquare size={26} strokeWidth={1.7} /></div>
             <p className="mt-2 font-semibold">על מה נלמד היום?</p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               {STARTERS.map((s) => (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Dumbbell, Trophy } from "lucide-react";
 import type { GradeResult, Quiz } from "@ruecai/sdk";
 import { useEngine } from "../../engine.ts";
 import { Button, Card, Spinner, errorMessage, inputClass } from "../../ui/components.tsx";
@@ -40,7 +41,7 @@ export function QuizPlayer({ quiz, courseId, artifactId }: { quiz: Quiz; courseI
         return (
           <Card key={q.id} className="space-y-3 p-5" data-testid="quiz-question">
             <div className="flex gap-2">
-              <span className="font-bold text-brand-600">{i + 1}.</span>
+              <span className="font-semibold text-brand-600">{i + 1}.</span>
               <Markdown text={q.prompt} className="flex-1" />
             </div>
             {q.kind === "mcq" ? (
@@ -72,7 +73,7 @@ export function QuizPlayer({ quiz, courseId, artifactId }: { quiz: Quiz; courseI
             {a.error && <p className="text-sm text-red-700">{a.error}</p>}
             {a.checked && (
               <div className={`rounded-lg p-3 text-sm ${a.correct ? "bg-emerald-50" : "bg-amber-50"}`}>
-                <div className="mb-1 font-bold">{a.correct ? "✅ נכון!" : q.kind === "mcq" ? "❌ לא מדויק" : "📝 משוב"}</div>
+                <div className="mb-1 font-semibold">{a.correct ? "נכון!" : q.kind === "mcq" ? "לא מדויק" : "משוב"}</div>
                 {a.grade && <Markdown text={`**ציון: ${a.grade.score}/10** — ${a.grade.feedback}`} />}
                 <Markdown text={q.explanation} />
                 {q.kind === "open" && <Markdown text={`**תשובה לדוגמה:** ${q.model_answer}`} />}
@@ -84,8 +85,8 @@ export function QuizPlayer({ quiz, courseId, artifactId }: { quiz: Quiz; courseI
       })}
       {done.length === quiz.questions.length && (
         <Card className="p-5 text-center">
-          <div className="text-3xl">{score / quiz.questions.length >= 0.7 ? "🎉" : "💪"}</div>
-          <div className="text-xl font-bold">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl tile-grad-3 text-ink/80">{score / quiz.questions.length >= 0.7 ? <Trophy size={22} /> : <Dumbbell size={22} />}</div>
+          <div className="text-xl font-semibold">
             {score} מתוך {quiz.questions.length}
           </div>
           <p className="text-slate-600">התוצאות עודכנו במעקב השליטה שלכם.</p>

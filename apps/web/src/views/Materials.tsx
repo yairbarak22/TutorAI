@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { FileText, Trash2, Upload } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { href } from "../router.ts";
 import { Alert, Badge, Button, Card, Empty, ProgressBar, Spinner } from "../ui/components.tsx";
@@ -44,7 +45,7 @@ export function Materials({ courseId }: { courseId: number }) {
         }}
         className={`rounded-2xl border-2 border-dashed p-8 text-center transition ${drag ? "border-brand-500 bg-brand-50" : "border-slate-300 bg-white"}`}
       >
-        <div className="text-4xl">📥</div>
+        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-ink shadow-sm ring-1 ring-black/[0.08]"><Upload size={22} strokeWidth={1.7} /></div>
         <p className="mt-2 font-semibold">גררו לכאן קבצים</p>
         <p className="text-sm text-slate-500">PDF · PowerPoint (PPTX) · Word (DOCX) · TXT/MD. הקבצים נשמרים רק אצלכם.</p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
@@ -79,7 +80,7 @@ export function Materials({ courseId }: { courseId: number }) {
       )}
 
       {sources.length === 0 ? (
-        <Empty icon="📚" title="אין עדיין חומרים">
+        <Empty icon={<FileText size={26} strokeWidth={1.6} />} title="אין עדיין חומרים">
           העלו מצגות או סיכומים. קבצים ששמם כולל "מבחן" יסומנו אוטומטית כמבחן לדוגמה.
         </Empty>
       ) : (
@@ -158,7 +159,7 @@ function SourceRow({ s }: { s: Source }) {
           onClick={() => confirm(`למחוק את "${s.name}"? הקובץ יימחק גם מהתיקייה.`) && engine.deleteSource(s.id)}
           aria-label={`מחיקת ${s.name}`}
         >
-          🗑️
+          <Trash2 size={15} />
         </Button>
       </div>
     </div>

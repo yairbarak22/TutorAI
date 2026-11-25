@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Box, Layers, ListChecks, Network } from "lucide-react";
 import { masteryLevel, MASTERY_LABEL, conceptInfos, type MasteryLevel } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
@@ -33,7 +34,7 @@ export function Concepts({ courseId }: { courseId: number }) {
 
   if (concepts.length === 0)
     return (
-      <Empty icon="🗺️" title="עוד אין מושגים">
+      <Empty icon={<Network size={26} strokeWidth={1.6} />} title="עוד אין מושגים">
         המושגים מחולצים אוטומטית מהחומרים שהעליתם. <a className="underline" href={href.course(courseId, "materials")}>העלו חומר</a>.
       </Empty>
     );
@@ -61,7 +62,7 @@ export function Concepts({ courseId }: { courseId: number }) {
           <Card key={c.id} className="p-4" data-testid="concept-card">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <div className="font-bold">{c.name}</div>
+                <div className="font-semibold">{c.name}</div>
                 {c.name_en && <div className="text-xs text-slate-500" dir="ltr">{c.name_en}</div>}
               </div>
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${COLORS[c.level].chip}`}>{MASTERY_LABEL[c.level]}</span>
@@ -71,13 +72,13 @@ export function Concepts({ courseId }: { courseId: number }) {
             <CitationChips ids={c.section_ids.slice(0, 4)} />
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" onClick={() => go(href.course(courseId, "studio", `quiz?concept=${encodeURIComponent(c.name)}`))}>
-                ❓ תרגול
+                <ListChecks size={13} /> תרגול
               </Button>
               <Button size="sm" variant="secondary" onClick={() => go(href.course(courseId, "studio", `explainer?concept=${encodeURIComponent(c.name)}`))}>
-                🧪 הסבר אינטראקטיבי
+                <Box size={13} /> הסבר אינטראקטיבי
               </Button>
               <Button size="sm" variant="ghost" onClick={() => go(href.course(courseId, "studio", `flashcards?concept=${encodeURIComponent(c.name)}`))}>
-                🃏 כרטיסיות
+                <Layers size={13} /> כרטיסיות
               </Button>
             </div>
           </Card>

@@ -1,11 +1,12 @@
 import { useEffect, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { X } from "lucide-react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700 disabled:bg-slate-300",
-  secondary: "bg-white text-brand-700 border border-slate-300 hover:bg-slate-50 disabled:text-slate-400",
-  ghost: "text-brand-700 hover:bg-brand-50 disabled:text-slate-400",
-  danger: "bg-white text-red-700 border border-red-200 hover:bg-red-50",
+  primary: "bg-ink text-white hover:bg-black/80 disabled:bg-slate-200 disabled:text-slate-400",
+  secondary: "bg-white text-ink border border-black/10 hover:bg-hover disabled:text-slate-400",
+  ghost: "text-ink-2 hover:bg-hover disabled:text-slate-400",
+  danger: "bg-white text-red-600 border border-red-200 hover:bg-red-50",
 };
 
 export function Button({
@@ -14,26 +15,26 @@ export function Button({
   className = "",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: "sm" | "md" | "lg" }) {
-  const sizes = { sm: "px-2.5 py-1 text-sm", md: "px-4 py-2", lg: "px-6 py-3 text-lg" };
+  const sizes = { sm: "h-8 px-3 text-[13px]", md: "h-9 px-4 text-sm", lg: "h-11 px-6 text-[15px]" };
   return (
     <button
       {...props}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors cursor-pointer disabled:cursor-not-allowed ${VARIANTS[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium transition-colors cursor-pointer disabled:cursor-not-allowed ${VARIANTS[variant]} ${sizes[size]} ${className}`}
     />
   );
 }
 
 export function Card({ children, className = "", ...rest }: { children: ReactNode; className?: string } & React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div {...rest} className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>
+    <div {...rest} className={`rounded-2xl border border-black/[0.08] bg-white ${className}`}>
       {children}
     </div>
   );
 }
 
-export function ProgressBar({ value, className = "", color = "bg-brand-500" }: { value: number; className?: string; color?: string }) {
+export function ProgressBar({ value, className = "", color = "bg-ink" }: { value: number; className?: string; color?: string }) {
   return (
-    <div className={`h-2 w-full overflow-hidden rounded-full bg-slate-100 ${className}`} role="progressbar" aria-valuenow={Math.round(value * 100)} aria-valuemin={0} aria-valuemax={100}>
+    <div className={`h-1.5 w-full overflow-hidden rounded-full bg-black/[0.06] ${className}`} role="progressbar" aria-valuenow={Math.round(value * 100)} aria-valuemin={0} aria-valuemax={100}>
       <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${Math.max(2, Math.min(100, value * 100))}%` }} />
     </div>
   );
@@ -42,7 +43,7 @@ export function ProgressBar({ value, className = "", color = "bg-brand-500" }: {
 export function Spinner({ label }: { label?: string }) {
   return (
     <span className="inline-flex items-center gap-2 text-slate-600" role="status">
-      <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink border-t-transparent" />
       {label}
     </span>
   );
@@ -57,31 +58,31 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 pt-[6vh]" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 p-4 pt-[8vh] backdrop-blur-[2px]" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`w-full ${wide ? "max-w-4xl" : "max-w-xl"} rounded-2xl bg-white shadow-xl`}
+        className={`w-full ${wide ? "max-w-4xl" : "max-w-lg"} rounded-3xl bg-white shadow-xl`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-          <h2 className="text-lg font-bold">{title}</h2>
-          <button onClick={onClose} className="rounded p-1 text-2xl leading-none text-slate-500 hover:bg-slate-100" aria-label="סגור">
-            ×
+        <div className="flex items-center justify-between px-6 pt-5 pb-2">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full text-muted hover:bg-hover hover:text-ink" aria-label="סגור">
+            <X size={18} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="px-6 pt-2 pb-6">{children}</div>
       </div>
     </div>
   );
 }
 
-export function Empty({ icon, title, children }: { icon: string; title: string; children?: ReactNode }) {
+export function Empty({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 py-14 text-center text-slate-600">
-      <div className="text-5xl">{icon}</div>
-      <div className="text-lg font-semibold text-slate-800">{title}</div>
+    <div className="flex flex-col items-center gap-2 py-14 text-center text-muted">
+      <div className="mb-1 grid h-14 w-14 place-items-center rounded-2xl border border-black/[0.08] bg-sidebar text-3xl text-ink">{icon}</div>
+      <div className="text-base font-semibold text-ink">{title}</div>
       {children}
     </div>
   );
@@ -89,42 +90,66 @@ export function Empty({ icon, title, children }: { icon: string; title: string; 
 
 export function Badge({ children, color = "slate" }: { children: ReactNode; color?: "slate" | "green" | "amber" | "red" | "blue" }) {
   const c = {
-    slate: "bg-slate-100 text-slate-700",
-    green: "bg-emerald-100 text-emerald-800",
-    amber: "bg-amber-100 text-amber-800",
-    red: "bg-red-100 text-red-800",
-    blue: "bg-brand-100 text-brand-700",
+    slate: "bg-black/[0.05] text-ink-2",
+    green: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
+    red: "bg-red-50 text-red-700",
+    blue: "bg-sky-50 text-sky-700",
   }[color];
-  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${c}`}>{children}</span>;
+  return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${c}`}>{children}</span>;
 }
 
 export function Alert({ kind = "info", children }: { kind?: "info" | "warn" | "error" | "success"; children: ReactNode }) {
   const c = {
-    info: "bg-brand-50 border-brand-100 text-brand-700",
-    warn: "bg-amber-50 border-amber-200 text-amber-900",
-    error: "bg-red-50 border-red-200 text-red-800",
-    success: "bg-emerald-50 border-emerald-200 text-emerald-800",
+    info: "bg-sidebar border-black/[0.08] text-ink-2",
+    warn: "bg-amber-50/70 border-amber-200/70 text-amber-900",
+    error: "bg-red-50/70 border-red-200/70 text-red-800",
+    success: "bg-emerald-50/70 border-emerald-200/70 text-emerald-800",
   }[kind];
   return (
-    <div role={kind === "error" ? "alert" : "status"} className={`rounded-lg border px-4 py-3 text-sm ${c}`}>
+    <div role={kind === "error" ? "alert" : "status"} className={`rounded-xl border px-4 py-3 text-sm ${c}`}>
       {children}
     </div>
   );
 }
 
 export const inputClass =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100";
+  "w-full rounded-xl border border-black/10 bg-white px-3.5 py-2 text-sm placeholder:text-slate-400 transition focus:border-black/30 focus:outline-none focus:ring-4 focus:ring-black/[0.05]";
 
 export function Field({ label, help, children }: { label: string; help?: string; children: ReactNode }) {
   return (
     <label className="block space-y-1">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span className="text-[13px] font-medium text-ink-2">{label}</span>
       {children}
-      {help && <span className="block text-xs text-slate-500">{help}</span>}
+      {help && <span className="block text-xs text-muted">{help}</span>}
     </label>
   );
 }
 
 export function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
+}
+
+/** Page header: title, optional subtitle, actions on the far side. */
+export function PageHeader({ title, subtitle, actions }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode }) {
+  return (
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-[26px] font-semibold leading-tight tracking-tight">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </div>
+  );
+}
+
+/** A small section label, like the group headings in the sidebar. */
+export function SectionLabel({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <h2 className={`mb-3 text-[13px] font-medium text-muted ${className}`}>{children}</h2>;
+}
+
+/** Rounded gradient square holding an icon — the visual signature of tools and quick actions. */
+export function IconTile({ children, grad = 1, size = "md" }: { children: ReactNode; grad?: number; size?: "sm" | "md" | "lg" }) {
+  const s = { sm: "h-8 w-8 rounded-lg", md: "h-11 w-11 rounded-xl", lg: "h-14 w-14 rounded-2xl" }[size];
+  return <span className={`tile-grad-${((grad - 1) % 8) + 1} grid shrink-0 place-items-center text-ink/80 ${s}`}>{children}</span>;
 }

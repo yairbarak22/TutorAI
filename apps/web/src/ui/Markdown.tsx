@@ -81,7 +81,7 @@ export function Markdown({ text, className = "" }: { text: string; className?: s
   return (
     <div
       dir="auto"
-      className={`prose-he [&_.cite]:mx-0.5 [&_.cite]:rounded [&_.cite]:bg-brand-50 [&_.cite]:px-1 [&_.cite]:text-xs [&_.cite]:font-semibold [&_.cite]:text-brand-600 [&_.cite]:hover:bg-brand-100 ${className}`}
+      className={`prose-he [&_.cite]:mx-0.5 [&_.cite]:rounded-full [&_.cite]:bg-black/[0.05] [&_.cite]:px-1.5 [&_.cite]:align-[1px] [&_.cite]:text-[11px] [&_.cite]:font-medium [&_.cite]:text-ink-2 [&_.cite]:hover:bg-black/10 ${className}`}
       onClick={(e) => {
         const target = e.target as HTMLElement;
         const el = target.closest("[data-cite]");

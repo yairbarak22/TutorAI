@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import type { InputSpec, LoadedTool } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
-import { Alert, Badge, Button, Card, Field, ProgressBar, errorMessage, inputClass } from "../ui/components.tsx";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { Alert, Badge, Button, Card, Field, ProgressBar, SectionLabel, errorMessage, inputClass } from "../ui/components.tsx";
+import { ToolTile } from "../ui/toolIcons.tsx";
 
 const PACK_LABEL: Record<string, string> = { core: "כלי ליבה (לכל הקורסים)", law: "חבילת משפטים", math: "חבילת מתמטיקה וכמותי" };
 
@@ -30,31 +32,32 @@ export function Studio({ courseId, preselect }: { courseId: number; preselect?: 
         </Alert>
       )}
       {packs.map((pack) => (
-        <section key={pack} className="space-y-3">
-          <h2 className="font-bold text-slate-700">{PACK_LABEL[pack] ?? `חבילת ${pack}`}</h2>
+        <section key={pack}>
+          <SectionLabel>{PACK_LABEL[pack] ?? `חבילת ${pack}`}</SectionLabel>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {tools
               .filter((t) => t.manifest.pack === pack)
               .map((t) => (
-                <a key={t.manifest.id} href={href.course(courseId, "studio", t.manifest.id)} data-testid={`tool-${t.manifest.id}`}>
-                  <Card className="h-full p-4 transition hover:border-brand-500 hover:shadow">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">{t.manifest.icon}</span>
-                      <span className="font-bold">{t.manifest.name}</span>
-                      {t.manifest.kind === "declarative" && (
-                        <span className="ms-auto">
-                          <Badge>ללא קוד</Badge>
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 text-sm text-slate-600">{t.manifest.description}</p>
-                  </Card>
+                <a
+                  key={t.manifest.id}
+                  href={href.course(courseId, "studio", t.manifest.id)}
+                  data-testid={`tool-${t.manifest.id}`}
+                  className="group flex items-start gap-3 rounded-2xl border border-black/[0.08] bg-white p-4 transition hover:border-black/15 hover:shadow"
+                >
+                  <ToolTile id={t.manifest.id} emoji={t.manifest.icon} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="text-[14px] font-medium text-ink">{t.manifest.name}</span>
+                      {t.manifest.kind === "declarative" && <Badge>ללא קוד</Badge>}
+                    </span>
+                    <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">{t.manifest.description}</span>
+                  </span>
                 </a>
               ))}
           </div>
         </section>
       ))}
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-[13px] text-muted">
         רוצים להוסיף כלי? כל כלי הוא תיקייה עם קובץ הגדרות ופרומפט.{" "}
         <a className="underline" href="https://github.com/yairbarak22/RuecAI_Tutor/blob/main/docs/plugins.md" target="_blank" rel="noreferrer">
           המדריך לכתיבת כלי
@@ -89,16 +92,16 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-800">
-        → כל הכלים
+      <button onClick={onBack} className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-ink">
+        <ArrowRight size={14} /> כל הכלים
       </button>
-      <Card className="space-y-4 p-6">
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-bold">
-            <span>{tool.manifest.icon}</span>
-            {tool.manifest.name}
-          </h2>
-          <p className="mt-1 text-slate-600">{tool.manifest.description}</p>
+      <Card className="space-y-5 p-6">
+        <div className="flex items-start gap-4">
+          <ToolTile id={tool.manifest.id} emoji={tool.manifest.icon} size="lg" />
+          <div>
+            <h2 className="text-[20px] font-semibold tracking-tight">{tool.manifest.name}</h2>
+            <p className="mt-1 text-[13.5px] text-muted">{tool.manifest.description}</p>
+          </div>
         </div>
         {tool.manifest.inputs.map((input) => (
           <InputControl key={input.name} input={input} courseId={courseId} value={params[input.name] ?? ""} onChange={(v) => setParams({ ...params, [input.name]: v })} />
@@ -107,12 +110,12 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
         {running ? (
           <div className="space-y-2" role="status">
             <ProgressBar value={running.pct} />
-            <div className="text-sm text-slate-600 animate-pulse-soft">{running.msg}</div>
+            <div className="text-sm text-ink-2 animate-pulse-soft">{running.msg}</div>
             <div className="text-xs text-slate-400">זה יכול לקחת עד דקה. אפשר להמשיך לעבוד בלשוניות אחרות.</div>
           </div>
         ) : (
           <Button size="lg" className="w-full" onClick={run} disabled={missing.length > 0}>
-            {tool.manifest.icon} יצירה
+            <Sparkles size={16} /> יצירה
           </Button>
         )}
       </Card>

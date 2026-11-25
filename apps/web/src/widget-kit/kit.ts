@@ -15,35 +15,35 @@ import katex from "katex";
 
 /* ------------------------------------------------------------------ theme */
 const PALETTE = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#4b5563"];
-const INK = "#0f172a";
-const MUTED = "#64748b";
-const GRID = "#e2e8f0";
-const ACCENT = "#3b6ea5";
+const INK = "#0f0f10";
+const MUTED = "#6f6f74";
+const GRID = "#ebebeb";
+const ACCENT = "#0f0f10";
 
 const CSS = `
 :root{color-scheme:light}
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#fff;color:${INK};font:15px/1.55 system-ui,-apple-system,"Segoe UI","Arial Hebrew",sans-serif}
+html,body{margin:0;padding:0;background:#fff;color:${INK};font:14px/1.55 Inter,system-ui,-apple-system,"Segoe UI","Arial Hebrew",sans-serif;-webkit-font-smoothing:antialiased}
 body{padding:14px}
 .viz-app{display:flex;flex-direction:column;gap:12px}
-.viz-head h1{font-size:18px;margin:0 0 2px;font-weight:700}
+.viz-head h1{font-size:18px;margin:0 0 2px;font-weight:600;letter-spacing:-.01em}
 .viz-head p{margin:0;color:${MUTED};font-size:14px}
 .viz-main{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);align-items:start}
 @media (min-width:1000px){.viz-main:not(.viz-wide){grid-template-columns:minmax(0,1fr) 270px}}
 .viz-stage{display:grid;gap:12px;min-width:0}
 @media (min-width:760px){.viz-stage.viz-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:999px){.viz-main .viz-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));align-items:start}}
-.viz-card{position:relative;border:1px solid ${GRID};border-radius:12px;background:#fff;overflow:hidden;min-width:0}
+.viz-card{position:relative;border:1px solid ${GRID};border-radius:16px;background:#fff;overflow:hidden;min-width:0}
 .viz-card-title{position:absolute;top:8px;inset-inline-start:10px;z-index:2;font-size:12px;font-weight:600;color:${MUTED};background:rgba(255,255,255,.85);padding:2px 8px;border-radius:999px;pointer-events:none}
 .viz-hint{position:absolute;bottom:6px;inset-inline-end:10px;z-index:2;font-size:11px;color:#94a3b8;pointer-events:none}
-.viz-panel{display:flex;flex-direction:column;gap:12px;padding:12px;border:1px solid ${GRID};border-radius:12px;background:#f8fafc}
+.viz-panel{display:flex;flex-direction:column;gap:14px;padding:14px;border:1px solid ${GRID};border-radius:16px;background:#fafafa}
 .viz-ctl label{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:600;margin-bottom:4px}
 .viz-ctl output{font:600 13px ui-monospace,SFMono-Regular,Menlo,monospace;color:${ACCENT};direction:ltr;unicode-bidi:isolate}
 .viz-ctl input[type=range]{width:100%;accent-color:${ACCENT};direction:ltr}
-.viz-ctl select{width:100%;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font:inherit}
+.viz-ctl select{width:100%;padding:6px 8px;border:1px solid rgba(0,0,0,.1);border-radius:10px;background:#fff;font:inherit}
 .viz-btns{display:flex;flex-wrap:wrap;gap:6px}
-.viz-btn{border:1px solid #cbd5e1;background:#fff;color:${INK};border-radius:8px;padding:6px 12px;font:600 13px inherit;cursor:pointer}
-.viz-btn:hover{background:#eff6ff;border-color:${ACCENT}}
+.viz-btn{border:1px solid rgba(0,0,0,.1);background:#fff;color:${INK};border-radius:999px;padding:6px 14px;font:600 13px inherit;cursor:pointer}
+.viz-btn:hover{background:#f3f3f3}
 .viz-btn.primary{background:${ACCENT};border-color:${ACCENT};color:#fff}
 .viz-toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer}
 .viz-toggle input{accent-color:${ACCENT};width:16px;height:16px}
@@ -52,7 +52,7 @@ body{padding:14px}
 .viz-readouts dd{margin:0;font:700 14px ui-monospace,SFMono-Regular,Menlo,monospace;direction:ltr;unicode-bidi:isolate;text-align:left}
 .viz-note{border-inline-start:4px solid #f59e0b;background:#fffbeb;border-radius:8px;padding:8px 12px;font-size:14px}
 .viz-note b{color:#92400e}
-.viz-formula{direction:ltr;text-align:center;overflow-x:auto;padding:10px 12px;background:#f8fafc;border:1px solid ${GRID};border-left:4px solid ${ACCENT};border-radius:10px;font-size:1.1em}
+.viz-formula{direction:ltr;text-align:center;overflow-x:auto;padding:10px 12px;background:#fafafa;border:1px solid ${GRID};border-left:3px solid ${ACCENT};border-radius:12px;font-size:1.1em}
 .viz-formula.inline{display:inline-block;padding:0 .2em;border:0;background:none;font-size:1em}
 .viz-legend{display:flex;flex-wrap:wrap;gap:10px;padding:6px 10px 8px;font-size:12px;color:${MUTED}}
 .viz-legend i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-inline-end:5px;vertical-align:middle}
@@ -776,7 +776,7 @@ export function scene3d(target: El | string, opts: Scene3DOptions = {}) {
   h("div", "viz-hint", box, "גררו לסיבוב · גלגלת לזום");
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(opts.background ?? "#f8fafc");
+  scene.background = new THREE.Color(opts.background ?? "#fafafa");
   const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
   camera.up.set(0, 0, 1);
   camera.position.copy(v(opts.camera ?? [6, -7, 5]));

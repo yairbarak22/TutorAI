@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { Paperclip } from "lucide-react";
 import { sectionIdFromKey } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { Button, Modal } from "./components.tsx";
@@ -28,7 +29,7 @@ function SourceViewer({ sectionKey, onClose }: { sectionKey: string; onClose: ()
         <p>המקור לא נמצא (ייתכן שהקובץ נמחק).</p>
       ) : (
         <div className="space-y-3">
-          {section.title && <h3 className="text-lg font-bold">{section.title}</h3>}
+          {section.title && <h3 className="text-lg font-semibold">{section.title}</h3>}
           <pre dir="auto" className="max-h-[55vh] overflow-y-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-4 font-sans text-sm leading-7">
             {section.text}
           </pre>
@@ -66,10 +67,11 @@ export function CitationChips({ ids }: { ids: string[] }) {
             key={k}
             type="button"
             onClick={() => open(k)}
-            className="rounded-md border border-brand-100 bg-brand-50 px-2 py-0.5 text-xs text-brand-700 hover:bg-brand-100"
+            data-testid="cite-chip"
+            className="inline-flex items-center gap-1 rounded-full border border-black/[0.08] bg-white px-2.5 py-0.5 text-[12px] text-ink-2 transition hover:border-black/20 hover:bg-hover"
             title={src ? `${src.name} · ${s!.anchor}` : k}
           >
-            📎 {src ? `${shortName(src.name)} · ${s!.anchor}` : k}
+            <Paperclip size={11} className="text-muted" /> {src ? `${shortName(src.name)} · ${s!.anchor}` : k}
           </button>
         );
       })}

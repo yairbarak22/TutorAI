@@ -1,49 +1,103 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/heebo";
 
+/*
+ * Design system: a minimal monochrome look (near-black ink, soft neutral greys, hairline
+ * borders, generous radii, pill buttons, line icons). Colour is used only for meaning:
+ * status, mastery, and the gradient tiles that mark tools.
+ * "brand" and "slate" are remapped to neutrals so every existing class follows the system.
+ */
 @theme {
-  --font-sans: "Segoe UI", "Arial Hebrew", "Noto Sans Hebrew", system-ui, -apple-system, sans-serif;
-  --color-brand-50: #eef4fb;
-  --color-brand-100: #d6e4f5;
-  --color-brand-500: #2f5d8f;
-  --color-brand-600: #1e3a5f;
-  --color-brand-700: #162c48;
+  --font-sans: "Inter Variable", "Heebo Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter Variable", "Heebo Variable", system-ui, sans-serif;
+
+  --color-ink: #0f0f10;
+  --color-ink-2: #2e2e2e;
+  --color-muted: #6f6f74;
+  --color-line: #ebebeb;
+  --color-surface: #ffffff;
+  --color-canvas: #ffffff;
+  --color-sidebar: #fafafa;
+  --color-hover: #f3f3f3;
+
+  --color-brand-50: #f5f5f5;
+  --color-brand-100: #ebebeb;
+  --color-brand-500: #2e2e2e;
+  --color-brand-600: #0f0f10;
+  --color-brand-700: #000000;
   --color-accent: #f59e0b;
+
+  --color-slate-50: #fafafa;
+  --color-slate-100: #f4f4f4;
+  --color-slate-200: #ebebeb;
+  --color-slate-300: #dcdcdc;
+  --color-slate-400: #a1a1a6;
+  --color-slate-500: #6f6f74;
+  --color-slate-600: #535357;
+  --color-slate-700: #2e2e2e;
+  --color-slate-800: #1c1c1e;
+  --color-slate-900: #0f0f10;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow: 0 2px 8px -2px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-xl: 0 24px 48px -12px rgb(0 0 0 / 0.18), 0 0 0 1px rgb(0 0 0 / 0.06);
 }
 
 html,
 body {
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
 }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.015em; }
+::selection { background: #0f0f10; color: #fff; }
+:focus-visible { outline: 2px solid #0f0f10; outline-offset: 2px; border-radius: 8px; }
+
+/* Gradient "orb" tiles used for tools and quick actions. */
+.tile-grad-1 { background: linear-gradient(135deg, #8ec5fc 0%, #e0c3fc 100%); }
+.tile-grad-2 { background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); }
+.tile-grad-3 { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); }
+.tile-grad-4 { background: linear-gradient(135deg, #fccb90 0%, #d57eeb 100%); }
+.tile-grad-5 { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+.tile-grad-6 { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
+.tile-grad-7 { background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); }
+.tile-grad-8 { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
 
 /* Rendered markdown */
 .prose-he {
   line-height: 1.75;
+  font-size: 15px;
+  color: #1c1c1e;
 }
-.prose-he h1 { font-size: 1.4rem; font-weight: 700; margin: 1rem 0 .5rem; }
-.prose-he h2 { font-size: 1.2rem; font-weight: 700; margin: 1rem 0 .5rem; }
-.prose-he h3 { font-size: 1.05rem; font-weight: 700; margin: .75rem 0 .25rem; }
+.prose-he h1 { font-size: 1.4rem; font-weight: 600; margin: 1rem 0 .5rem; }
+.prose-he h2 { font-size: 1.2rem; font-weight: 600; margin: 1rem 0 .5rem; }
+.prose-he h3 { font-size: 1.05rem; font-weight: 600; margin: .75rem 0 .25rem; }
 .prose-he p { margin: .5rem 0; }
 .prose-he ul { list-style: disc; padding-inline-start: 1.4rem; margin: .5rem 0; }
 .prose-he ol { list-style: decimal; padding-inline-start: 1.4rem; margin: .5rem 0; }
 .prose-he li { margin: .2rem 0; }
-.prose-he code { background: #f1f5f9; padding: 0 .3rem; border-radius: .25rem; font-size: .9em; direction: ltr; unicode-bidi: embed; }
-.prose-he pre { background: #0f172a; color: #e2e8f0; padding: .75rem; border-radius: .5rem; overflow-x: auto; direction: ltr; text-align: left; }
+.prose-he code { background: #f4f4f4; padding: 0 .3rem; border-radius: .25rem; font-size: .9em; direction: ltr; unicode-bidi: embed; }
+.prose-he pre { background: #0f0f10; color: #ededed; padding: .9rem 1rem; border-radius: .75rem; overflow-x: auto; direction: ltr; text-align: left; }
 .prose-he pre code { background: none; color: inherit; }
 .prose-he table { border-collapse: collapse; margin: .5rem 0; }
-.prose-he td, .prose-he th { border: 1px solid #cbd5e1; padding: .25rem .5rem; }
-.prose-he blockquote { border-inline-start: 3px solid #cbd5e1; padding-inline-start: .75rem; color: #475569; }
+.prose-he td, .prose-he th { border: 1px solid #ebebeb; padding: .25rem .5rem; }
+.prose-he blockquote { border-inline-start: 3px solid #dcdcdc; padding-inline-start: .75rem; color: #535357; }
 /* Formulas: always LTR, one fixed look everywhere. */
 .math-box {
   direction: ltr; text-align: center; position: relative;
   margin: .75rem 0; padding: .85rem 1rem; overflow-x: auto; overflow-y: hidden;
-  background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3b6ea5; border-radius: .6rem;
+  background: #fafafa; border: 1px solid #ebebeb; border-left: 3px solid #0f0f10; border-radius: .75rem;
   cursor: copy;
 }
 .math-box::after {
   content: "LaTeX"; position: absolute; top: .3rem; right: .5rem;
-  font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .05em; color: #94a3b8;
+  font: 600 .6rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .05em; color: #a1a1a6;
 }
 .math-box.copied::after { content: "הועתק ✓"; color: #059669; }
 .math-box .katex-display { margin: 0; }

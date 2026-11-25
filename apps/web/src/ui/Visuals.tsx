@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Lock, Wrench } from "lucide-react";
 import DOMPurify from "dompurify";
 import { Alert, Button, Spinner } from "./components.tsx";
 
@@ -122,13 +123,13 @@ export function WidgetFrame({ html, onError, onRepair, repairing }: { html: stri
             <span>בווידג'ט יש שגיאה: {error}</span>
             {onRepair && (
               <Button size="sm" variant="secondary" disabled={repairing} onClick={() => onRepair(error)}>
-                {repairing ? <Spinner label="מתקן…" /> : "🔧 תקן אוטומטית"}
+                {repairing ? <Spinner label="מתקן…" /> : <><Wrench size={14} /> תקן אוטומטית</>}
               </Button>
             )}
           </div>
         </Alert>
       )}
-      <p className="text-xs text-slate-500">🔒 רץ בסביבה מבודדת: אין לו גישה לאינטרנט, לקבצים שלכם או למפתח ה-API.</p>
+      <p className="flex items-center gap-1.5 text-xs text-slate-500"><Lock size={12} /> רץ בסביבה מבודדת: אין לו גישה לאינטרנט, לקבצים שלכם או למפתח ה-API.</p>
     </div>
   );
 }

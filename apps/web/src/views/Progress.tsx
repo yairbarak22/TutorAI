@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CalendarDays, ChartLine } from "lucide-react";
 import { conceptInfos, masteryLevel, MASTERY_LABEL } from "@ruecai/core";
 import type { StudyPlan } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
@@ -18,7 +19,7 @@ export function ProgressView({ courseId }: { courseId: number }) {
   const todayPlan = plan ? (plan.data as StudyPlan).days.find((d) => d.date === today) : undefined;
   const d = daysUntil(course.exam_date);
 
-  if (concepts.length === 0) return <Empty icon="📈" title="עוד אין נתונים">העלו חומר ותרגלו כדי לראות התקדמות.</Empty>;
+  if (concepts.length === 0) return <Empty icon={<ChartLine size={26} strokeWidth={1.6} />} title="עוד אין נתונים">העלו חומר ותרגלו כדי לראות התקדמות.</Empty>;
 
   const avg = concepts.reduce((n, c) => n + c.mastery, 0) / concepts.length;
   const makePlan = async () => {
@@ -39,21 +40,21 @@ export function ProgressView({ courseId }: { courseId: number }) {
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
           <div className="text-sm text-slate-500">שליטה ממוצעת</div>
-          <div className="text-3xl font-bold text-brand-700">{Math.round(avg * 100)}%</div>
+          <div className="text-3xl font-semibold text-brand-700">{Math.round(avg * 100)}%</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm text-slate-500">תשובות שנבדקו</div>
-          <div className="text-3xl font-bold text-brand-700">{attempts.length}</div>
+          <div className="text-3xl font-semibold text-brand-700">{attempts.length}</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm text-slate-500">ימים למבחן</div>
-          <div className="text-3xl font-bold text-brand-700">{d ?? "—"}</div>
+          <div className="text-3xl font-semibold text-brand-700">{d ?? "—"}</div>
         </Card>
       </div>
 
       <Card className="space-y-3 p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-bold">📅 היום בתוכנית</h2>
+          <h2 className="flex items-center gap-2 font-semibold"><CalendarDays size={16} /> היום בתוכנית</h2>
           <Button size="sm" className="ms-auto" onClick={makePlan} disabled={busy}>
             {busy ? <Spinner label="בונה…" /> : plan ? "עדכון התוכנית לפי המצב הנוכחי" : "יצירת תוכנית לימוד"}
           </Button>
@@ -82,7 +83,7 @@ export function ProgressView({ courseId }: { courseId: number }) {
       </Card>
 
       <Card className="p-5">
-        <h2 className="mb-3 font-bold">שליטה לפי מושג</h2>
+        <h2 className="mb-3 font-semibold">שליטה לפי מושג</h2>
         <div className="space-y-3">
           {concepts.map((c) => {
             const level = masteryLevel(c.mastery, c.attempts);
