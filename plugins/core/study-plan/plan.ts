@@ -82,7 +82,7 @@ export function buildStudyPlan({ concepts, today, examDate, minutesPerDay, title
     });
     for (const gap of [3, 7]) {
       const d = practiceDay + gap;
-      if (practiceDay >= 0 && d <= lastStudyDay) place(d, { concept: c.name, activity: "review", minutes: 10, reason: t(`חזרה מרווחת (+${gap} ימים)`, `Spaced review (+${gap} days)`) });
+      if (practiceDay >= 0 && d <= lastStudyDay) place(d, { concept: c.name, activity: "review", minutes: 10, reason: t(gap === 1 ? "חזרה מרווחת (למחרת)" : `חזרה מרווחת (+${gap} ימים)`, `Spaced review (+${gap} days)`) });
     }
     if (load[cursor] >= minutesPerDay * 0.8) cursor = Math.min(cursor + 1, lastStudyDay);
   }

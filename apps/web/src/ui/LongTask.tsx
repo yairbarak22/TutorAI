@@ -87,7 +87,7 @@ export function LongTask(p: LongTaskProps) {
   const { elapsed, value, remaining, late } = useEstimate(p);
   const words = p.chars ? Math.round(p.chars / 6) : 0;
   const current = p.stages[Math.min(p.stage, p.stages.length - 1)];
-  const timeLine = late ? t("לוקח קצת יותר מהרגיל, עדיין עובד…", "Taking a bit longer than usual, still working…") : remainingText(remaining);
+  const timeLine = late ? t("זה לוקח קצת יותר זמן מהרגיל, אבל עדיין עובד…", "Taking a bit longer than usual, still working…") : remainingText(remaining);
 
   if (p.compact)
     return (

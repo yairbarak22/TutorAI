@@ -14,7 +14,7 @@ const packLabel = (p: string): string =>
   ({
     core: t("כלי ליבה", "Core tools"),
     law: t("חבילת משפטים", "Law pack"),
-    math: t("חבילת מתמטיקה וכמותי", "Math & quantitative pack"),
+    math: t("חבילת מתמטיקה ומקצועות כמותיים", "Math & quantitative pack"),
   })[p] ?? t(`חבילת ${p}`, `${p} pack`);
 const packChip = (p: string): string => ({ core: t("ליבה", "Core"), law: t("משפטים", "Law"), math: t("מתמטיקה", "Math") })[p] ?? p;
 

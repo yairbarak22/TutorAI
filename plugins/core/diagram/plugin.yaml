@@ -20,7 +20,7 @@ authors: [RuecAI core team]
 i18n:
   he:
     name: תרשים
-    description: תרשים Mermaid, כמו מפת מושגים, תרשים זרימה להחלטה או ציר זמן.
+    description: תרשים (Mermaid), כמו מפת מושגים, תרשים זרימה להחלטה או ציר זמן.
     inputs:
       topic: { label: נושא }
       style:

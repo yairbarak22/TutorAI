@@ -126,11 +126,11 @@ export function WidgetFrame({ html, onError, onRepair, repairing }: { html: stri
         <Alert kind="warn">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span>
-              {t("בווידג'ט יש שגיאה:", "The widget has an error:")} {error}
+              {t("יש שגיאה בהמחשה:", "The widget has an error:")} {error}
             </span>
             {onRepair && (
               <Button size="sm" variant="secondary" disabled={repairing} onClick={() => onRepair(error)}>
-                {repairing ? <Spinner label={t("מתקן…", "Fixing…")} /> : <><Wrench size={14} /> {t("תקן אוטומטית", "Fix automatically")}</>}
+                {repairing ? <Spinner label={t("מתקן…", "Fixing…")} /> : <><Wrench size={14} /> {t("תיקון אוטומטי", "Fix automatically")}</>}
               </Button>
             )}
           </div>

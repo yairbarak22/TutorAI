@@ -113,7 +113,7 @@ export function Materials({ courseId }: { courseId: number }) {
 
       {ready > 0 && (
         <Alert kind="success">
-          {t(`${ready} קבצים מוכנים. אפשר לעבור ל`, `${ready} ${ready === 1 ? "file" : "files"} ready. You can go to the `)}
+          {t(ready === 1 ? "קובץ אחד מוכן. אפשר לעבור ל" : `${ready} קבצים מוכנים. אפשר לעבור ל`, `${ready} ${ready === 1 ? "file" : "files"} ready. You can go to the `)}
           <a className="font-semibold underline" href={href.course(courseId, "concepts")}>
             {t("מפת המושגים", "concept map")}
           </a>
@@ -123,7 +123,7 @@ export function Materials({ courseId }: { courseId: number }) {
           </a>{" "}
           {t("או ל", "or the ")}
           <a className="font-semibold underline" href={href.course(courseId, "tutor")}>
-            {t("טוטור", "tutor")}
+            {t("מורה פרטי", "tutor")}
           </a>
           .
         </Alert>
@@ -170,13 +170,13 @@ function SourceRow({ s }: { s: Source }) {
                 {queuePos === 1
                   ? t("הבא בתור", "Next in line")
                   : queuePos > 1
-                    ? t(`ממתין בתור (${queuePos} קבצים לפניו)`, `Waiting in queue (${queuePos} files ahead)`)
+                    ? t(queuePos === 1 ? "ממתין בתור (קובץ אחד לפניו)" : `ממתין בתור (${queuePos} קבצים לפניו)`, `Waiting in queue (${queuePos} files ahead)`)
                     : t("ממתין לעיבוד…", "Waiting to be processed…")}
               </div>
             )}
           </div>
         )}
-        {s.status === "ready" && <div className="text-xs text-slate-500">{t(`${sections} קטעים`, `${sections} ${sections === 1 ? "section" : "sections"}`)} · {(s.size / 1024).toFixed(0)}KB</div>}
+        {s.status === "ready" && <div className="text-xs text-slate-500">{t(sections === 1 ? "קטע אחד" : `${sections} קטעים`, `${sections} ${sections === 1 ? "section" : "sections"}`)} · {(s.size / 1024).toFixed(0)}KB</div>}
         {s.status === "error" && <div className="text-sm text-red-700">{s.error}</div>}
       </div>
       <div className="flex gap-1.5">
@@ -187,7 +187,7 @@ function SourceRow({ s }: { s: Source }) {
           onClick={() => engine.store.setSourceKind(s.id, s.kind === "material" ? "sample_exam" : "material")}
           title={t("החלפת סוג", "Change type")}
         >
-          <Repeat size={13} /> {s.kind === "material" ? t("סמן כמבחן", "Mark as exam") : t("סמן כחומר", "Mark as material")}
+          <Repeat size={13} /> {s.kind === "material" ? t("סימון כמבחן", "Mark as exam") : t("סימון כחומר", "Mark as material")}
         </Button>
         <Button size="sm" variant="secondary" className="h-7 px-2.5 text-[12.5px]" onClick={async () => window.open(await engine.sourceUrl(s.id), "_blank", "noopener")}>
           <ExternalLink size={13} /> {t("פתיחה", "Open")}

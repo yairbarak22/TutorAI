@@ -22,7 +22,7 @@ authors: [RuecAI core team]
 i18n:
   he:
     name: חידון
-    description: שאלות אמריקאיות ופתוחות עם משוב והסבר — מעדכן את מעקב השליטה שלך.
+    description: שאלות אמריקאיות ופתוחות עם משוב והסבר — מעדכן את מעקב השליטה שלכם.
     inputs:
       source: { label: מקור }
       concept: { label: מושג (לא חובה) }

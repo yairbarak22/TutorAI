@@ -39,7 +39,7 @@ export function previewIntervals(fsrsJson: string, now: Date): Record<ReviewGrad
     const mins = Math.round((d.getTime() - now.getTime()) / 60_000);
     if (mins < 60) return t(`${Math.max(1, mins)} דק'`, `${Math.max(1, mins)} min`);
     if (mins < 60 * 24) return t(`${Math.round(mins / 60)} שע'`, `${Math.round(mins / 60)} h`);
-    return t(`${Math.round(mins / 1440)} ימים`, `${Math.round(mins / 1440)} d`);
+    return t(Math.round(mins / 1440) === 1 ? "יום" : `${Math.round(mins / 1440)} ימים`, `${Math.round(mins / 1440)} d`);
   };
   return {
     again: fmt(all[Rating.Again].card.due),

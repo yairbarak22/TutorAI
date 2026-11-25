@@ -93,7 +93,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
             <ul className="space-y-2">
               {[
                 { icon: <Upload size={18} />, g: 6, text: t("מעלים מצגות, סיכומים ומבחנים לדוגמה מכל קורס", "Upload slides, summaries and sample exams from any course") },
-                { icon: <Network size={18} />, g: 3, text: t("מפת מושגים, סיכומים, טוטור שמצטט את החומר, חידונים וכרטיסיות", "Concept maps, summaries, a tutor that cites your material, quizzes and flashcards") },
+                { icon: <Network size={18} />, g: 3, text: t("מפת מושגים, סיכומים, מורה פרטי שמצטט את החומר, חידונים וכרטיסיות", "Concept maps, summaries, a tutor that cites your material, quizzes and flashcards") },
                 { icon: <ClipboardCheck size={18} />, g: 5, text: t("מבחנים חדשים בסגנון המבחנים לדוגמה, עם בדיקה לפי מחוון", "New exams in the style of the sample exams, graded against a rubric") },
                 { icon: <ChartLine size={18} />, g: 1, text: t("מעקב שליטה לפי מושג ותוכנית לימוד עד המבחן", "Mastery tracking per concept and a study plan up to the exam") },
               ].map((f) => (
@@ -140,7 +140,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
                     <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">
                       {t("בחרו או צרו תיקייה, למשל", "Choose or create a folder, for example")} <code>{t("מסמכים/RuecAI", "Documents/RuecAI")}</code>.{" "}
                       {t("הנתונים יישמרו בה כקבצים רגילים", "Your data will be saved in it as regular files")} (<code>ruecai.db</code>).{" "}
-                      {t("תיקייה בתוך Google Drive או OneDrive גם מגובה וזמינה בכל מחשב.", "A folder inside Google Drive or OneDrive is also backed up and available on any computer.")}
+                      {t("תיקייה ב-Google Drive או ב-OneDrive גם מגובה וגם זמינה מכל מחשב.", "A folder inside Google Drive or OneDrive is also backed up and available on any computer.")}
                     </span>
                   </span>
                 </button>
@@ -151,7 +151,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
                   <span>
                     <span className="block text-[14px] font-medium text-ink">{t("בתוך הדפדפן", "Inside the browser")}</span>
                     <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">
-                      {t("בלי בחירת תיקייה. פחות עמיד: ניקוי נתוני גלישה ימחק הכול, לכן צריך לגבות ידנית.", "No folder needed. Less durable: clearing browsing data deletes everything, so back up manually.")}
+                      {t("בלי בחירת תיקייה. פחות בטוח: ניקוי נתוני הגלישה ימחק הכול, ולכן צריך לגבות ידנית.", "No folder needed. Less durable: clearing browsing data deletes everything, so back up manually.")}
                     </span>
                   </span>
                 </button>

@@ -139,7 +139,7 @@ export function Settings() {
           </Row>
           <Row
             title={t("מודלים", "Models")}
-            desc={t("מודל מהיר לחילוץ וכרטיסיות, ומודל חכם להסברים ולמבחנים.", "A fast model for extraction and flashcards, and a smart model for explanations and exams.")}
+            desc={t("מודל מהיר לניתוח החומר ולכרטיסיות, ומודל חכם להסברים ולמבחנים.", "A fast model for extraction and flashcards, and a smart model for explanations and exams.")}
             wide
           >
             <div className="mt-3 grid gap-3 sm:grid-cols-2">

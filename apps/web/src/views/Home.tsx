@@ -27,7 +27,7 @@ const quick = () => [
   { id: "summary", label: t("סיכום", "Summary"), icon: FileText },
   { id: "quiz", label: t("חידון", "Quiz"), icon: ListChecks },
   { id: "flashcards", label: t("כרטיסיות", "Flashcards"), icon: Layers },
-  { id: "explainer", label: t("הסבר 3D", "3D explainer"), icon: Box },
+  { id: "explainer", label: t("הסבר בתלת-ממד", "3D explainer"), icon: Box },
   { id: "diagram", label: t("תרשים", "Diagram"), icon: Workflow },
   { id: "exam-from-samples", label: t("מבחן", "Exam"), icon: ClipboardCheck },
   { id: "study-plan", label: t("תוכנית", "Plan"), icon: CalendarDays },
@@ -72,10 +72,10 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
           <span className="tile-grad-5 h-8 w-8 shrink-0 rounded-full shadow-[inset_0_-6px_10px_rgba(0,0,0,0.12)]" />
           <input
             className="min-w-0 flex-1 bg-transparent px-1 text-[14px] outline-none placeholder:text-slate-400"
-            placeholder={course ? t(`שאלו את הטוטור על ${course.name}…`, `Ask the tutor about ${course.name}…`) : t("צרו קורס כדי לשאול את הטוטור…", "Create a course to ask the tutor…")}
+            placeholder={course ? t(`שאלו את המורה הפרטי על ${course.name}…`, `Ask the tutor about ${course.name}…`) : t("צרו קורס כדי לשאול את המורה הפרטי…", "Create a course to ask the tutor…")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            aria-label={t("שאלה לטוטור", "Question for the tutor")}
+            aria-label={t("שאלה למורה הפרטי", "Question for the tutor")}
           />
           {course && <span className="hidden rounded-md bg-black/[0.05] px-1.5 text-[11px] font-medium leading-5 text-ink-2 sm:inline">{course.name.split(" ")[0]}</span>}
           <button type="submit" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-white disabled:bg-slate-300" disabled={!q.trim()} aria-label={t("שליחה", "Send")}>
@@ -110,7 +110,7 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
         <div className="grid items-center gap-6 p-6 md:grid-cols-[1fr_1.4fr_1fr]">
           <ul className="hidden space-y-1.5 text-[13px] text-muted md:block">
             <li>{t("מפת מושגים מכל החומר", "A concept map of all your material")}</li>
-            <li>{t("טוטור שמצטט עמוד ושקף", "A tutor that cites page and slide")}</li>
+            <li>{t("מורה פרטי שמצטט עמוד ושקף", "A tutor that cites page and slide")}</li>
             <li>{t("חידונים וכרטיסיות חזרה", "Quizzes and review flashcards")}</li>
             <li>{t("מבחן בסגנון המבחנים לדוגמה", "Exams in the style of past papers")}</li>
             <li>{t("הסברים אינטראקטיביים בתלת-ממד", "Interactive 3D explainers")}</li>
@@ -168,13 +168,13 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
                   <span className="min-w-0 flex-1 pt-0.5">
                     <span className="block truncate text-[14px] font-medium">{c.name}</span>
                     <span className="block text-[12.5px] text-muted">
-                      {t(`${sources.length} קבצים · ${concepts} מושגים`, `${sources.length} ${sources.length === 1 ? "file" : "files"} · ${concepts} ${concepts === 1 ? "concept" : "concepts"}`)}
+                      {t(`${sources.length === 1 ? "קובץ אחד" : `${sources.length} קבצים`} · ${concepts === 1 ? "מושג אחד" : `${concepts} מושגים`}`, `${sources.length} ${sources.length === 1 ? "file" : "files"} · ${concepts} ${concepts === 1 ? "concept" : "concepts"}`)}
                     </span>
                     <span className="mt-1 flex flex-wrap gap-1">
                       {d !== null && (
                         <Badge color={d > 0 && d <= 7 ? "amber" : "slate"}>
                           <CalendarDays size={11} />
-                          {d > 0 ? t(`${d} ימים למבחן`, `${d} ${d === 1 ? "day" : "days"} to exam`) : d === 0 ? t("המבחן היום", "Exam today") : t("המבחן עבר", "Exam passed")}
+                          {d > 0 ? t(d === 1 ? "המבחן מחר" : `${d} ימים למבחן`, `${d} ${d === 1 ? "day" : "days"} to exam`) : d === 0 ? t("המבחן היום", "Exam today") : t("המבחן עבר", "Exam passed")}
                         </Badge>
                       )}
                       {due > 0 && (
@@ -197,7 +197,7 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
 
 function totalDueLine(engine: ReturnType<typeof useEngine>, courses: { id: number }[], now: string) {
   const n = courses.reduce((a, c) => a + engine.store.dueCards(c.id, now).length, 0);
-  return n > 0 ? <p className="mt-3 text-[13px] text-muted">{t(`יש לכם ${n} כרטיסיות לחזרה היום.`, `You have ${n} ${n === 1 ? "flashcard" : "flashcards"} to review today.`)}</p> : null;
+  return n > 0 ? <p className="mt-3 text-[13px] text-muted">{t(n === 1 ? "יש לכם כרטיסייה אחת לחזרה היום." : `יש לכם ${n} כרטיסיות לחזרה היום.`, `You have ${n} ${n === 1 ? "flashcard" : "flashcards"} to review today.`)}</p> : null;
 }
 
 export function NewCourse({ open, onClose }: { open: boolean; onClose: () => void }) {

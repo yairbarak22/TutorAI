@@ -45,7 +45,7 @@ function SourceViewer({ sectionKey, onClose }: { sectionKey: string; onClose: ()
                 }
               }}
             >
-              {t("פתח את הקובץ המקורי", "Open the original file")}{" "}
+              {t("פתיחת הקובץ המקורי", "Open the original file")}{" "}
               {section.page && source.name.toLowerCase().endsWith(".pdf") ? t(`בעמוד ${section.page}`, `at page ${section.page}`) : ""}
             </Button>
           </div>

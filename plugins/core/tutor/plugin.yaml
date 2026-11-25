@@ -16,9 +16,9 @@ retrieval: { mode: search }
 authors: [RuecAI core team]
 i18n:
   he:
-    name: טוטור
+    name: מורה פרטי
     description: שיחה עם מורה פרטי שמכיר את חומר הקורס. מצב סוקרטי כברירת מחדל — שואל, מכוון ומצטט.
     inputs:
       mode:
         label: מצב
-        options: { socratic: סוקרטי, direct: הסבר ישיר, quiz-me: בוחן אותי, simple: פשוט כמו לילד בן 12 }
+        options: { socratic: סוקרטי, direct: הסבר ישיר, quiz-me: בוחן אותי, simple: "בפשטות, כמו לילד בן 12" }

@@ -9,7 +9,7 @@ import { CitationChips } from "../ui/Citations.tsx";
 import { t } from "../i18n.tsx";
 
 const buttons = (): { g: ReviewGrade; label: string; cls: string }[] => [
-  { g: "again", label: t("שוב", "Again"), cls: "bg-red-600 hover:bg-red-700" },
+  { g: "again", label: t("שכחתי", "Again"), cls: "bg-red-600 hover:bg-red-700" },
   { g: "hard", label: t("קשה", "Hard"), cls: "bg-amber-600 hover:bg-amber-700" },
   { g: "good", label: t("טוב", "Good"), cls: "bg-emerald-600 hover:bg-emerald-700" },
   { g: "easy", label: t("קל", "Easy"), cls: "bg-brand-600 hover:bg-brand-700" },
@@ -36,7 +36,7 @@ export function Review({ courseId }: { courseId: number }) {
   if (!card)
     return (
       <Empty icon={<CircleCheck size={26} strokeWidth={1.6} />} title={t("סיימתם את החזרה להיום!", "You're done reviewing for today!")}>
-        {t("הכרטיסיות הבאות יחזרו בדיוק כשתהיו על סף לשכוח אותן.", "The next cards will come back just as you're about to forget them.")}
+        {t("הכרטיסיות יחזרו בדיוק כשתהיו קרובים לשכוח אותן.", "The next cards will come back just as you're about to forget them.")}
       </Empty>
     );
 

@@ -21,7 +21,7 @@ authors: [RuecAI math pack]
 i18n:
   he:
     name: פתרון מודרך
-    description: תרגיל חדש עם פתרון צעד-אחר-צעד, רמזים מדורגים ובדיקת שפיות — לקורסים כמותיים.
+    description: תרגיל חדש עם פתרון צעד אחר צעד, רמזים מדורגים ובדיקת סבירות — לקורסים כמותיים.
     inputs:
       concept: { label: מושג }
       difficulty:

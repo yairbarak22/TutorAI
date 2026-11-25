@@ -39,7 +39,7 @@ export function CourseView({ id, tab, sub }: { id: number; tab: string; sub?: st
             {d !== null && d >= 0 && (
               <Badge color={d <= 7 ? "amber" : "slate"}>
                 <CalendarDays size={12} />
-                {d === 0 ? t("המבחן היום", "Exam today") : t(`${d} ימים למבחן`, `${d} ${d === 1 ? "day" : "days"} to exam`)}
+                {d === 0 ? t("המבחן היום", "Exam today") : t(d === 1 ? "המבחן מחר" : `${d} ימים למבחן`, `${d} ${d === 1 ? "day" : "days"} to exam`)}
               </Badge>
             )}
           </div>

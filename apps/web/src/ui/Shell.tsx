@@ -34,7 +34,7 @@ export const COURSE_SECTIONS = [
   { id: "materials", he: "חומרים", en: "Materials", icon: FileText, get label() { return t(this.he, this.en); } },
   { id: "concepts", he: "מפת מושגים", en: "Concept map", icon: Network, get label() { return t(this.he, this.en); } },
   { id: "studio", he: "כלים", en: "Tools", icon: Sparkles, get label() { return t(this.he, this.en); } },
-  { id: "tutor", he: "טוטור", en: "Tutor", icon: MessagesSquare, get label() { return t(this.he, this.en); } },
+  { id: "tutor", he: "מורה פרטי", en: "Tutor", icon: MessagesSquare, get label() { return t(this.he, this.en); } },
   { id: "review", he: "חזרה", en: "Review", icon: Layers, get label() { return t(this.he, this.en); } },
   { id: "progress", he: "התקדמות", en: "Progress", icon: ChartLine, get label() { return t(this.he, this.en); } },
   { id: "artifacts", he: "תוצרים", en: "Outputs", icon: FolderOpen, get label() { return t(this.he, this.en); } },
@@ -283,7 +283,7 @@ function GlobalSearch() {
   const courseId = route.name === "course" ? route.id : Number(kvGet(LAST_COURSE)) || engine.store.courses()[0]?.id;
   const items: { label: string; hint: string; to: string }[] = [
     ...engine.store.courses().map((c) => ({ label: c.name, hint: t("קורס", "Course"), to: href.course(c.id) })),
-    ...(courseId ? COURSE_SECTIONS.map((sec) => ({ label: sec.label, hint: t("מדור", "Section"), to: href.course(courseId, sec.id) })) : []),
+    ...(courseId ? COURSE_SECTIONS.map((sec) => ({ label: sec.label, hint: t("אזור בקורס", "Section"), to: href.course(courseId, sec.id) })) : []),
     ...(courseId
       ? engine.tools.filter((x) => x.manifest.output !== "chat").map((x) => ({ label: toolText(x.manifest).name, hint: t("כלי", "Tool"), to: href.course(courseId, "studio", x.manifest.id) }))
       : []),

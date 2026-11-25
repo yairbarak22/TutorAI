@@ -132,7 +132,7 @@ function CardsView({ cards, courseId }: { cards: Flashcards; courseId: number })
       <div className="flex items-center gap-3">
         <p className="text-slate-600">
           {t(
-            `${cards.cards.length} כרטיסיות נוספו לחזרה המרווחת.`,
+            cards.cards.length === 1 ? "כרטיסייה אחת נוספה לחזרה המרווחת." : `${cards.cards.length} כרטיסיות נוספו לחזרה המרווחת.`,
             cards.cards.length === 1 ? "1 card was added to spaced review." : `${cards.cards.length} cards were added to spaced review.`,
           )}
         </p>
@@ -231,7 +231,7 @@ function PlanView({ plan, courseId }: { plan: StudyPlan; courseId: number }) {
       <p className="text-slate-600">
         {t("מבחן ב-", "Exam on ")}
         {fmtDate(plan.exam_date)}.{" "}
-        {t("התוכנית מתעדכנת לפי התרגול: צרו אותה מחדש מדי כמה ימים.", "The plan adapts to your practice: regenerate it every few days.")}
+        {t("כדי שהתוכנית תתאים להתקדמות שלכם, צרו אותה מחדש כל כמה ימים.", "The plan adapts to your practice: regenerate it every few days.")}
       </p>
       {plan.days.map((d) => (
         <Card key={d.date} className={`p-4 ${d.date === today ? "border-brand-500 ring-2 ring-brand-100" : ""}`}>

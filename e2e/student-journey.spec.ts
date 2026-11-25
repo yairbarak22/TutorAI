@@ -84,8 +84,8 @@ test("concept map, tools, quiz → mastery, flashcards → review, tutor with ci
   await expect(page.getByTestId("review-card")).toBeVisible();
 
   // Tutor streams an answer with inline citations
-  await tab(page, /טוטור/).click();
-  await page.getByLabel("הודעה לטוטור").fill("לא מבין את נוסחת בייס");
+  await tab(page, /מורה פרטי/).click();
+  await page.getByLabel("הודעה למורה הפרטי").fill("לא מבין את נוסחת בייס");
   await page.keyboard.press("Enter");
   const answer = page.getByTestId("msg-assistant").last();
   await expect(answer).toContainText("שאלה מנחה");
@@ -118,5 +118,5 @@ test("interactive explainer runs sandboxed without errors", async ({ page }) => 
   await expect(frame.locator(".viz-readouts dd").last()).toHaveText(/%/);
   await expect(frame.locator("canvas")).toHaveCount(2); // 3D scene + 2D plot
   await expect(page.locator("iframe")).toHaveAttribute("sandbox", "allow-scripts");
-  await expect(page.getByText("בווידג'ט יש שגיאה")).toHaveCount(0);
+  await expect(page.getByText("יש שגיאה בהמחשה")).toHaveCount(0);
 });

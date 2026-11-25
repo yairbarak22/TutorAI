@@ -80,7 +80,7 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
               `${exam.questions.length} ${exam.questions.length === 1 ? "question" : "questions"} · ${total} pts · ${exam.duration_minutes} min`,
             )}
           </span>
-          {!started && !grades && <Button onClick={() => setStarted(Date.now())}><Timer size={15} /> {t("התחלת המבחן (טיימר)", "Start the exam (timer)")}</Button>}
+          {!started && !grades && <Button onClick={() => setStarted(Date.now())}><Timer size={15} /> {t("התחלת המבחן עם טיימר", "Start the exam (timer)")}</Button>}
           {started && !grades && (
             <span className={`ms-auto font-mono text-lg font-semibold ${left < 600 ? "text-red-600" : "text-brand-700"}`} aria-live="polite">
               <Timer size={14} className="inline" /> {fmt(left)}

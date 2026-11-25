@@ -775,7 +775,7 @@ export function scene3d(target: El | string, opts: Scene3DOptions = {}) {
   renderer.domElement.style.width = "100%";
   renderer.domElement.style.height = "100%";
   box.appendChild(renderer.domElement);
-  h("div", "viz-hint", box, tr("גררו לסיבוב · גלגלת לזום", "Drag to rotate · scroll to zoom"));
+  h("div", "viz-hint", box, tr("גררו כדי לסובב · גללו כדי להתקרב", "Drag to rotate · scroll to zoom"));
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(opts.background ?? "#fafafa");

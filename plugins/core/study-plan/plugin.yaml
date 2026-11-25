@@ -14,7 +14,7 @@ authors: [RuecAI core team]
 i18n:
   he:
     name: תוכנית לימוד למבחן
-    description: לוח זמנים יומי עד תאריך המבחן לפי רמת השליטה שלך בכל מושג ודרישות הקדם.
+    description: לוח זמנים יומי עד תאריך המבחן לפי רמת השליטה שלכם בכל מושג ודרישות הקדם.
     inputs:
       exam_date: { label: תאריך המבחן, help: "YYYY-MM-DD. ריק = התאריך שהוגדר לקורס" }
       minutes_per_day: { label: דקות ביום }

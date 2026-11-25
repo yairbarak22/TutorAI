@@ -96,7 +96,7 @@ export function Tutor({ courseId }: { courseId: number }) {
         </Button>
       </div>
 
-      {!hasMaterial && <Alert kind="info">{t("הטוטור עונה מתוך החומרים שלכם. העלו קבצים כדי לקבל תשובות עם ציטוטים.", "The tutor answers from your materials. Upload files to get answers with citations.")}</Alert>}
+      {!hasMaterial && <Alert kind="info">{t("המורה הפרטי עונה מתוך החומרים שלכם. העלו קבצים כדי לקבל תשובות עם ציטוטים.", "The tutor answers from your materials. Upload files to get answers with citations.")}</Alert>}
 
       <div className="space-y-3" aria-live="polite">
         {messages.length === 0 && streaming === null && (
@@ -140,7 +140,7 @@ export function Tutor({ courseId }: { courseId: number }) {
               void send(input);
             }
           }}
-          aria-label={t("הודעה לטוטור", "Message to the tutor")}
+          aria-label={t("הודעה למורה הפרטי", "Message to the tutor")}
         />
         <Button type="submit" disabled={!input.trim() || streaming !== null}>
           {t("שליחה", "Send")}

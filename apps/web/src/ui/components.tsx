@@ -69,7 +69,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
       >
         <div className="flex items-center justify-between px-6 pt-5 pb-2">
           <h2 className="text-lg font-semibold">{title}</h2>
-          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full text-muted hover:bg-hover hover:text-ink" aria-label={t("סגור", "Close")}>
+          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full text-muted hover:bg-hover hover:text-ink" aria-label={t("סגירה", "Close")}>
             <X size={18} />
           </button>
         </div>
