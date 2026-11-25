@@ -1,0 +1,17 @@
+{
+  "ingest-analyze": {
+    "sections": [
+      { "id": "S1", "title": "מבוא", "summary": "פתיחה והגדרות בסיסיות של הנושא." },
+      { "id": "S2", "title": "המשך החומר", "summary": "הרחבה ודוגמאות." }
+    ],
+    "concepts": [
+      { "name": "מושג מרכזי", "name_en": "Core concept", "definition": "המושג המרכזי שנלמד בקובץ זה (מצב הדגמה).", "prerequisites": [], "citations": ["S1"] }
+    ]
+  },
+  "ingest-ocr": "תוכן העמוד (מצב הדגמה).",
+  "grade": {
+    "score": 7, "max_score": 10, "correct": true,
+    "criteria": [ { "criterion": "רעיון מרכזי", "awarded": 5, "comment": "זוהה נכון." }, { "criterion": "נימוק", "awarded": 2, "comment": "חסרה דוגמה." } ],
+    "feedback": "כיוון נכון! כדי לקבל ניקוד מלא הוסיפו דוגמה מספרית שממחישה את הטענה. (מצב הדגמה)"
+  }
+}

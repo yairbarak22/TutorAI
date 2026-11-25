@@ -1,0 +1,15 @@
+id: case-brief
+name: ניתוח שאלת אירוע (IRAC)
+description: ניתוח סוגיה משפטית במבנה IRAC — סוגיה, כלל, יישום, מסקנה — מעוגן בחקיקה ובחומר הקורס.
+icon: "⚖️"
+pack: law
+kind: declarative
+output: markdown_doc
+tier: smart
+disciplines: [law]
+inputs:
+  - { name: facts, label: "עובדות המקרה / השאלה", type: textarea, default: "", required: true }
+retrieval:
+  mode: search
+  query: "{{params.facts}}"
+authors: [RuecAI law pack]

@@ -1,0 +1,15 @@
+{
+  "name": "@ruecai/plugins",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": "./registry.ts"
+  },
+  "dependencies": {
+    "@ruecai/sdk": "0.1.0",
+    "yaml": "^2.8.0",
+    "zod": "^4.1.0",
+    "@ruecai/core": "0.1.0"
+  }
+}

@@ -1,0 +1,3 @@
+fixture: law
+params: { facts: "דנה פרסמה מודעה למכירת מחשב, יוסי ענה 'מסכים אבל ב-2,800' ולמחרת 'מקבל את 3,000'." }
+checks: { min_items: 3, min_citation_coverage: 0.75, min_hebrew_ratio: 0.8, must_mention: [הצעה נגדית] }

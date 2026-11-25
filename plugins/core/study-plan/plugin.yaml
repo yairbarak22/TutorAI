@@ -1,0 +1,13 @@
+id: study-plan
+name: תוכנית לימוד למבחן
+description: לוח זמנים יומי עד תאריך המבחן לפי רמת השליטה שלך בכל מושג ודרישות הקדם.
+icon: "📅"
+pack: core
+kind: code
+output: study_plan
+tier: fast
+inputs:
+  - { name: exam_date, label: "תאריך המבחן", type: text, default: "", help: "YYYY-MM-DD. ריק = התאריך שהוגדר לקורס" }
+  - { name: minutes_per_day, label: "דקות ביום", type: number, default: 90 }
+retrieval: { mode: none }
+authors: [RuecAI core team]

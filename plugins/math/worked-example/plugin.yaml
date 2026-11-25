@@ -1,0 +1,20 @@
+id: worked-example
+name: פתרון מודרך
+description: תרגיל חדש עם פתרון צעד-אחר-צעד, רמזים מדורגים ובדיקת שפיות — לקורסים כמותיים.
+icon: "🧮"
+pack: math
+kind: declarative
+output: markdown_doc
+tier: smart
+disciplines: [math, cs, economics]
+inputs:
+  - { name: concept, label: "מושג", type: concept, default: "" }
+  - name: difficulty
+    label: רמת קושי
+    type: select
+    options: [בסיסית, בינונית, מאתגרת]
+    default: בינונית
+retrieval:
+  mode: search
+  query: "{{params.concept}}"
+authors: [RuecAI math pack]

@@ -1,0 +1,33 @@
+{
+  "name": "ruecai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "RuecAI Teacher — local-first AI study companion (Reichman University students)",
+  "license": "Apache-2.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "plugins",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @ruecai/web",
+    "build": "npm run build -w @ruecai/web",
+    "preview": "npm run preview -w @ruecai/web",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "eval": "vitest run plugins",
+    "eval:live": "node --experimental-strip-types scripts/eval-live.ts",
+    "e2e": "playwright test",
+    "check": "npm run typecheck && npm run test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^22.20.7",
+    "typescript": "5.9",
+    "vitest": "^3.2.7"
+  }
+}

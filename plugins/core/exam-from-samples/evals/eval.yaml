@@ -1,0 +1,3 @@
+fixture: law
+params: { count: 2 }
+checks: { min_items: 2, min_citation_coverage: 1, min_hebrew_ratio: 0.8 }

@@ -1,0 +1,19 @@
+id: diagram
+name: תרשים
+description: תרשים Mermaid — מפת מושגים, תרשים זרימה להחלטה או ציר זמן.
+icon: "🗺️"
+pack: core
+kind: declarative
+output: diagram
+tier: smart
+inputs:
+  - { name: topic, label: "נושא", type: text, default: "", required: true }
+  - name: style
+    label: סוג תרשים
+    type: select
+    options: [מפת מושגים, תרשים זרימה להחלטה, ציר זמן]
+    default: מפת מושגים
+retrieval:
+  mode: search
+  query: "{{params.topic}}"
+authors: [RuecAI core team]

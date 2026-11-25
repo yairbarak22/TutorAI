@@ -1,0 +1,20 @@
+id: summary
+name: סיכום
+description: סיכום מסודר של הרצאה, קובץ או נושא — עם ציטוט לכל טענה.
+icon: "📝"
+pack: core
+kind: declarative
+output: markdown_doc
+tier: smart
+inputs:
+  - { name: source, label: "מקור", type: source, default: all }
+  - { name: focus, label: "נושא ממוקד (לא חובה)", type: text, default: "" }
+  - name: length
+    label: אורך
+    type: select
+    options: [תמציתי, בינוני, מפורט]
+    default: בינוני
+retrieval:
+  mode: search
+  query: "{{params.focus}}"
+authors: [RuecAI core team]

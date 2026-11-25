@@ -1,0 +1,21 @@
+id: quiz
+name: חידון
+description: שאלות אמריקאיות ופתוחות עם משוב והסבר — מעדכן את מעקב השליטה שלך.
+icon: "❓"
+pack: core
+kind: declarative
+output: quiz
+tier: smart
+inputs:
+  - { name: source, label: "מקור", type: source, default: all }
+  - { name: concept, label: "מושג (לא חובה)", type: concept, default: "" }
+  - { name: count, label: "מספר שאלות", type: number, default: 6 }
+  - name: difficulty
+    label: רמת קושי
+    type: select
+    options: [בסיסית, בינונית, מאתגרת]
+    default: בינונית
+retrieval:
+  mode: search
+  query: "{{params.concept}}"
+authors: [RuecAI core team]

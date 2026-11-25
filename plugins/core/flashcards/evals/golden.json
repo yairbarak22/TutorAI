@@ -1,0 +1,12 @@
+{
+  "flashcards": {
+    "title": "כרטיסיות: יסודות ההסתברות",
+    "cards": [
+      { "front": "מהי ההגדרה של הסתברות מותנית $P(A\\mid B)$?", "back": "$P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}$, כאשר $P(B)>0$.", "concept": "הסתברות מותנית", "citations": ["S3"] },
+      { "front": "מה אומרת נוסחת בייס?", "back": "$P(B\\mid A)=\\frac{P(A\\mid B)P(B)}{P(A)}$", "concept": "נוסחת בייס", "citations": ["S5"] },
+      { "front": "מה ההבדל בין מאורעות זרים לבלתי תלויים?", "back": "זרים: $A\\cap B=\\emptyset$. בלתי תלויים: $P(A\\cap B)=P(A)P(B)$. זרים עם הסתברות חיובית — תמיד תלויים.", "concept": "אי-תלות", "citations": ["S6"] },
+      { "front": "מהו עקרון ההכלה וההדחה לשני מאורעות?", "back": "$P(A\\cup B)=P(A)+P(B)-P(A\\cap B)$", "concept": "אקסיומות ההסתברות", "citations": ["S2"] },
+      { "front": "האם לינאריות התוחלת דורשת אי-תלות?", "back": "לא. $E[X+Y]=E[X]+E[Y]$ תמיד.", "concept": "תוחלת", "citations": ["S8"] }
+    ]
+  }
+}

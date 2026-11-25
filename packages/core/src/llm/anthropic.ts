@@ -1,0 +1,169 @@
+import Anthropic from "@anthropic-ai/sdk";
+import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import type { BetaContentBlockParam, BetaMessageParam, BetaTextBlockParam } from "@anthropic-ai/sdk/resources/beta/messages/messages";
+import type { z } from "zod";
+import type { ChatTurn, LLMApi, LLMCallOptions, Tier } from "@ruecai/sdk";
+
+export interface ModelConfig {
+  fast: string;
+  smart: string;
+}
+
+/** Defaults: the current Opus for quality work, the current Haiku for bulk extraction. */
+export const DEFAULT_MODELS: ModelConfig = { fast: "claude-haiku-5-5", smart: "claude-opus-5-5" };
+
+export interface UsageEvent {
+  tag: string;
+  model: string;
+  input: number;
+  output: number;
+  cacheRead: number;
+}
+
+export class LLMError extends Error {
+  constructor(
+    message: string,
+    public readonly kind: "auth" | "rate_limit" | "refusal" | "invalid_output" | "network" | "other",
+  ) {
+    super(message);
+  }
+}
+
+/** Models that accept the server-side refusal fallback. */
+const supportsFallback = (model: string) => /^claude-(opus-5|sonnet-5-5|fable-5)/.test(model);
+
+/**
+ * Claude via the official Anthropic SDK, called directly from the student's browser with
+ * the student's own key (the key never touches a RuecAI server — there is none).
+ */
+export class AnthropicLLM implements LLMApi {
+  private client: Anthropic;
+  constructor(
+    apiKey: string,
+    private models: ModelConfig = DEFAULT_MODELS,
+    private onUsage?: (u: UsageEvent) => void,
+  ) {
+    this.client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true, maxRetries: 3 });
+  }
+
+  private model(tier: Tier = "smart") {
+    return tier === "fast" ? this.models.fast : this.models.smart;
+  }
+
+  private system(opts: LLMCallOptions): BetaTextBlockParam[] {
+    const blocks: BetaTextBlockParam[] = [];
+    if (opts.system) blocks.push({ type: "text", text: opts.system });
+    if (opts.context)
+      blocks.push({
+        type: "text",
+        text: `חומר הקורס הרלוונטי:\n\n${opts.context}`,
+        cache_control: { type: "ephemeral" },
+      });
+    return blocks;
+  }
+
+  private userContent(opts: LLMCallOptions): BetaContentBlockParam[] {
+    const content: BetaContentBlockParam[] = (opts.images ?? []).map((img) => ({
+      type: "image" as const,
+      source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
+    }));
+    content.push({ type: "text", text: opts.prompt });
+    return content;
+  }
+
+  private common(opts: LLMCallOptions, history: ChatTurn[] = []) {
+    const model = this.model(opts.tier);
+    const messages: BetaMessageParam[] = [
+      ...history.map((t) => ({ role: t.role, content: t.content })),
+      { role: "user", content: this.userContent(opts) },
+    ];
+    return {
+      model,
+      max_tokens: opts.maxTokens ?? 16000,
+      system: this.system(opts),
+      messages,
+      ...(supportsFallback(model)
+        ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
+        : {}),
+    };
+  }
+
+  private track(tag: string | undefined, model: string, usage: Anthropic.Beta.BetaUsage | undefined) {
+    if (!usage) return;
+    this.onUsage?.({
+      tag: tag ?? "",
+      model,
+      input: usage.input_tokens ?? 0,
+      output: usage.output_tokens ?? 0,
+      cacheRead: usage.cache_read_input_tokens ?? 0,
+    });
+  }
+
+  async object<S extends z.ZodType>(schema: S, opts: LLMCallOptions): Promise<z.infer<S>> {
+    const params = this.common(opts);
+    try {
+      const res = await this.client.beta.messages.parse({
+        ...params,
+        output_config: {
+          format: betaZodOutputFormat(schema),
+          effort: opts.tier === "fast" ? "low" : "medium",
+        },
+      });
+      this.track(opts.tag, params.model, res.usage);
+      if (res.stop_reason === "refusal") throw new LLMError("המודל סירב לבקשה הזו.", "refusal");
+      if (res.stop_reason === "max_tokens") throw new LLMError("התשובה נקטעה (ארוכה מדי). נסו היקף קטן יותר.", "invalid_output");
+      if (res.parsed_output == null) throw new LLMError("המודל החזיר תשובה במבנה לא תקין.", "invalid_output");
+      return res.parsed_output as z.infer<S>;
+    } catch (e) {
+      throw toLLMError(e);
+    }
+  }
+
+  async text(opts: LLMCallOptions): Promise<string> {
+    return this.stream(opts, () => {});
+  }
+
+  async stream(opts: LLMCallOptions & { history?: ChatTurn[] }, onDelta: (t: string) => void): Promise<string> {
+    const params = this.common(opts, opts.history);
+    try {
+      const stream = this.client.beta.messages.stream({
+        ...params,
+        output_config: { effort: opts.tier === "fast" ? "low" : "medium" },
+      });
+      let text = "";
+      for await (const event of stream) {
+        if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+          text += event.delta.text;
+          onDelta(event.delta.text);
+        }
+      }
+      const final = await stream.finalMessage();
+      this.track(opts.tag, params.model, final.usage);
+      if (final.stop_reason === "refusal") throw new LLMError("המודל סירב לבקשה הזו.", "refusal");
+      return text;
+    } catch (e) {
+      throw toLLMError(e);
+    }
+  }
+}
+
+function toLLMError(e: unknown): LLMError {
+  if (e instanceof LLMError) return e;
+  if (e instanceof Anthropic.AuthenticationError) return new LLMError("מפתח ה-API לא תקין. בדקו אותו בהגדרות.", "auth");
+  if (e instanceof Anthropic.PermissionDeniedError) return new LLMError("למפתח אין הרשאה למודל הזה.", "auth");
+  if (e instanceof Anthropic.RateLimitError) return new LLMError("הגעתם למגבלת קצב/תקציב ב-API. נסו שוב בעוד דקה.", "rate_limit");
+  if (e instanceof Anthropic.APIConnectionError) return new LLMError("אין חיבור לשרת של Anthropic. בדקו את האינטרנט.", "network");
+  if (e instanceof Anthropic.APIError) return new LLMError(`שגיאת API (${e.status}): ${e.message}`, "other");
+  return new LLMError(e instanceof Error ? e.message : String(e), "other");
+}
+
+/** Cheap key check used by onboarding. */
+export async function verifyApiKey(apiKey: string, model = DEFAULT_MODELS.fast): Promise<true | string> {
+  try {
+    const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true, maxRetries: 1 });
+    await client.models.retrieve(model);
+    return true;
+  } catch (e) {
+    return toLLMError(e).message;
+  }
+}

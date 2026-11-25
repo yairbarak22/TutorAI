@@ -1,0 +1,8 @@
+{ "name": "@ruecai/core", "version": "0.1.0", "type": "module", "license": "Apache-2.0",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@ruecai/sdk": "0.1.0", "@anthropic-ai/sdk": "^1.14.0", "zod": "^4.1.0",
+    "sql.js": "^1.13.0", "jszip": "^3.10.1", "minisearch": "^7.2.0",
+    "pdfjs-dist": "4.10.38", "ts-fsrs": "^4.7.1", "yaml": "^2.8.0"
+  },
+  "devDependencies": { "@types/sql.js": "^1.4.9" } }

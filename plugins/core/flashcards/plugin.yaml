@@ -1,0 +1,16 @@
+id: flashcards
+name: כרטיסיות
+description: כרטיסיות לחזרה מרווחת (FSRS). נכנסות אוטומטית לחזרה היומית.
+icon: "🃏"
+pack: core
+kind: declarative
+output: flashcards
+tier: fast
+inputs:
+  - { name: source, label: "מקור", type: source, default: all }
+  - { name: concept, label: "מושג (לא חובה)", type: concept, default: "" }
+  - { name: count, label: "מספר כרטיסיות", type: number, default: 15 }
+retrieval:
+  mode: search
+  query: "{{params.concept}}"
+authors: [RuecAI core team]

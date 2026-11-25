@@ -1,0 +1,7 @@
+fixture: probability
+params: { count: 4, difficulty: בינונית, concept: "" }
+checks:
+  min_items: 4
+  min_citation_coverage: 1
+  min_hebrew_ratio: 0.5
+  judge: "האם לכל שאלה אמריקאית יש תשובה נכונה אחת בלבד, והאם השאלות בודקות הבנה ולא רק שינון?"

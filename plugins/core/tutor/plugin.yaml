@@ -1,0 +1,16 @@
+id: tutor
+name: טוטור
+description: שיחה עם מורה פרטי שמכיר את חומר הקורס. מצב סוקרטי כברירת מחדל — שואל, מכוון ומצטט.
+icon: "🎓"
+pack: core
+kind: code
+output: chat
+tier: smart
+inputs:
+  - name: mode
+    label: מצב
+    type: select
+    options: [סוקרטי, הסבר ישיר, בוחן אותי, פשוט כמו לילד בן 12]
+    default: סוקרטי
+retrieval: { mode: search }
+authors: [RuecAI core team]

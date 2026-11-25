@@ -1,0 +1,3 @@
+fixture: probability
+params: { mode: סוקרטי }
+checks: { min_items: 1, min_citation_coverage: 1, min_hebrew_ratio: 0.6 }
