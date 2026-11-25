@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { ArrowLeft, BookOpen, CalendarDays, ChevronLeft, KeyRound, Layers, Plus, Scale, Sigma } from "lucide-react";
+import { useState } from "react";
+import { ArrowUp, BookOpen, Box, CalendarDays, ChevronLeft, ClipboardCheck, Ellipsis, FileText, Layers, ListChecks, Plus, Workflow } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Badge, Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
@@ -14,62 +14,113 @@ function greeting() {
   return h < 5 ? "לילה טוב" : h < 12 ? "בוקר טוב" : h < 17 ? "צהריים טובים" : h < 21 ? "ערב טוב" : "לילה טוב";
 }
 
-const TINTS = ["#ece8f3", "#e4ebe4", "#e7ecef", "#f1ebe4"];
-
-/** Tinted feature card with a big title and a round black arrow button. */
-function ActionTile({ tint, art, title, desc, onClick, href: to }: { tint: number; art: ReactNode; title: string; desc: string; onClick?: () => void; href?: string }) {
-  const inner = (
-    <>
-      <span className="grid h-[92px] w-[76px] shrink-0 place-items-center rounded-xl bg-white/60 shadow-[0_8px_20px_-8px_rgba(0,0,0,0.25)]">{art}</span>
-      <span className="flex min-w-0 flex-1 flex-col self-stretch">
-        <span className="text-[16px] font-semibold leading-snug tracking-tight text-ink">{title}</span>
-        <span className="mt-1 text-[12.5px] leading-snug text-ink-2/80">{desc}</span>
-        <span className="mt-auto grid h-7 w-7 place-items-center self-end rounded-full bg-ink text-white transition group-hover:-translate-x-0.5">
-          <ArrowLeft size={14} />
-        </span>
-      </span>
-    </>
-  );
-  const cls = "group flex w-full items-start gap-4 rounded-2xl p-3 text-start transition hover:brightness-[0.98]";
-  const style = { background: TINTS[tint % TINTS.length] };
-  return to ? (
-    <a href={to} className={cls} style={style}>
-      {inner}
-    </a>
-  ) : (
-    <button type="button" onClick={onClick} className={cls} style={style}>
-      {inner}
-    </button>
-  );
-}
-
-const Art = ({ grad, children }: { grad: number; children: ReactNode }) => (
-  <span className={`tile-grad-${grad} grid h-12 w-12 place-items-center rounded-full text-ink/75 shadow-[inset_0_-8px_14px_rgba(0,0,0,0.1)]`}>{children}</span>
-);
+const QUICK = [
+  { id: "summary", label: "סיכום", icon: FileText },
+  { id: "quiz", label: "חידון", icon: ListChecks },
+  { id: "flashcards", label: "כרטיסיות", icon: Layers },
+  { id: "explainer", label: "הסבר 3D", icon: Box },
+  { id: "diagram", label: "תרשים", icon: Workflow },
+  { id: "exam-from-samples", label: "מבחן", icon: ClipboardCheck },
+  { id: "study-plan", label: "תוכנית", icon: CalendarDays },
+  { id: "", label: "עוד", icon: Ellipsis },
+];
 
 export function Home({ onNewCourse }: { onNewCourse: () => void }) {
   const engine = useEngine();
   const courses = engine.store.courses();
   const now = new Date().toISOString();
-  const totalDue = courses.reduce((n, c) => n + engine.store.dueCards(c.id, now).length, 0);
+  const [q, setQ] = useState("");
+  let remembered = 0;
+  try {
+    remembered = Number(localStorage.getItem("ruecai.lastCourse"));
+  } catch {
+    /* ignore */
+  }
+  const course = engine.store.course(remembered) ?? courses[0] ?? null;
+
+  const ask = () => {
+    if (!q.trim()) return;
+    if (!course) return onNewCourse();
+    go(`#/course/${course.id}/tutor/${encodeURIComponent(q.trim())}`);
+  };
 
   return (
-    <div className="space-y-10">
-      <div>
-        <p className="text-[13px] text-muted">סביבת הלמידה שלכם</p>
-        <h1 className="mt-1 text-[30px] font-semibold leading-tight tracking-tight">{greeting()}</h1>
-        {totalDue > 0 && <p className="mt-1 text-sm text-muted">יש לכם {totalDue} כרטיסיות לחזרה היום.</p>}
+    <div className="space-y-12">
+      <div className="mx-auto max-w-[640px] pt-[4vh] text-center">
+        <h1 className="text-[28px] font-medium tracking-tight">{greeting()}, מה לומדים היום?</h1>
+        <form
+          className="mt-6 flex h-12 items-center gap-2 rounded-full border border-black/10 bg-white ps-2 pe-2 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] focus-within:border-black/25"
+          onSubmit={(e) => {
+            e.preventDefault();
+            ask();
+          }}
+        >
+          <span className="tile-grad-5 h-8 w-8 shrink-0 rounded-full shadow-[inset_0_-6px_10px_rgba(0,0,0,0.12)]" />
+          <input
+            className="min-w-0 flex-1 bg-transparent px-1 text-[14px] outline-none placeholder:text-slate-400"
+            placeholder={course ? `שאלו את הטוטור על ${course.name}…` : "צרו קורס כדי לשאול את הטוטור…"}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="שאלה לטוטור"
+          />
+          {course && <span className="hidden rounded-md bg-black/[0.05] px-1.5 text-[11px] font-medium leading-5 text-ink-2 sm:inline">{course.name.split(" ")[0]}</span>}
+          <button type="submit" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-white disabled:bg-slate-300" disabled={!q.trim()} aria-label="שליחה">
+            <ArrowUp size={16} />
+          </button>
+        </form>
+        {totalDueLine(engine, courses, now)}
       </div>
 
-      <section>
-        <h2 className="mb-3 flex items-center gap-1 text-[16px] font-semibold tracking-tight">התחלה מהירה</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <ActionTile tint={0} art={<Art grad={1}><Plus size={22} /></Art>} title="קורס חדש" desc="יוצרים קורס וגוררים אליו מצגות, סיכומים ומבחנים" onClick={onNewCourse} />
-          <ActionTile tint={1} art={<Art grad={3}><Sigma size={22} /></Art>} title="קורס לדוגמה: הסתברות" desc="הרצאות, מושגים וכלים מוכנים לנסות" onClick={() => go(href.course(engine.loadDemoCourse("probability")))} />
-          <ActionTile tint={3} art={<Art grad={4}><Scale size={22} /></Art>} title="קורס לדוגמה: דיני חוזים" desc="מבחנים לדוגמה ומבחן חדש באותו סגנון" onClick={() => go(href.course(engine.loadDemoCourse("law")))} />
-          <ActionTile tint={2} art={<Art grad={6}><KeyRound size={22} /></Art>} title="מפתח API ומודלים" desc={engine.demo ? "עוברים ממצב הדגמה לעבודה אמיתית" : "מודל, עלויות, גיבוי ושחזור"} href={href.settings()} />
+      <div className="mx-auto grid max-w-[720px] grid-cols-4 gap-y-5 sm:grid-cols-8">
+        {QUICK.map((t) => (
+          <a
+            key={t.label}
+            href={course ? href.course(course.id, "studio", t.id || undefined) : "#/"}
+            onClick={(e) => {
+              if (!course) {
+                e.preventDefault();
+                onNewCourse();
+              }
+            }}
+            className="group flex flex-col items-center gap-2 text-[12.5px] font-medium text-ink-2"
+          >
+            <span className="grid h-11 w-11 place-items-center rounded-xl border border-black/10 bg-white text-ink shadow-sm transition group-hover:border-black/25 group-hover:shadow">
+              <t.icon size={18} strokeWidth={1.8} />
+            </span>
+            {t.label}
+          </a>
+        ))}
+      </div>
+
+      <div className="relative overflow-hidden rounded-2xl border border-black/[0.08] bg-white">
+        <div className="grid items-center gap-6 p-6 md:grid-cols-[1fr_1.4fr_1fr]">
+          <ul className="hidden space-y-1.5 text-[13px] text-muted md:block">
+            <li>מפת מושגים מכל החומר</li>
+            <li>טוטור שמצטט עמוד ושקף</li>
+            <li>חידונים וכרטיסיות חזרה</li>
+            <li>מבחן בסגנון המבחנים לדוגמה</li>
+            <li>הסברים אינטראקטיביים בתלת-ממד</li>
+          </ul>
+          <div className="text-center">
+            <h2 className="text-[22px] font-medium tracking-tight">נסו קורס לדוגמה</h2>
+            <p className="mt-1 text-[13px] text-muted">חומרים אמיתיים, מוכנים לכל הכלים. בלי להעלות כלום.</p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <Button size="sm" onClick={() => go(href.course(engine.loadDemoCourse("probability")))}>
+                קורס לדוגמה: הסתברות
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => go(href.course(engine.loadDemoCourse("law")))}>
+                קורס לדוגמה: דיני חוזים
+              </Button>
+            </div>
+          </div>
+          <div className="relative hidden h-[150px] md:block" aria-hidden>
+            <span className="tile-grad-8 absolute top-2 start-6 h-28 w-28 rounded-full shadow-[inset_0_-14px_24px_rgba(0,0,0,0.12)]" />
+            <span className="tile-grad-5 absolute -top-6 end-2 h-16 w-16 rounded-full opacity-90" />
+            <span className="tile-grad-3 absolute bottom-[-18px] end-10 h-20 w-20 rounded-full opacity-90" />
+            <span className="tile-grad-1 absolute bottom-2 start-0 h-10 w-10 rounded-full opacity-90" />
+          </div>
         </div>
-      </section>
+      </div>
 
       <section>
         <div className="mb-3 flex items-center justify-between">
@@ -83,7 +134,7 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
         {courses.length === 0 ? (
           <Card>
             <Empty icon={<BookOpen size={26} strokeWidth={1.6} />} title="עוד אין קורסים">
-              <p>צרו קורס והעלו אליו את חומרי הלימוד, או נסו את אחד מקורסי הדוגמה למעלה.</p>
+              <p>צרו קורס והעלו אליו את חומרי הלימוד, או נסו את אחד מקורסי הדוגמה.</p>
             </Empty>
           </Card>
         ) : (
@@ -128,6 +179,11 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
       </section>
     </div>
   );
+}
+
+function totalDueLine(engine: ReturnType<typeof useEngine>, courses: { id: number }[], now: string) {
+  const n = courses.reduce((a, c) => a + engine.store.dueCards(c.id, now).length, 0);
+  return n > 0 ? <p className="mt-3 text-[13px] text-muted">יש לכם {n} כרטיסיות לחזרה היום.</p> : null;
 }
 
 export function NewCourse({ open, onClose }: { open: boolean; onClose: () => void }) {

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   BookOpen,
   ChartLine,
@@ -19,6 +19,7 @@ import {
   Network,
   PanelRight,
   Plus,
+  Search,
   Settings as SettingsIcon,
   Sparkles,
   X,
@@ -260,11 +261,79 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
   );
 }
 
+/** "Search everything" box in the top bar: courses, course sections and tools. ⌘K / Ctrl+K focuses it. */
+function GlobalSearch() {
+  const engine = useEngine();
+  const route = useRoute();
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        ref.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const courseId = route.name === "course" ? route.id : Number(kvGet(LAST_COURSE)) || engine.store.courses()[0]?.id;
+  const items: { label: string; hint: string; to: string }[] = [
+    ...engine.store.courses().map((c) => ({ label: c.name, hint: "קורס", to: href.course(c.id) })),
+    ...(courseId ? COURSE_SECTIONS.map((sec) => ({ label: sec.label, hint: "מדור", to: href.course(courseId, sec.id) })) : []),
+    ...(courseId
+      ? engine.tools.filter((t) => t.manifest.output !== "chat").map((t) => ({ label: t.manifest.name, hint: "כלי", to: href.course(courseId, "studio", t.manifest.id) }))
+      : []),
+    { label: "הגדרות", hint: "עמוד", to: href.settings() },
+  ];
+  const term = q.trim();
+  const results = term ? items.filter((i) => i.label.includes(term)).slice(0, 8) : [];
+  return (
+    <div className="relative hidden w-[300px] lg:block">
+      <Search size={15} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-muted" />
+      <input
+        ref={ref}
+        value={q}
+        onChange={(e) => (setQ(e.target.value), setOpen(true))}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && results[0]) {
+            location.hash = results[0].to;
+            setQ("");
+            ref.current?.blur();
+          }
+          if (e.key === "Escape") ref.current?.blur();
+        }}
+        placeholder="חיפוש…"
+        aria-label="חיפוש"
+        className="h-8 w-full rounded-lg border border-black/10 bg-white ps-9 pe-16 text-[13px] outline-none placeholder:text-slate-400 focus:border-black/25"
+      />
+      <span className="pointer-events-none absolute end-2 top-1/2 flex -translate-y-1/2 gap-0.5" dir="ltr">
+        <kbd className="rounded border border-black/10 px-1 text-[10px] text-muted">⌘</kbd>
+        <kbd className="rounded border border-black/10 px-1 text-[10px] text-muted">K</kbd>
+      </span>
+      {open && results.length > 0 && (
+        <div className="absolute inset-x-0 top-10 z-50 rounded-xl border border-black/10 bg-white p-1 shadow-xl">
+          {results.map((r) => (
+            <a key={r.to + r.label} href={r.to} onClick={() => setQ("")} className="flex h-9 items-center justify-between rounded-lg px-2.5 text-[13px] hover:bg-black/[0.04]">
+              <span className="truncate">{r.label}</span>
+              <span className="text-[11px] text-muted">{r.hint}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; crumbs: ReactNode; onNewCourse: () => void }) {
   const engine = useEngine();
   const route = useRoute();
   const [drawer, setDrawer] = useState(false);
   const [collapsed, setCollapsed] = useState(() => kvGet("ruecai.sidebar") === "collapsed");
+  const [bannerClosed, setBannerClosed] = useState(() => kvGet("ruecai.banner") === "closed");
   useEffect(() => setDrawer(false), [route]);
   const toggle = () => {
     kvSet("ruecai.sidebar", collapsed ? "open" : "collapsed");
@@ -294,6 +363,23 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
       )}
 
       <div className={collapsed ? "" : "md:ps-[252px]"}>
+        {engine.root.mode === "browser" && !bannerClosed && (
+          <div className="relative flex min-h-9 items-center justify-center bg-[linear-gradient(90deg,#3a2f2a,#24282f_45%,#2c3a35)] px-10 py-1.5 text-center text-[12.5px] text-white/90">
+            <span>
+              הנתונים שמורים בתוך הדפדפן. מומלץ לגבות מדי פעם, או לעבור ל-Chrome/Edge כדי לשמור בתיקייה.{" "}
+              <a href={href.settings()} className="font-medium text-white underline underline-offset-2">
+                לגיבוי
+              </a>
+            </span>
+            <button
+              className="absolute end-3 grid h-6 w-6 place-items-center rounded text-white/70 hover:text-white"
+              onClick={() => (kvSet("ruecai.banner", "closed"), setBannerClosed(true))}
+              aria-label="סגירת ההודעה"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        )}
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-black/[0.06] bg-white/85 px-4 backdrop-blur-md md:px-8">
           <button className="grid h-9 w-9 place-items-center rounded-lg hover:bg-hover md:hidden" onClick={() => setDrawer(true)} aria-label="תפריט">
             <Menu size={18} />
@@ -302,6 +388,8 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
             <PanelRight size={17} />
           </button>
           <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] text-muted">{crumbs}</div>
+          <GlobalSearch />
+          <div className="hidden flex-1 lg:block" />
           {engine.demo && (
             <a href={href.settings()} className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[12px] font-medium text-amber-800 md:hidden">
               מצב הדגמה
@@ -332,13 +420,6 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
           {engine.lockWarning && (
             <div className="mb-5">
               <Alert kind="warn">{engine.lockWarning}</Alert>
-            </div>
-          )}
-          {engine.root.mode === "browser" && (
-            <div className="mb-5">
-              <Alert kind="info">
-                הנתונים שמורים בתוך הדפדפן. מומלץ לגבות מדי פעם (הגדרות ← גיבוי), או לעבור ל-Chrome/Edge כדי לשמור בתיקייה רגילה.
-              </Alert>
             </div>
           )}
           {children}

@@ -67,7 +67,7 @@ export function CourseView({ id, tab, sub }: { id: number; tab: string; sub?: st
       {tab === "materials" && <Materials courseId={id} />}
       {tab === "concepts" && <Concepts courseId={id} />}
       {tab === "studio" && <Studio courseId={id} preselect={sub} />}
-      {tab === "tutor" && <Tutor courseId={id} />}
+      {tab === "tutor" && <Tutor courseId={id} ask={sub ? safeDecode(sub) : undefined} />}
       {tab === "review" && <Review courseId={id} />}
       {tab === "progress" && <ProgressView courseId={id} />}
       {tab === "artifacts" && (sub ? <ArtifactView courseId={id} artifactId={Number(sub)} /> : <ArtifactList courseId={id} />)}
@@ -118,4 +118,12 @@ function EditCourse({ open, onClose, id }: { open: boolean; onClose: () => void;
       </div>
     </Modal>
   );
+}
+
+function safeDecode(s: string) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
 }
