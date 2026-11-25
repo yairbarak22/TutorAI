@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import type { InputSpec, LoadedTool } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { Alert, Badge, Button, Card, Field, ProgressBar, SectionLabel, errorMessage, inputClass } from "../ui/components.tsx";
-import { ToolTile } from "../ui/toolIcons.tsx";
+import { ArrowRight, ChevronLeft, Search, Sparkles } from "lucide-react";
+import { Alert, Badge, Button, Card, Field, ProgressBar, errorMessage, inputClass } from "../ui/components.tsx";
+import { ToolOrb, ToolTile } from "../ui/toolIcons.tsx";
 
-const PACK_LABEL: Record<string, string> = { core: "כלי ליבה (לכל הקורסים)", law: "חבילת משפטים", math: "חבילת מתמטיקה וכמותי" };
+const PACK_LABEL: Record<string, string> = { core: "כלי ליבה", law: "חבילת משפטים", math: "חבילת מתמטיקה וכמותי" };
+const PACK_CHIP: Record<string, string> = { core: "ליבה", law: "משפטים", math: "מתמטיקה" };
 
 export function Studio({ courseId, preselect }: { courseId: number; preselect?: string }) {
   const engine = useEngine();
@@ -20,10 +21,15 @@ export function Studio({ courseId, preselect }: { courseId: number; preselect?: 
   const tools = engine.tools.filter((t) => t.manifest.output !== "chat");
   const packs = [...new Set(tools.map((t) => t.manifest.pack))];
   const tool = tools.find((t) => t.manifest.id === selected);
+  const [q, setQ] = useState("");
+  const [pack, setPack] = useState("all");
   const hasMaterial = engine.store.sources(courseId).some((s) => s.status === "ready");
 
   if (tool) return <ToolRunner key={tool.manifest.id + JSON.stringify(preset)} courseId={courseId} tool={tool} preset={preset} onBack={() => go(href.course(courseId, "studio"))} />;
 
+  const shown = tools.filter(
+    (t) => (pack === "all" || t.manifest.pack === pack) && (!q.trim() || `${t.manifest.name} ${t.manifest.description}`.includes(q.trim())),
+  );
   return (
     <div className="space-y-6">
       {!hasMaterial && (
@@ -31,32 +37,57 @@ export function Studio({ courseId, preselect }: { courseId: number; preselect?: 
           כדי שהכלים יעבדו על החומר שלכם, <a className="underline" href={href.course(courseId, "materials")}>העלו קבצים</a> קודם.
         </Alert>
       )}
-      {packs.map((pack) => (
-        <section key={pack}>
-          <SectionLabel>{PACK_LABEL[pack] ?? `חבילת ${pack}`}</SectionLabel>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {tools
-              .filter((t) => t.manifest.pack === pack)
-              .map((t) => (
-                <a
-                  key={t.manifest.id}
-                  href={href.course(courseId, "studio", t.manifest.id)}
-                  data-testid={`tool-${t.manifest.id}`}
-                  className="group flex items-start gap-3 rounded-2xl border border-black/[0.08] bg-white p-4 transition hover:border-black/15 hover:shadow"
-                >
-                  <ToolTile id={t.manifest.id} emoji={t.manifest.icon} />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className="text-[14px] font-medium text-ink">{t.manifest.name}</span>
-                      {t.manifest.kind === "declarative" && <Badge>ללא קוד</Badge>}
+      <div className="space-y-3">
+        <div className="relative">
+          <Search size={16} className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input className={`${inputClass} h-10 ps-10`} placeholder="חיפוש כלים…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="חיפוש כלים" />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {["all", ...packs].map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPack(p)}
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] font-medium transition ${
+                pack === p ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-ink-2 hover:bg-hover"
+              }`}
+            >
+              {p === "all" ? "כל הכלים" : (PACK_CHIP[p] ?? p)}
+            </button>
+          ))}
+        </div>
+      </div>
+      {packs
+        .filter((p) => shown.some((t) => t.manifest.pack === p))
+        .map((p) => (
+          <section key={p}>
+            <h2 className="mb-2 flex items-center gap-1 text-[16px] font-semibold tracking-tight">
+              {PACK_LABEL[p] ?? `חבילת ${p}`} <ChevronLeft size={16} className="text-muted" />
+            </h2>
+            <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+              {shown
+                .filter((t) => t.manifest.pack === p)
+                .map((t) => (
+                  <a
+                    key={t.manifest.id}
+                    href={href.course(courseId, "studio", t.manifest.id)}
+                    data-testid={`tool-${t.manifest.id}`}
+                    className="-mx-2 flex items-start gap-3 rounded-xl p-2 transition hover:bg-black/[0.03]"
+                  >
+                    <ToolOrb id={t.manifest.id} emoji={t.manifest.icon} />
+                    <span className="min-w-0 flex-1 pt-0.5">
+                      <span className="flex items-center gap-2 text-[14px] font-medium text-ink">
+                        {t.manifest.name}
+                        {t.manifest.kind === "declarative" && <Badge>ללא קוד</Badge>}
+                      </span>
+                      <span className="mt-0.5 line-clamp-2 block text-[12.5px] leading-snug text-muted">{t.manifest.description}</span>
                     </span>
-                    <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">{t.manifest.description}</span>
-                  </span>
-                </a>
-              ))}
-          </div>
-        </section>
-      ))}
+                  </a>
+                ))}
+            </div>
+          </section>
+        ))}
+      {shown.length === 0 && <p className="py-8 text-center text-[13px] text-muted">לא נמצאו כלים.</p>}
       <p className="text-center text-[13px] text-muted">
         רוצים להוסיף כלי? כל כלי הוא תיקייה עם קובץ הגדרות ופרומפט.{" "}
         <a className="underline" href="https://github.com/yairbarak22/RuecAI_Tutor/blob/main/docs/plugins.md" target="_blank" rel="noreferrer">

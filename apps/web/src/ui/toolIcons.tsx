@@ -27,3 +27,16 @@ export function ToolTile({ id, emoji, size = "md" }: { id: string; emoji: string
     </IconTile>
   );
 }
+
+/** Voice-library style avatar: a soft grey square holding a gradient orb with the tool icon. */
+export function ToolOrb({ id, emoji }: { id: string; emoji: string }) {
+  const t = TOOL_ICONS[id];
+  const g = t?.grad ?? (hash(id) % 8) + 1;
+  return (
+    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-black/[0.04]">
+      <span className={`tile-grad-${g} grid h-9 w-9 place-items-center rounded-full text-ink/80 shadow-[inset_0_-6px_12px_rgba(0,0,0,0.08)]`}>
+        {t ? <t.icon size={17} strokeWidth={1.9} /> : <span className="text-base">{emoji}</span>}
+      </span>
+    </span>
+  );
+}

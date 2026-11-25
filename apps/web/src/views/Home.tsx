@@ -1,9 +1,8 @@
 import { useState, type ReactNode } from "react";
-import { ArrowLeft, BookOpen, CalendarDays, KeyRound, Layers, Plus, Scale, Sigma } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, ChevronLeft, KeyRound, Layers, Plus, Scale, Sigma } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
-import { Badge, Button, Card, Empty, Field, IconTile, Modal, SectionLabel, inputClass } from "../ui/components.tsx";
-import { CourseMark } from "../ui/Shell.tsx";
+import { Badge, Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
 
 export function daysUntil(date: string | null): number | null {
   if (!date) return null;
@@ -15,27 +14,38 @@ function greeting() {
   return h < 5 ? "לילה טוב" : h < 12 ? "בוקר טוב" : h < 17 ? "צהריים טובים" : h < 21 ? "ערב טוב" : "לילה טוב";
 }
 
-function ActionTile({ grad, icon, title, desc, onClick, href: to }: { grad: number; icon: ReactNode; title: string; desc: string; onClick?: () => void; href?: string }) {
+const TINTS = ["#ece8f3", "#e4ebe4", "#e7ecef", "#f1ebe4"];
+
+/** Tinted feature card with a big title and a round black arrow button. */
+function ActionTile({ tint, art, title, desc, onClick, href: to }: { tint: number; art: ReactNode; title: string; desc: string; onClick?: () => void; href?: string }) {
   const inner = (
     <>
-      <IconTile grad={grad}>{icon}</IconTile>
-      <span className="min-w-0">
-        <span className="block text-[14px] font-medium text-ink">{title}</span>
-        <span className="mt-0.5 block text-[12.5px] leading-snug text-muted">{desc}</span>
+      <span className="grid h-[92px] w-[76px] shrink-0 place-items-center rounded-xl bg-white/60 shadow-[0_8px_20px_-8px_rgba(0,0,0,0.25)]">{art}</span>
+      <span className="flex min-w-0 flex-1 flex-col self-stretch">
+        <span className="text-[16px] font-semibold leading-snug tracking-tight text-ink">{title}</span>
+        <span className="mt-1 text-[12.5px] leading-snug text-ink-2/80">{desc}</span>
+        <span className="mt-auto grid h-7 w-7 place-items-center self-end rounded-full bg-ink text-white transition group-hover:-translate-x-0.5">
+          <ArrowLeft size={14} />
+        </span>
       </span>
     </>
   );
-  const cls = "flex w-full items-start gap-3 rounded-2xl border border-black/[0.08] bg-white p-4 text-start transition hover:border-black/15 hover:bg-black/[0.015]";
+  const cls = "group flex w-full items-start gap-4 rounded-2xl p-3 text-start transition hover:brightness-[0.98]";
+  const style = { background: TINTS[tint % TINTS.length] };
   return to ? (
-    <a href={to} className={cls}>
+    <a href={to} className={cls} style={style}>
       {inner}
     </a>
   ) : (
-    <button type="button" onClick={onClick} className={cls}>
+    <button type="button" onClick={onClick} className={cls} style={style}>
       {inner}
     </button>
   );
 }
+
+const Art = ({ grad, children }: { grad: number; children: ReactNode }) => (
+  <span className={`tile-grad-${grad} grid h-12 w-12 place-items-center rounded-full text-ink/75 shadow-[inset_0_-8px_14px_rgba(0,0,0,0.1)]`}>{children}</span>
+);
 
 export function Home({ onNewCourse }: { onNewCourse: () => void }) {
   const engine = useEngine();
@@ -52,18 +62,20 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
       </div>
 
       <section>
-        <SectionLabel>התחלה מהירה</SectionLabel>
+        <h2 className="mb-3 flex items-center gap-1 text-[16px] font-semibold tracking-tight">התחלה מהירה</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <ActionTile grad={1} icon={<Plus size={20} />} title="קורס חדש" desc="יוצרים קורס וגוררים אליו מצגות, סיכומים ומבחנים" onClick={onNewCourse} />
-          <ActionTile grad={3} icon={<Sigma size={20} />} title="קורס לדוגמה: הסתברות" desc="הרצאות לדוגמה, מושגים וכלים מוכנים לנסות" onClick={() => go(href.course(engine.loadDemoCourse("probability")))} />
-          <ActionTile grad={4} icon={<Scale size={20} />} title="קורס לדוגמה: דיני חוזים" desc="מבחנים לדוגמה ומבחן חדש באותו סגנון" onClick={() => go(href.course(engine.loadDemoCourse("law")))} />
-          <ActionTile grad={6} icon={<KeyRound size={20} />} title="מפתח API ומודלים" desc={engine.demo ? "עוברים ממצב הדגמה לעבודה אמיתית" : "מודל, עלויות, גיבוי ושחזור"} href={href.settings()} />
+          <ActionTile tint={0} art={<Art grad={1}><Plus size={22} /></Art>} title="קורס חדש" desc="יוצרים קורס וגוררים אליו מצגות, סיכומים ומבחנים" onClick={onNewCourse} />
+          <ActionTile tint={1} art={<Art grad={3}><Sigma size={22} /></Art>} title="קורס לדוגמה: הסתברות" desc="הרצאות, מושגים וכלים מוכנים לנסות" onClick={() => go(href.course(engine.loadDemoCourse("probability")))} />
+          <ActionTile tint={3} art={<Art grad={4}><Scale size={22} /></Art>} title="קורס לדוגמה: דיני חוזים" desc="מבחנים לדוגמה ומבחן חדש באותו סגנון" onClick={() => go(href.course(engine.loadDemoCourse("law")))} />
+          <ActionTile tint={2} art={<Art grad={6}><KeyRound size={22} /></Art>} title="מפתח API ומודלים" desc={engine.demo ? "עוברים ממצב הדגמה לעבודה אמיתית" : "מודל, עלויות, גיבוי ושחזור"} href={href.settings()} />
         </div>
       </section>
 
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[17px] font-semibold tracking-tight">הקורסים שלי</h2>
+          <h2 className="flex items-center gap-1 text-[16px] font-semibold tracking-tight">
+            הקורסים שלי <ChevronLeft size={16} className="text-muted" />
+          </h2>
           <Button size="sm" variant="secondary" onClick={onNewCourse}>
             <Plus size={14} /> קורס חדש
           </Button>
@@ -75,38 +87,39 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
             </Empty>
           </Card>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((c) => {
               const sources = engine.store.sources(c.id);
               const concepts = engine.store.concepts(c.id).length;
               const due = engine.store.dueCards(c.id, now).length;
               const d = daysUntil(c.exam_date);
               return (
-                <a key={c.id} href={href.course(c.id)} className="group block rounded-2xl border border-black/[0.08] bg-white p-4 transition hover:border-black/15 hover:shadow">
-                  <div className="flex items-start gap-3">
-                    <CourseMark id={c.id} name={c.name} size="md" />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[15px] font-medium">{c.name}</div>
-                      <div className="mt-0.5 text-[12.5px] text-muted">
-                        {sources.length} קבצים · {concepts} מושגים
-                      </div>
-                    </div>
-                    <ArrowLeft size={16} className="mt-1 text-slate-300 transition group-hover:-translate-x-0.5 group-hover:text-ink" />
-                  </div>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {d !== null && (
-                      <Badge color={d > 0 && d <= 7 ? "amber" : "slate"}>
-                        <CalendarDays size={12} />
-                        {d > 0 ? `${d} ימים למבחן` : d === 0 ? "המבחן היום" : "המבחן עבר"}
-                      </Badge>
-                    )}
-                    {due > 0 && (
-                      <Badge color="blue">
-                        <Layers size={12} />
-                        {due} לחזרה היום
-                      </Badge>
-                    )}
-                  </div>
+                <a key={c.id} href={href.course(c.id)} className="-mx-2 flex items-start gap-3 rounded-xl p-2 transition hover:bg-black/[0.03]">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-black/[0.04]">
+                    <span className={`tile-grad-${((c.id - 1) % 8) + 1} grid h-9 w-9 place-items-center rounded-full text-[14px] font-semibold text-ink/75 shadow-[inset_0_-6px_12px_rgba(0,0,0,0.08)]`}>
+                      {c.name.trim().charAt(0)}
+                    </span>
+                  </span>
+                  <span className="min-w-0 flex-1 pt-0.5">
+                    <span className="block truncate text-[14px] font-medium">{c.name}</span>
+                    <span className="block text-[12.5px] text-muted">
+                      {sources.length} קבצים · {concepts} מושגים
+                    </span>
+                    <span className="mt-1 flex flex-wrap gap-1">
+                      {d !== null && (
+                        <Badge color={d > 0 && d <= 7 ? "amber" : "slate"}>
+                          <CalendarDays size={11} />
+                          {d > 0 ? `${d} ימים למבחן` : d === 0 ? "המבחן היום" : "המבחן עבר"}
+                        </Badge>
+                      )}
+                      {due > 0 && (
+                        <Badge>
+                          <Layers size={11} />
+                          {due} לחזרה
+                        </Badge>
+                      )}
+                    </span>
+                  </span>
                 </a>
               );
             })}
