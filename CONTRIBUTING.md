@@ -75,6 +75,7 @@ npm run check   # typecheck + unit tests + evals for every tool + browser E2E
 - A small, focused PR beats a huge one.
 - UI text is available in Hebrew and English: add both when you add UI strings. Code, comments, and plugin prompts are in English.
 - PRs are checked by CI (typecheck, unit tests, recorded plugin evals, Playwright E2E). To try a PR, check it out locally and run `npm run dev`.
+- **Reusing code from another project?** Use only code under a compatible open license (MIT, BSD, Apache-2.0), keep its copyright notice, and add an entry to [NOTICE](NOTICE). Don't copy code from projects with a non-open or copyleft license (for example AGPL).
 
 ## Non-negotiables
 
@@ -82,6 +83,14 @@ npm run check   # typecheck + unit tests + evals for every tool + browser E2E
 2. **Grounding:** every claim from the course material is cited.
 3. **Pedagogy:** help students learn; don't do their work for them.
 4. **Security:** see [SECURITY.md](SECURITY.md).
+
+## Free for students, and how the project stays sustainable
+
+Everything students use (the app, the tools, and the engine) is open source under Apache-2.0 and will stay free.
+
+To keep the project going, the maintainers may in the future offer a paid service to universities and colleges: for example running a university login with an AI-usage allowance, Moodle integration, deployment, and support. That service would be built on top of this project, not by taking anything away from it.
+
+Your contributions are licensed under Apache-2.0, like the rest of the project (section 5 of the [LICENSE](LICENSE)). You keep the copyright to your work, and anyone, including such a paid service, may use it under the license.
 
 ## Labels
 
