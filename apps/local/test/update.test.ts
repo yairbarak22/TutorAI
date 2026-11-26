@@ -27,7 +27,8 @@ function release(binary: Uint8Array, sum: string, tag = "v0.2.0", sig?: string) 
   return fetchFn;
 }
 
-const sumsText = (sum: string, name: string) => `${sum}  ${name}\n0000000000000000000000000000000000000000000000000000000000000000  other\n`;
+const sumsText = (sum: string, name: string, version = "0.2.0") =>
+  `${sum}  ${name}\n0000000000000000000000000000000000000000000000000000000000000000  other\nversion: ${version}\n`;
 
 describe("signed releases", () => {
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");
@@ -43,6 +44,28 @@ describe("signed releases", () => {
     const u = new Updater({ current: "0.1.0", binary: bin, publicKey: pub, fetchFn: release(data, sum, "v0.2.0", goodSig), relaunch: async () => {} });
     await u.check();
     expect((await u.status()).staged).toBe(true);
+  });
+
+  it("rejects an old signed release re-published under a newer tag (rollback)", async () => {
+    const e = tempEnv();
+    const bin = join(e.root, "tutorai");
+    writeFileSync(bin, "old");
+    // A genuinely signed 0.1.0 SHA256SUMS, served as release v0.3.0.
+    const oldSigned = sign(null, Buffer.from(sumsText(sum, assetName(), "0.1.0")), privateKey).toString("base64");
+    const fetchFn = (async (url: string) => {
+      if (url.endsWith("/releases/latest"))
+        return new Response(JSON.stringify({ tag_name: "v0.3.0", assets: [
+          { name: assetName(), browser_download_url: "https://github.com/dl/bin" },
+          { name: "SHA256SUMS", browser_download_url: "https://github.com/dl/sums" },
+          { name: "SHA256SUMS.sig", browser_download_url: "https://github.com/dl/sig" },
+        ] }));
+      if (url.endsWith("/sums")) return new Response(sumsText(sum, assetName(), "0.1.0"));
+      if (url.endsWith("/sig")) return new Response(oldSigned);
+      return new Response(data as BodyInit);
+    }) as typeof fetch;
+    const u = new Updater({ current: "0.2.5", binary: bin, publicKey: pub, fetchFn, relaunch: async () => {} });
+    await expect(u.check()).rejects.toThrow(/version/);
+    expect(existsSync(`${bin}.new`)).toBe(false);
   });
 
   it("rejects a missing or forged signature even when the checksum matches", async () => {

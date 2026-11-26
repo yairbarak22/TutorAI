@@ -125,6 +125,8 @@ jobs:
           find artifacts -type f \( -name 'tutorai-*' -o -name 'icon.*' \) -exec cp {} release/ \;
           cd release
           sha256sum tutorai-* > SHA256SUMS
+          # The version is part of what's signed, so an old signed release can't be re-published as new.
+          echo "version: ${GITHUB_REF_NAME#v}" >> SHA256SUMS
           ls -la
       - name: Sign SHA256SUMS (the self-updater accepts only signed releases)
         env:
