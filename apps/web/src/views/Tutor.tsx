@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowUp, Check, Copy, GraduationCap, History, SquarePen, Trash2, User } from "lucide-react";
 import { extractInlineCitations, type ChatTurn } from "@tutorai/sdk";
 import type { ChatSummary } from "@tutorai/core";
@@ -33,19 +33,25 @@ export function Tutor({ courseId }: { courseId: number }) {
   const [streaming, setStreaming] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  /** Index of the answer being typed out (it keeps typing after the stream ends). */
+  const [typing, setTyping] = useState<number | null>(null);
   const chats = engine.store.chats(courseId);
   const bottom = useRef<HTMLDivElement>(null);
   const busy = streaming !== null;
 
-  useEffect(() => {
-    if (messages.length) bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, streaming]);
+  /** Follow the answer as it is revealed, unless the student scrolled up to read. */
+  const follow = useCallback((force = false) => {
+    const el = bottom.current;
+    if (!el) return;
+    if (force || el.getBoundingClientRect().top < window.innerHeight + 220) el.scrollIntoView({ block: "end" });
+  }, []);
 
   const open = (id: number | null) => {
     if (busy) return;
     setError(null);
     setHistoryOpen(false);
     setChatId(id);
+    setTyping(null);
     setMessages(id === null ? [] : (engine.store.chatById(id)?.messages ?? []));
     window.scrollTo({ top: 0 });
   };
@@ -63,7 +69,9 @@ export function Tutor({ courseId }: { courseId: number }) {
     const history = messages.slice(-20);
     const next = [...messages, { role: "user" as const, content: text }];
     setMessages(next);
+    setTyping(next.length);
     setStreaming("");
+    requestAnimationFrame(() => follow(true));
     try {
       const reply = await engine.chat(courseId, text, history, mode, (d) => setStreaming((s) => (s ?? "") + d));
       const done = [...next, { role: "assistant" as const, content: reply.text }];
@@ -72,6 +80,7 @@ export function Tutor({ courseId }: { courseId: number }) {
       else engine.store.saveChat(chatId, done);
     } catch (e) {
       setError(errorMessage(e));
+      setTyping(null);
       setMessages(messages);
       setInput(text);
     } finally {
@@ -167,12 +176,13 @@ export function Tutor({ courseId }: { courseId: number }) {
         ) : (
           <>
             <div className="flex-1 divide-y divide-black/[0.05]" aria-live="polite">
-              {messages.map((m, i) => (
-                <Message key={i} turn={m} />
-              ))}
-              {busy && (streaming ? <Message turn={{ role: "assistant", content: streaming }} streaming /> : <Message thinking turn={{ role: "assistant", content: "" }} />)}
+              {[
+                ...messages.map((m, i) => <Message key={i} turn={m} typing={i === typing} onTick={follow} onTyped={() => setTyping(null)} />),
+                ...(busy
+                  ? [<Message key={messages.length} turn={{ role: "assistant", content: streaming ?? "" }} typing streamOpen onTick={follow} onTyped={() => {}} />]
+                  : []),
+              ]}
             </div>
-            <div ref={bottom} />
             <div className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent pt-6 pb-3">
               {error && (
                 <div className="mb-3">
@@ -184,6 +194,7 @@ export function Tutor({ courseId }: { courseId: number }) {
                 {t("התשובות מבוססות על חומרי הקורס ועלולות לטעות. כדאי לבדוק את המקורות.", "Answers are based on your course materials and can be wrong. Check the cited sources.")}
               </p>
             </div>
+            <div ref={bottom} />
           </>
         )}
       </div>
@@ -193,9 +204,25 @@ export function Tutor({ courseId }: { courseId: number }) {
 
 /* ------------------------------------------------------------------------------------------ */
 
-function Message({ turn, streaming, thinking }: { turn: ChatTurn; streaming?: boolean; thinking?: boolean }) {
+function Message({
+  turn,
+  typing,
+  streamOpen,
+  onTick,
+  onTyped,
+}: {
+  turn: ChatTurn;
+  /** Reveal the text gradually (the newest answer). */
+  typing?: boolean;
+  /** More text may still arrive. */
+  streamOpen?: boolean;
+  onTick?: () => void;
+  onTyped?: () => void;
+}) {
   const mine = turn.role === "user";
   const [copied, setCopied] = useState(false);
+  const shown = useTypewriter(turn.content, !mine && !!typing, !!streamOpen, onTick, onTyped);
+  const revealing = !mine && !!typing && (streamOpen || shown.length < turn.content.length);
   return (
     <article className="group py-6 first:pt-2" data-testid={mine ? "msg-user" : "msg-assistant"}>
       <header className="mb-2 flex items-center gap-2.5 text-[13px] font-semibold text-ink">
@@ -211,17 +238,18 @@ function Message({ turn, streaming, thinking }: { turn: ChatTurn; streaming?: bo
         {mine ? t("אתם", "You") : t("המורה הפרטי", "Tutor")}
       </header>
       <div className="ps-[38px] text-[15px] leading-7">
-        {thinking ? (
-          <TutorThinking />
-        ) : mine ? (
+        {mine ? (
           <p className="whitespace-pre-wrap text-ink" dir="auto">
             {turn.content}
           </p>
+        ) : !shown && revealing ? (
+          <TutorThinking />
         ) : (
           <>
-            <Markdown text={turn.content} />
-            {!streaming && <CitationChips ids={extractInlineCitations(turn.content)} />}
-            {!streaming && (
+            <Markdown text={shown} />
+            {revealing && <span className="typing-caret" aria-hidden />}
+            {!revealing && <CitationChips ids={extractInlineCitations(turn.content)} />}
+            {!revealing && (
               <div className="mt-2 flex opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
                 <button
                   type="button"
@@ -241,6 +269,63 @@ function Message({ turn, streaming, thinking }: { turn: ChatTurn; streaming?: bo
       </div>
     </article>
   );
+}
+
+/**
+ * Reveals `text` gradually, faster when more is waiting, so it never falls behind the stream.
+ * Never shows half of an inline formula ($…) or citation ([S…), which would flash as raw text.
+ */
+function useTypewriter(text: string, active: boolean, streamOpen: boolean, onTick?: () => void, onDone?: () => void): string {
+  const [n, setN] = useState(() => (active ? 0 : text.length));
+  const target = useRef(text.length);
+  target.current = text.length;
+  const tick = useRef(onTick);
+  tick.current = onTick;
+
+  useEffect(() => {
+    if (!active) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setN(Number.MAX_SAFE_INTEGER);
+      return;
+    }
+    let raf = 0;
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = Math.min(64, now - last);
+      last = now;
+      setN((cur) => {
+        const backlog = target.current - cur;
+        if (backlog <= 0) return cur;
+        const perSecond = Math.max(90, backlog * 2.2);
+        return Math.min(target.current, cur + Math.max(1, Math.round((perSecond * dt) / 1000)));
+      });
+      tick.current?.();
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [active]);
+
+  const done = active && !streamOpen && n >= text.length;
+  const finished = useRef(false);
+  useEffect(() => {
+    if (done && !finished.current) {
+      finished.current = true;
+      onDone?.();
+    }
+  }, [done, onDone]);
+
+  if (!active) return text;
+  return safeCut(text.slice(0, n));
+}
+
+/** Trims a partial inline formula or citation from the end of revealed text. */
+function safeCut(s: string): string {
+  const dollars = (s.match(/(?<!\\)\$/g) ?? []).length;
+  if (dollars % 2 === 1) s = s.slice(0, s.lastIndexOf("$"));
+  const cite = s.match(/\[S?\d*$/);
+  if (cite) s = s.slice(0, cite.index);
+  return s;
 }
 
 function Composer({

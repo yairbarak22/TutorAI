@@ -152,3 +152,21 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.015em; }
 @media (prefers-reduced-motion: reduce) {
   [class*="animate-[selectIn"] { animation: none !important; }
 }
+
+/* Tutor: shown while an answer is being typed out */
+.typing-caret {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border-radius: 9999px;
+  background: var(--color-ink);
+  animation: typingPulse 1s ease-in-out infinite;
+}
+@keyframes typingPulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .typing-caret { animation: none; opacity: 0.6; }
+}

@@ -50,7 +50,7 @@ export function Spinner({ label }: { label?: string }) {
   );
 }
 
-export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean }) {
+export function Modal({ open, onClose, title, children, wide, huge }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean; huge?: boolean }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -64,7 +64,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`w-full ${wide ? "max-w-4xl" : "max-w-lg"} rounded-3xl bg-white shadow-xl`}
+        className={`w-full ${huge ? "max-w-6xl" : wide ? "max-w-4xl" : "max-w-lg"} rounded-3xl bg-white shadow-xl`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 pt-5 pb-2">

@@ -171,3 +171,25 @@ test("check my solution finds the first mistake and reveals hints one at a time"
   await tab(page, /מחברת טעויות/).click();
   await expect(page.getByTestId("mistake-card").first()).toContainText("בדיקת פתרון");
 });
+
+test("a citation opens the original PDF at the cited page", async ({ page }) => {
+  await onboard(page);
+  await page.getByRole("main").getByRole("button", { name: "קורס חדש", exact: true }).click();
+  await page.getByPlaceholder(/למשל/).fill("קורס PDF");
+  await page.getByRole("button", { name: "יצירה" }).click();
+  await page.getByTestId("file-input").setInputFiles([fixtures("lecture-graphs.pdf")]);
+  await expect(page.getByTestId("source-row").getByText("מוכן")).toBeVisible({ timeout: 30_000 });
+
+  const violations: string[] = [];
+  await page.exposeFunction("reportViolation", (v: string) => violations.push(v));
+  await page.evaluate(() => document.addEventListener("securitypolicyviolation", (e) => (window as unknown as { reportViolation: (v: string) => void }).reportViolation(e.violatedDirective)));
+
+  await tab(page, /מורה פרטי/).click();
+  await page.getByLabel("הודעה למורה הפרטי").fill("מה זה מיון טופולוגי?");
+  await page.keyboard.press("Enter");
+  await page.getByTestId("cite-chip").filter({ hasText: "עמ' 2" }).first().click();
+  const frame = page.getByRole("dialog").locator("iframe");
+  await expect(frame).toHaveAttribute("src", /^blob:.*#page=2$/);
+  await expect(page.getByRole("dialog").getByRole("link", { name: "פתיחה בלשונית חדשה" })).toBeVisible();
+  expect(violations).toEqual([]);
+});
