@@ -1,4 +1,4 @@
-# Contributing to RuecAI Teacher
+# Contributing to TutorAI
 
 Thanks for being here! 🙏 The project is built by students from every faculty. You don't need to be a programmer to contribute.
 
@@ -6,7 +6,7 @@ Thanks for being here! 🙏 The project is built by students from every faculty.
 
 | Who | What you can do |
 |---|---|
-| **Any student** | Open a [tool idea](https://github.com/yairbarak22/RuecAI_Tutor/issues/new?template=tool-idea.yml), report a bug, improve UI wording or translations (Hebrew and English) |
+| **Any student** | Open a [tool idea](https://github.com/yairbarak22/TutorAI/issues/new?template=tool-idea.yml), report a bug, improve UI wording or translations (Hebrew and English) |
 | **Law, economics, psychology… students** | Write a **declarative tool** (YAML + an English prompt, no code), and add examples and quality checks (evals) for your field |
 | **CS students** | TypeScript code tools, new renderers, engine improvements, tests |
 
@@ -33,8 +33,8 @@ AI help is welcome. What matters: you've tried the change yourself and can expla
 You need [Node.js 22](https://nodejs.org) and git.
 
 ```bash
-git clone https://github.com/<your-user>/RuecAI_Tutor.git   # after forking
-cd RuecAI_Tutor
+git clone https://github.com/<your-user>/TutorAI.git   # after forking
+cd TutorAI
 npm install
 npm run dev
 ```
@@ -46,7 +46,7 @@ Open http://localhost:5173, choose in-browser storage, then try demo mode with t
 | Path | What |
 |---|---|
 | `apps/web/` | The static web app (React, Vite, Tailwind; Hebrew RTL and English LTR UI). `src/platform/` holds storage, the API key, and the SymPy worker |
-| `packages/sdk/` | `@ruecai/sdk`: artifact schemas, the tool contract, quality checks |
+| `packages/sdk/` | `@tutorai/sdk`: artifact schemas, the tool contract, quality checks |
 | `packages/core/` | The engine: SQLite store (sql.js), parsers (PDF/PPTX/DOCX), ingestion, retrieval, model clients (Claude, local models), learner model (BKT, FSRS, mistakes notebook, daily session, concept graph), tool runtime |
 | `plugins/<pack>/<tool>/` | The tools, one folder per tool, auto-discovered |
 | `plugins/_fixtures/` | Fixture courses (probability, law) used by evals, demo mode, and E2E |

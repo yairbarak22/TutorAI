@@ -6,7 +6,7 @@ test("loads in Hebrew RTL with no console errors", async ({ page }) => {
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  await expect(page.getByRole("heading", { name: "RuecAI Teacher" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "TutorAI" })).toBeVisible();
   await page.getByRole("button", { name: "בואו נתחיל" }).click();
   await page.getByText("בתוך הדפדפן").click();
   await page.getByRole("button", { name: /נסו במצב הדגמה/ }).click();

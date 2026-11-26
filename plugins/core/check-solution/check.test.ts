@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import initSqlJs from "sql.js";
-import type { MathVerifier, SolutionCheck } from "@ruecai/sdk";
-import { MockLLM, runTool, seedCourse, Store } from "@ruecai/core";
+import type { MathVerifier, SolutionCheck } from "@tutorai/sdk";
+import { MockLLM, runTool, seedCourse, Store } from "@tutorai/core";
 import { courseFixtures, demoFixtures, getTool } from "../../registry.ts";
 
 const SQL = await initSqlJs();

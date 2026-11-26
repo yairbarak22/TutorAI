@@ -8,7 +8,7 @@ export interface FileStore {
   read(path: string): Promise<Uint8Array>;
   exists(path: string): Promise<boolean>;
   remove(path: string): Promise<void>;
-  /** Human-readable location, e.g. "~/Documents/RuecAI" or "browser storage". */
+  /** Human-readable location, e.g. "~/Documents/TutorAI" or "browser storage". */
   label: string;
   kind: "folder" | "browser" | "memory";
 }

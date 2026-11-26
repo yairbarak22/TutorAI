@@ -1,4 +1,4 @@
-import { t } from "@ruecai/sdk";
+import { t } from "@tutorai/sdk";
 /**
  * Bayesian Knowledge Tracing — one probability per concept that the student "knows" it.
  * Same model OATutor (Berkeley) uses. Parameters are conservative defaults.

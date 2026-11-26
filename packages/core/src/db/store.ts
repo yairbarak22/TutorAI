@@ -100,7 +100,7 @@ export const sectionIdFromKey = (key: string) => Number(key.replace(/^S/, ""));
 
 /**
  * The whole local database. sql.js keeps it in memory; the platform layer persists
- * `export()` to `ruecai.db` in the student's folder whenever `onChange` fires.
+ * `export()` to `tutorai.db` in the student's folder whenever `onChange` fires.
  */
 export class Store {
   private listeners = new Set<() => void>();

@@ -6,7 +6,7 @@ This file is for AI coding assistants (Claude Code, Cursor, Copilot, and others)
 
 ## What this project is
 
-RuecAI Teacher is a local-first study app: a static TypeScript web app with **no backend**. Data lives in `ruecai.db` (sql.js) in a folder the student picks, and Claude is called from the browser with the student's own key. Read [docs/architecture.md](docs/architecture.md) before changing anything in `packages/` or `apps/`.
+TutorAI is a local-first study app: a static TypeScript web app with **no backend**. Data lives in `tutorai.db` (sql.js) in a folder the student picks, and Claude is called from the browser with the student's own key. Read [docs/architecture.md](docs/architecture.md) before changing anything in `packages/` or `apps/`.
 
 ## Where to put changes
 
@@ -29,7 +29,7 @@ Helper scripts for agents, if any, are listed in `scripts/agent/README.md`.
 ## Rules
 
 - **Language:** everything on GitHub (code, comments, prompts, docs, issues, commit messages) is in English. The UI is bilingual: add every UI string as `t("עברית", "English")`; plugin manifests are English with Hebrew under `i18n.he`.
-- **Privacy:** no server, no telemetry, no new external network calls. The API key never goes into `ruecai.db` or logs.
+- **Privacy:** no server, no telemetry, no new external network calls. The API key never goes into `tutorai.db` or logs.
 - **Grounding:** outputs that use course material carry citations to section ids from `ctx.retrieve()`.
 - **Pedagogy:** tools guide rather than solve. The shared rules live in `packages/core/src/llm/prompts.ts`; don't duplicate them in prompts.
 - **Structured output:** tools return data matching a Zod schema from `packages/sdk/src/artifacts.ts`.
@@ -39,7 +39,7 @@ Helper scripts for agents, if any, are listed in `scripts/agent/README.md`.
 
 ## Helping a student contribute
 
-You are helping a **university student contribute to RuecAI Teacher**. Assume they are **not a programmer**: many study law, economics or psychology and have never used GitHub. AI-assisted contributions are welcome here. Your job is to be a patient guide and do the technical work *with* them, so they understand what is happening and own the result.
+You are helping a **university student contribute to TutorAI**. Assume they are **not a programmer**: many study law, economics or psychology and have never used GitHub. AI-assisted contributions are welcome here. Your job is to be a patient guide and do the technical work *with* them, so they understand what is happening and own the result.
 
 Claude Code: the `/contribute` command runs this playbook step by step.
 
@@ -74,11 +74,11 @@ Claude Code: the `/contribute` command runs this playbook step by step.
 
 #### 0. Set up (first time only)
 1. Check `git --version`, `node --version` (needs 22+), `gh --version`. Help install what's missing.
-2. `gh repo fork yairbarak22/RuecAI_Tutor --clone` (fork + clone in one go), then `cd RuecAI_Tutor` and `npm install`.
+2. `gh repo fork yairbarak22/TutorAI --clone` (fork + clone in one go), then `cd TutorAI` and `npm install`.
 3. `npm run dev`, then have them open http://localhost:5173, choose "in the browser", and try demo mode. They now see the app running on their own computer.
 
 #### 1. Choose what to work on
-- Show open issues for beginners: `gh issue list -R yairbarak22/RuecAI_Tutor --label "good first issue" --state open` (also useful: `--label no-code`). Skip issues that already have an assignee.
+- Show open issues for beginners: `gh issue list -R yairbarak22/TutorAI --label "good first issue" --state open` (also useful: `--label no-code`). Skip issues that already have an assignee.
 - Help the student pick one that matches their field and interest. Read the issue together and explain it in plain words.
 - Or they have their own idea: open a new issue with the "tool idea" template first, and wait for a maintainer to say it's a good fit before building.
 
@@ -89,7 +89,7 @@ Rules (enforced by a bot):
 - If you stop, comment **`/unclaim`** so someone else can take it. An issue with no PR after **10 days** gets a reminder; after **14 days** it's released.
 
 Help the student understand the issue well enough to write the plan, then draft it together, show it, and post after their OK:
-`gh issue comment <number> -R yairbarak22/RuecAI_Tutor --body "/claim <plan>"`
+`gh issue comment <number> -R yairbarak22/TutorAI --body "/claim <plan>"`
 
 #### 3. Make the change
 - Create a branch: `git checkout -b <short-description>` (e.g. `tool-case-comparison`).
@@ -116,13 +116,13 @@ Draft the PR with the template in [.github/PULL_REQUEST_TEMPLATE.md](.github/PUL
 - how it was tested, plus a screenshot if the UI changed;
 - which AI assistant helped (just for context: AI help is welcome).
 
-Show the full text, then after their OK: `gh pr create -R yairbarak22/RuecAI_Tutor --fill-first --body-file <file>`.
+Show the full text, then after their OK: `gh pr create -R yairbarak22/TutorAI --fill-first --body-file <file>`.
 
 #### 7. Checks and review
 - `gh pr checks` shows the CI result. Red? Read the log together (`gh run view --log-failed`), fix, commit and push again. The PR updates by itself.
 - Review comments are suggestions from a person, not a rejection. Go through each one with the student, decide together, make the change, and reply politely to every comment.
 - Expect a first review within a few days. If nothing happens after 5 days, a short polite comment asking for a review is fine.
-- When it's merged, celebrate: the change goes live at https://yairbarak22.github.io/RuecAI_Tutor/ within minutes.
+- When it's merged, celebrate: the change goes live at https://yairbarak22.github.io/TutorAI/ within minutes.
 
 ### Never
 

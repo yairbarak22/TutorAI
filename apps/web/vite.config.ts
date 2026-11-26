@@ -24,14 +24,14 @@ export const NETWORK_POLICY = [
 
 function networkPolicy(): Plugin {
   return {
-    name: "ruecai-network-policy",
+    name: "tutorai-network-policy",
     apply: "build",
     transformIndexHtml: () => [{ tag: "meta", attrs: { "http-equiv": "Content-Security-Policy", content: NETWORK_POLICY }, injectTo: "head-prepend" }],
   };
 }
 
 export default defineConfig({
-  // Relative base: the same build works at / and /RuecAI_Tutor/.
+  // Relative base: the same build works at / and /TutorAI/.
   base: "./",
   plugins: [
     react(),
@@ -42,8 +42,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon.svg"],
       manifest: {
-        name: "RuecAI Teacher",
-        short_name: "RuecAI",
+        name: "TutorAI",
+        short_name: "TutorAI",
         description: "עוזר לימודים מבוסס AI — החומרים נשארים אצלכם",
         lang: "he",
         dir: "rtl",

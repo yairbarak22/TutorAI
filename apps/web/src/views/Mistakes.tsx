@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, NotebookPen, Play, Sparkles, Trash2 } from "lucide-react";
-import type { Mistake } from "@ruecai/core";
-import { diagnoseMistake } from "@ruecai/core";
+import type { Mistake } from "@tutorai/core";
+import { diagnoseMistake } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Badge, Button, Empty, Tabs } from "../ui/components.tsx";

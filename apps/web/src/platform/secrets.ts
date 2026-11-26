@@ -1,17 +1,17 @@
-import type { LocalConfig } from "@ruecai/core";
+import type { LocalConfig } from "@tutorai/core";
 
 /**
- * The API key stays on this device only (browser storage) — deliberately NOT in ruecai.db,
+ * The API key stays on this device only (browser storage) — deliberately NOT in tutorai.db,
  * so syncing the data folder to Drive/OneDrive never uploads the key. The student can also
  * choose not to save it at all (sessionStorage, cleared when the tab closes).
  */
-const KEY = "ruecai.apiKey";
+const KEY = "tutorai.apiKey";
 /** "session" = the student chose not to save the key: it lives in sessionStorage and is gone when the tab closes. */
-const KEY_MODE = "ruecai.apiKeyMode";
-const DEMO = "ruecai.demo";
-const MODELS = "ruecai.models";
-const PROVIDER = "ruecai.provider";
-const LOCAL = "ruecai.local";
+const KEY_MODE = "tutorai.apiKeyMode";
+const DEMO = "tutorai.demo";
+const MODELS = "tutorai.models";
+const PROVIDER = "tutorai.provider";
+const LOCAL = "tutorai.local";
 
 /** Which backend answers: Claude, a model on this computer, or local for fast work + Claude for the rest. */
 export type Provider = "claude" | "local" | "hybrid";

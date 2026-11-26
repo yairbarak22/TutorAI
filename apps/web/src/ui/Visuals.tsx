@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Lock, Wrench } from "lucide-react";
 import DOMPurify from "dompurify";
-import { getLanguage, isRTL } from "@ruecai/sdk";
+import { getLanguage, isRTL } from "@tutorai/sdk";
 import { t } from "../i18n.tsx";
 import { Alert, Button, Spinner } from "./components.tsx";
 
@@ -58,10 +58,10 @@ export function MermaidView({ source }: { source: string }) {
  *  - runtime errors are reported back so the tool can self-repair
  */
 const CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:";
-const REPORTER = `<script>(function(){var sent=false;function r(m){if(sent)return;sent=true;parent.postMessage({ruecaiWidgetError:String(m).slice(0,800)},'*')}
+const REPORTER = `<script>(function(){var sent=false;function r(m){if(sent)return;sent=true;parent.postMessage({tutoraiWidgetError:String(m).slice(0,800)},'*')}
 window.addEventListener('error',function(e){r((e.message||'error')+(e.lineno?' (line '+e.lineno+')':''))});
 window.addEventListener('unhandledrejection',function(e){r(e.reason&&e.reason.message||e.reason)});
-function hgt(){var b=document.body;if(!b)return;var cs=getComputedStyle(b);parent.postMessage({ruecaiWidgetOk:true,height:Math.ceil(b.getBoundingClientRect().bottom+parseFloat(cs.marginBottom||0))},'*')}
+function hgt(){var b=document.body;if(!b)return;var cs=getComputedStyle(b);parent.postMessage({tutoraiWidgetOk:true,height:Math.ceil(b.getBoundingClientRect().bottom+parseFloat(cs.marginBottom||0))},'*')}
 window.addEventListener('load',function(){setTimeout(hgt,50);if(window.ResizeObserver)new ResizeObserver(function(){hgt()}).observe(document.body)});})();</script>`;
 
 /**
@@ -102,11 +102,11 @@ export function WidgetFrame({ html, onError, onRepair, repairing }: { html: stri
     setError(null);
     const onMsg = (e: MessageEvent) => {
       if (e.source !== ref.current?.contentWindow) return;
-      if (e.data?.ruecaiWidgetError) {
-        setError(e.data.ruecaiWidgetError);
-        onError?.(e.data.ruecaiWidgetError);
+      if (e.data?.tutoraiWidgetError) {
+        setError(e.data.tutoraiWidgetError);
+        onError?.(e.data.tutoraiWidgetError);
       }
-      if (e.data?.ruecaiWidgetOk && e.data.height) setHeight(Math.min(1400, Math.max(320, e.data.height + 8)));
+      if (e.data?.tutoraiWidgetOk && e.data.height) setHeight(Math.min(1400, Math.max(320, e.data.height + 8)));
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);

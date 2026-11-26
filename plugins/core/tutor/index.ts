@@ -1,4 +1,4 @@
-import { defineTool, extractInlineCitations } from "@ruecai/sdk";
+import { defineTool, extractInlineCitations } from "@tutorai/sdk";
 
 const MODES: Record<string, string> = {
   socratic:

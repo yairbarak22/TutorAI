@@ -39,7 +39,7 @@ test("upload PDF, PPTX, DOCX and a sample exam → all processed", async ({ page
   await expect(rows.nth(3).getByText("מבחן לדוגמה", { exact: true })).toBeVisible();
   await expect(rows.nth(0)).toContainText("2 קטעים"); // 2 PDF pages
 
-  // data survives a reload (autosave to ruecai.db)
+  // data survives a reload (autosave to tutorai.db)
   await page.waitForTimeout(1200);
   await page.reload();
   await expect(page.getByTestId("source-row")).toHaveCount(4);

@@ -1,19 +1,19 @@
-# RuecAI Teacher
+# TutorAI
 
-[![Open the app](https://img.shields.io/badge/Open%20the%20app-yairbarak22.github.io-2563EB?labelColor=black&style=for-the-badge)](https://yairbarak22.github.io/RuecAI_Tutor/)
-[![CI](https://img.shields.io/github/actions/workflow/status/yairbarak22/RuecAI_Tutor/ci.yml?branch=main&label=CI&labelColor=black&style=for-the-badge)](https://github.com/yairbarak22/RuecAI_Tutor/actions/workflows/ci.yml)
+[![Open the app](https://img.shields.io/badge/Open%20the%20app-yairbarak22.github.io-2563EB?labelColor=black&style=for-the-badge)](https://yairbarak22.github.io/TutorAI/)
+[![CI](https://img.shields.io/github/actions/workflow/status/yairbarak22/TutorAI/ci.yml?branch=main&label=CI&labelColor=black&style=for-the-badge)](https://github.com/yairbarak22/TutorAI/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-2563EB?labelColor=black&style=for-the-badge)](LICENSE)
 [![Languages](https://img.shields.io/badge/Hebrew%20%7C%20English-RTL%20%2B%20LTR-2563EB?labelColor=black&style=for-the-badge)](#)
 
 ![The concept map of a course: concepts in stages from foundations to advanced, colored by mastery, with one concept's prerequisite chain in focus](docs/screenshots/concept-map.png)
 
-RuecAI Teacher is an open-source study companion for Reichman University students.
+TutorAI is an open-source study companion for Reichman University students.
 
 Upload a course's materials and it builds a map of the course's concepts, tracks what you already know, and gives you tools that help you learn instead of handing you answers. There is nothing to install and no server: it runs in your browser, and your materials stay on your computer.
 
 Use it with Claude, with a free open-source model running on your own machine, or both.
 
-**[Open the app →](https://yairbarak22.github.io/RuecAI_Tutor/)**
+**[Open the app →](https://yairbarak22.github.io/TutorAI/)**
 
 ## Features
 
@@ -77,9 +77,9 @@ The app is available in English and in Hebrew (right-to-left), and demo mode wor
 
 ## Why not just study with a chatbot?
 
-A general chatbot is a capable tutor with no memory of you. RuecAI Teacher is the system around the model.
+A general chatbot is a capable tutor with no memory of you. TutorAI is the system around the model.
 
-| A general chatbot | RuecAI Teacher |
+| A general chatbot | TutorAI |
 |---|---|
 | Waits for you to know what to ask | Prepares today's session for you |
 | Doesn't know which concepts you have mastered | Tracks mastery per concept across the semester |
@@ -91,7 +91,7 @@ A general chatbot is a capable tutor with no memory of you. RuecAI Teacher is th
 
 ## Getting started
 
-1. Open **[the app](https://yairbarak22.github.io/RuecAI_Tutor/)**. Chrome or Edge is recommended.
+1. Open **[the app](https://yairbarak22.github.io/TutorAI/)**. Chrome or Edge is recommended.
 2. Choose where your data lives: a folder on your computer (Chrome and Edge), or browser storage.
 3. Choose a model:
    - **Claude:** paste an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys). It is stored only in your browser.
@@ -106,16 +106,16 @@ You can install the site as an app from the browser menu.
 Paste this into Claude to get a plain-language tour: what the app does, how to start, and how you can contribute.
 
 ```text
-Help me get to know RuecAI Teacher, an open-source study companion for Reichman University students.
+Help me get to know TutorAI, an open-source study companion for Reichman University students.
 First read these files from GitHub:
-https://raw.githubusercontent.com/yairbarak22/RuecAI_Tutor/main/README.md
-https://raw.githubusercontent.com/yairbarak22/RuecAI_Tutor/main/CONTRIBUTING.md
-https://raw.githubusercontent.com/yairbarak22/RuecAI_Tutor/main/docs/architecture.md
-https://raw.githubusercontent.com/yairbarak22/RuecAI_Tutor/main/AGENTS.md
+https://raw.githubusercontent.com/yairbarak22/TutorAI/main/README.md
+https://raw.githubusercontent.com/yairbarak22/TutorAI/main/CONTRIBUTING.md
+https://raw.githubusercontent.com/yairbarak22/TutorAI/main/docs/architecture.md
+https://raw.githubusercontent.com/yairbarak22/TutorAI/main/AGENTS.md
 
 Then explain, briefly and in plain language:
 1. What the app does, and how it differs from studying with a regular chatbot.
-2. How to start using it (https://yairbarak22.github.io/RuecAI_Tutor/), including the free options.
+2. How to start using it (https://yairbarak22.github.io/TutorAI/), including the free options.
 3. How I can contribute, even if I can't code.
 
 Finally, ask me what I study and what interests me, and suggest one specific way I could help.
@@ -126,8 +126,8 @@ Claude needs web access to read the links (Claude Code, or claude.ai with web se
 
 ## Privacy
 
-- There is no RuecAI server and no telemetry.
-- Course files, your progress, and the database (`ruecai.db`) stay on your device. In Chrome and Edge they are regular files in the folder you chose, so you can see them, back them up, or keep them in Google Drive.
+- There is no TutorAI server and no telemetry.
+- Course files, your progress, and the database (`tutorai.db`) stay on your device. In Chrome and Edge they are regular files in the folder you chose, so you can see them, back them up, or keep them in Google Drive.
 - Model calls go straight from your browser to the model you chose, with your own key. You can keep the key only until you close the tab, and the page's security policy blocks the app's requests to any address other than Anthropic and your local model.
 - Code written by the model runs in a sandboxed iframe that has no network access and can't read your data.
 - Course materials belong to their lecturers. The app never shares them between students.
@@ -139,8 +139,8 @@ See [SECURITY.md](SECURITY.md) for the security model.
 Requires [Node.js 22](https://nodejs.org) and git.
 
 ```bash
-git clone https://github.com/yairbarak22/RuecAI_Tutor.git
-cd RuecAI_Tutor
+git clone https://github.com/yairbarak22/TutorAI.git
+cd TutorAI
 npm install
 npm run dev
 ```
@@ -169,7 +169,7 @@ docs/              Architecture, plugin guide, roadmap, maintainer guide
 
 Every tool is a folder in [`plugins/`](plugins). Most tools need no code: a `plugin.yaml` that describes the inputs and output, and a prompt. The runtime handles retrieval, citations, validation, and rendering, and no tool is merged without passing its evals.
 
-Start with the [plugin guide](docs/plugins.md), or [suggest a tool](https://github.com/yairbarak22/RuecAI_Tutor/issues/new?template=tool-idea.yml) if you'd like someone else to build it. Students from every faculty are welcome, including non-programmers. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Start with the [plugin guide](docs/plugins.md), or [suggest a tool](https://github.com/yairbarak22/TutorAI/issues/new?template=tool-idea.yml) if you'd like someone else to build it. Students from every faculty are welcome, including non-programmers. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation
 

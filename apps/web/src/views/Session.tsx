@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, CircleCheck, Flame, Layers, NotebookPen, RotateCcw, Target, X, Zap } from "lucide-react";
-import { previewIntervals, sessionReasonLabel, type ReviewGrade, type SessionItem, type SessionPlan } from "@ruecai/core";
-import type { GradeResult } from "@ruecai/sdk";
+import { previewIntervals, sessionReasonLabel, type ReviewGrade, type SessionItem, type SessionPlan } from "@tutorai/core";
+import type { GradeResult } from "@tutorai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Alert, Badge, Button, Card, Empty, Panel, errorMessage, inputClass } from "../ui/components.tsx";

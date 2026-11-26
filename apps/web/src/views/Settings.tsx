@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
-import { DEFAULT_MODELS } from "@ruecai/core";
+import { DEFAULT_MODELS } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { download, forgetStorage, importBackup } from "../platform/storage.ts";
 import { secrets } from "../platform/secrets.ts";
@@ -246,7 +246,7 @@ export function Settings() {
             desc={
               engine.root.mode === "folder" ? (
                 <>
-                  {t("תיקייה", "Folder")} <b className="font-medium text-ink-2">{engine.root.files.label}</b>, {t("בקובץ", "in the file")} <code>ruecai.db</code>{" "}
+                  {t("תיקייה", "Folder")} <b className="font-medium text-ink-2">{engine.root.files.label}</b>, {t("בקובץ", "in the file")} <code>tutorai.db</code>{" "}
                   {t("ובתיקיית", "and the folder")} <code>courses/</code>.
                 </>
               ) : (
@@ -275,9 +275,9 @@ export function Settings() {
           />
           <Row
             title={t("גיבוי", "Backup")}
-            desc={t("קובץ ‎.ruecai‎ אחד עם כל הקורסים, הקבצים וההתקדמות.", "A single .ruecai file with all courses, files and progress.")}
+            desc={t("קובץ ‎.tutorai‎ אחד עם כל הקורסים, הקבצים וההתקדמות.", "A single .tutorai file with all courses, files and progress.")}
             action={
-              <Button variant="secondary" size="sm" onClick={async () => download(await engine.backup(), `ruecai-backup-${new Date().toISOString().slice(0, 10)}.ruecai`)}>
+              <Button variant="secondary" size="sm" onClick={async () => download(await engine.backup(), `tutorai-backup-${new Date().toISOString().slice(0, 10)}.tutorai`)}>
                 <Download size={14} /> {t("הורדת גיבוי", "Download backup")}
               </Button>
             }
@@ -293,7 +293,7 @@ export function Settings() {
                 <input
                   ref={restoreInput}
                   type="file"
-                  accept=".ruecai,.zip"
+                  accept=".tutorai,.ruecai,.zip"
                   hidden
                   onChange={async (e) => {
                     const f = e.target.files?.[0];
@@ -301,7 +301,7 @@ export function Settings() {
                     if (!confirm(t("השחזור יחליף את כל הנתונים הנוכחיים בנתונים מהגיבוי. להמשיך?", "Restoring will replace all current data with the data from the backup. Continue?"))) return;
                     try {
                       const db = await importBackup(engine.root, f);
-                      await engine.root.files.write("ruecai.db", db);
+                      await engine.root.files.write("tutorai.db", db);
                       location.reload();
                     } catch (err) {
                       setMsg({ kind: "error", text: errorMessage(err) });
@@ -316,7 +316,7 @@ export function Settings() {
 
       {tab === "about" && (
         <div>
-          <Row title="RuecAI Teacher" desc={t(
+          <Row title="TutorAI" desc={t(
               "פרויקט קוד פתוח (Apache-2.0) של סטודנטים באוניברסיטת רייכמן. אין שרת ואין איסוף נתונים: הקבצים נשמרים אצלכם, והבקשות ל-AI נשלחות ישירות ל-Anthropic.",
               "An open-source project (Apache-2.0) by students at Reichman University. No server and no data collection: your files stay with you, and AI requests go directly to Anthropic.",
             )} />
@@ -331,7 +331,7 @@ export function Settings() {
             title={t("קוד המקור", "Source code")}
             desc={t("דיווח על באגים, רעיונות לכלים ותרומות קוד.", "Bug reports, tool ideas and code contributions.")}
             action={
-              <a href="https://github.com/yairbarak22/RuecAI_Tutor" target="_blank" rel="noreferrer">
+              <a href="https://github.com/yairbarak22/TutorAI" target="_blank" rel="noreferrer">
                 <Button variant="secondary" size="sm">
                   GitHub
                 </Button>

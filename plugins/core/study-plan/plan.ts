@@ -1,5 +1,5 @@
-import { t } from "@ruecai/sdk";
-import type { ConceptInfo, StudyPlan } from "@ruecai/sdk";
+import { t } from "@tutorai/sdk";
+import type { ConceptInfo, StudyPlan } from "@tutorai/sdk";
 
 export interface PlanInput {
   concepts: ConceptInfo[];

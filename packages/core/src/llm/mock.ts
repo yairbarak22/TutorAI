@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { ChatTurn, LLMApi, LLMCallOptions } from "@ruecai/sdk";
+import type { ChatTurn, LLMApi, LLMCallOptions } from "@tutorai/sdk";
 
 /**
  * Deterministic LLM used for:

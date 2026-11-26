@@ -2,8 +2,8 @@
  * Discovers every plugin folder at build time: plugins/<pack>/<tool-id>/plugin.yaml
  * Adding a tool = adding a folder. No registration code needed.
  */
-import type { CodeTool, Lang, LoadedTool } from "@ruecai/sdk";
-import { loadPlugin, type CourseFixture } from "@ruecai/core";
+import type { CodeTool, Lang, LoadedTool } from "@tutorai/sdk";
+import { loadPlugin, type CourseFixture } from "@tutorai/core";
 import coreGolden from "./_fixtures/core-golden.json";
 import coreGoldenEn from "./_fixtures/core-golden.en.json";
 import probability from "./_fixtures/probability.json";

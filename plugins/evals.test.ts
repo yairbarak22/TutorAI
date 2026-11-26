@@ -8,18 +8,18 @@
  *  3. the output passes the plugin's checks: schema, citation grounding, item count, Hebrew ratio, keywords.
  *
  * Live mode (real model, costs money): `ANTHROPIC_API_KEY=... npm run eval:live`
- * Uses the cheap model for both tiers by default; override with RUECAI_EVAL_MODEL.
+ * Uses the cheap model for both tiers by default; override with TUTORAI_EVAL_MODEL.
  */
 import { afterAll, describe, expect, it } from "vitest";
 import initSqlJs from "sql.js";
-import { collectText, countItems, hebrewRatio, type LLMApi } from "@ruecai/sdk";
-import { AnthropicLLM, MockLLM, runTool, seedCourse, Store } from "@ruecai/core";
+import { collectText, countItems, hebrewRatio, type LLMApi } from "@tutorai/sdk";
+import { AnthropicLLM, MockLLM, runTool, seedCourse, Store } from "@tutorai/core";
 import { courseFixtures, demoFixtures, pluginErrors, tools } from "./registry.ts";
 
-const LIVE = process.env.RUECAI_LIVE === "1" && !!process.env.ANTHROPIC_API_KEY;
+const LIVE = process.env.TUTORAI_LIVE === "1" && !!process.env.ANTHROPIC_API_KEY;
 const SQL = await initSqlJs();
 
-const EVAL_MODEL = process.env.RUECAI_EVAL_MODEL || "claude-haiku-5-5";
+const EVAL_MODEL = process.env.TUTORAI_EVAL_MODEL || "claude-haiku-5-5";
 const usage = { input: 0, output: 0, calls: 0 };
 afterAll(() => {
   if (LIVE) console.log(`[live evals] model=${EVAL_MODEL} calls=${usage.calls} input_tokens=${usage.input} output_tokens=${usage.output}`);

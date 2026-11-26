@@ -13,7 +13,7 @@ inputs:
     options: [socratic, direct, quiz-me, simple]
     default: socratic
 retrieval: { mode: search }
-authors: [RuecAI core team]
+authors: [TutorAI core team]
 i18n:
   en:
     inputs:

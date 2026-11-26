@@ -18,7 +18,7 @@ inputs:
 retrieval:
   mode: search
   query: "{{params.concept}}"
-authors: [RuecAI core team]
+authors: [TutorAI core team]
 i18n:
   en:
     inputs:

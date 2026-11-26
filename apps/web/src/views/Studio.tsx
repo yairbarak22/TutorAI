@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { InputSpec, LoadedTool, ToolManifest } from "@ruecai/sdk";
+import type { InputSpec, LoadedTool, ToolManifest } from "@tutorai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Camera, ScanLine, Search, Sparkles, X } from "lucide-react";
@@ -103,7 +103,7 @@ export function Studio({ courseId, preselect }: { courseId: number; preselect?: 
       {shown.length === 0 && <p className="py-8 text-center text-[13px] text-muted">{t("לא נמצאו כלים.", "No tools found.")}</p>}
       <p className="text-center text-[13px] text-muted">
         {t("רוצים להוסיף כלי? כל כלי הוא תיקייה עם קובץ הגדרות ופרומפט.", "Want to add a tool? Each tool is a folder with a settings file and a prompt.")}{" "}
-        <a className="underline" href="https://github.com/yairbarak22/RuecAI_Tutor/blob/main/docs/plugins.md" target="_blank" rel="noreferrer">
+        <a className="underline" href="https://github.com/yairbarak22/TutorAI/blob/main/docs/plugins.md" target="_blank" rel="noreferrer">
           {t("המדריך לכתיבת כלי", "Guide to writing a tool")}
         </a>
       </p>

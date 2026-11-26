@@ -16,7 +16,7 @@ import {
   getLanguage,
   languageName,
   t,
-} from "@ruecai/sdk";
+} from "@tutorai/sdk";
 import type { Store } from "./db/store.ts";
 import { baseSystemPrompt, CONCEPTS_HINT } from "./llm/prompts.ts";
 import { DEFAULT_BUDGET_CHARS, retrieve } from "./retrieve.ts";

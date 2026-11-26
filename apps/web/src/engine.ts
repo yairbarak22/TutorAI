@@ -33,11 +33,11 @@ import {
   type ReviewGrade,
   type RunResult,
   type Source,
-} from "@ruecai/core";
-import { getLanguage, onLanguageChange, t, type ArtifactPayload, type ChatTurn, type LLMApi, type LoadedTool, type SolutionCheck } from "@ruecai/sdk";
+} from "@tutorai/core";
+import { getLanguage, onLanguageChange, t, type ArtifactPayload, type ChatTurn, type LLMApi, type LoadedTool, type SolutionCheck } from "@tutorai/sdk";
 import { sympyVerifier } from "./platform/sympy.ts";
-import { demoCourse, demoFixtures, getTool, tools } from "@ruecai/plugins";
-import { DB_FILE, Persistence, exportBackup, type DataRoot } from "./platform/storage.ts";
+import { demoCourse, demoFixtures, getTool, tools } from "@tutorai/plugins";
+import { DB_FILE, LEGACY_DB_FILE, Persistence, exportBackup, type DataRoot } from "./platform/storage.ts";
 import { secrets } from "./platform/secrets.ts";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
@@ -48,7 +48,7 @@ const loadSql = () => (sqlPromise ??= initSqlJs({ locateFile: () => sqlWasmUrl }
 export type IngestEvent = { sourceId: number; pct: number; message: string; startedAt: number };
 
 /**
- * App-level orchestration around the core: one Store (ruecai.db), one FileStore,
+ * App-level orchestration around the core: one Store (tutorai.db), one FileStore,
  * one LLM, the plugin registry, autosave, and a sequential ingestion queue.
  */
 export class Engine {
@@ -71,11 +71,18 @@ export class Engine {
   static async start(root: DataRoot, overrideDb?: Uint8Array): Promise<Engine> {
     const SQL = await loadSql();
     let bytes: Uint8Array | null = overrideDb ?? null;
+    let fromLegacy = false;
     if (!bytes) {
       try {
         bytes = await root.files.read(DB_FILE);
       } catch {
-        bytes = null; // new folder
+        try {
+          // A folder from before the rename: load ruecai.db and save it again as tutorai.db.
+          bytes = await root.files.read(LEGACY_DB_FILE);
+          fromLegacy = true;
+        } catch {
+          bytes = null; // new folder
+        }
       }
     }
     const store = Store.open(SQL, bytes);
@@ -89,7 +96,7 @@ export class Engine {
     });
     engine.lockWarning = await persistence.checkLock();
     persistence.startHeartbeat();
-    if (overrideDb || !bytes) {
+    if (overrideDb || !bytes || fromLegacy) {
       persistence.markDirty();
       await persistence.flush();
     }
@@ -302,7 +309,7 @@ export class Engine {
     if (!a) return;
     const tool = getTool(a.tool_id);
     if (!tool.code?.repair) return;
-    const { buildContext } = await import("@ruecai/core");
+    const { buildContext } = await import("@tutorai/core");
     const ctx = buildContext(tool, { store: this.store, llm: this.llm, courseId: a.course_id, params: a.params as Record<string, string>, onOutput }, new Set());
     const fixed = await tool.code.repair(ctx, { type: a.type, title: a.title, data: a.data } as ArtifactPayload, error);
     this.store.updateArtifactData(artifactId, fixed.data);
@@ -393,7 +400,7 @@ let current: Engine | null = null;
 export const setEngine = (e: Engine) => {
   current = e;
   // Dev-only handle for debugging and seeding test data from the console.
-  if (import.meta.env.DEV) (window as unknown as { __ruecai?: Engine }).__ruecai = e;
+  if (import.meta.env.DEV) (window as unknown as { __tutorai?: Engine }).__tutorai = e;
 };
 export function useEngine(): Engine {
   const e = current!;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineTool, languageName, SolutionCheck, t, type MathCheckResult } from "@ruecai/sdk";
+import { defineTool, languageName, SolutionCheck, t, type MathCheckResult } from "@tutorai/sdk";
 
 /**
  * "Check my solution": the student does the work, the tool finds the first mistake.

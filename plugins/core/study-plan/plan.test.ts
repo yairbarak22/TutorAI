@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ConceptInfo } from "@ruecai/sdk";
+import type { ConceptInfo } from "@tutorai/sdk";
 import { buildStudyPlan, prerequisiteOrder } from "./plan.ts";
 
 const c = (name: string, prerequisites: string[] = [], mastery = 0.2, attempts = 0): ConceptInfo => ({

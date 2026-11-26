@@ -1,4 +1,4 @@
-import type { RetrieveOptions, RetrievedContext, SectionRef } from "@ruecai/sdk";
+import type { RetrieveOptions, RetrievedContext, SectionRef } from "@tutorai/sdk";
 import { sectionKey, type Section, type Store } from "./db/store.ts";
 import { searchSections } from "./search.ts";
 

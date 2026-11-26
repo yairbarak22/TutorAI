@@ -12,7 +12,7 @@ const ingestStages = () => [t("קורא את הקובץ", "Reading the file"), t
 /** Rough processing time for a file: a fixed part plus a per-MB part (scanned pages and slides take longer). */
 const ingestSeconds = (bytes: number, demo: boolean) =>
   demo ? expectedSeconds("ingest:base", true) : expectedSeconds("ingest:base", false) + (bytes / 1048576) * expectedSeconds("ingest:per-mb", false);
-import type { Source } from "@ruecai/core";
+import type { Source } from "@tutorai/core";
 
 const status = (): Record<Source["status"], { label: string; color: "slate" | "green" | "amber" | "red" | "blue" }> => ({
   pending: { label: t("בתור", "Queued"), color: "slate" },

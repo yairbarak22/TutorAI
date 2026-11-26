@@ -1,4 +1,4 @@
-import { defineTool, t } from "@ruecai/sdk";
+import { defineTool, t } from "@tutorai/sdk";
 import { buildStudyPlan } from "./plan.ts";
 
 export default defineTool<"study_plan">({

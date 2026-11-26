@@ -10,7 +10,7 @@ inputs:
   - { name: count, label: "Number of questions", type: number, default: 0, help: "0 = same as the sample exams" }
   - { name: focus, label: "Topics to emphasize (optional)", type: text, default: "" }
 retrieval: { mode: samples }
-authors: [RuecAI core team]
+authors: [TutorAI core team]
 i18n:
   he:
     name: מבחן מתוך מבחנים לדוגמה

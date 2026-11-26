@@ -60,7 +60,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink text-white">
             <GraduationCap size={18} strokeWidth={2.2} />
           </span>
-          <h1 className="text-[18px] font-semibold tracking-tight">RuecAI Teacher</h1>
+          <h1 className="text-[18px] font-semibold tracking-tight">TutorAI</h1>
         </div>
 
         <div className="mb-6 flex items-center justify-center gap-1.5" aria-label={t("שלבים", "Steps")}>
@@ -131,8 +131,8 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
                       {t("בתיקייה במחשב", "In a folder on your computer")} <Badge>{t("מומלץ", "Recommended")}</Badge>
                     </span>
                     <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">
-                      {t("בחרו או צרו תיקייה, למשל", "Choose or create a folder, for example")} <code>{t("מסמכים/RuecAI", "Documents/RuecAI")}</code>.{" "}
-                      {t("הנתונים יישמרו בה כקבצים רגילים", "Your data will be saved in it as regular files")} (<code>ruecai.db</code>).{" "}
+                      {t("בחרו או צרו תיקייה, למשל", "Choose or create a folder, for example")} <code>{t("מסמכים/TutorAI", "Documents/TutorAI")}</code>.{" "}
+                      {t("הנתונים יישמרו בה כקבצים רגילים", "Your data will be saved in it as regular files")} (<code>tutorai.db</code>).{" "}
                       {t("תיקייה ב-Google Drive או ב-OneDrive גם מגובה וגם זמינה מכל מחשב.", "A folder inside Google Drive or OneDrive is also backed up and available on any computer.")}
                     </span>
                   </span>

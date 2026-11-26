@@ -17,7 +17,7 @@ inputs:
 retrieval:
   mode: search
   query: "{{params.concept}}"
-authors: [RuecAI math pack]
+authors: [TutorAI math pack]
 i18n:
   en:
     inputs:

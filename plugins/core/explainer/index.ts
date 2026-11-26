@@ -1,4 +1,4 @@
-import { defineTool, InteractiveWidget, WIDGET_KIT_API, languageName, t, type ArtifactPayload } from "@ruecai/sdk";
+import { defineTool, InteractiveWidget, WIDGET_KIT_API, languageName, t, type ArtifactPayload } from "@tutorai/sdk";
 
 const WIDGET_RULES = `Mandatory technical rules for the html field:
 - Return ONLY the body content: one <script> element (and a short <style> if needed). No <!doctype>, <html> or <head>: the frame, styling and libraries are already loaded.

@@ -1,4 +1,4 @@
-import { t } from "@ruecai/sdk";
+import { t } from "@tutorai/sdk";
 
 /**
  * Learns how long each kind of long task takes on this device / key / model, so waiting screens
@@ -40,7 +40,7 @@ const DEFAULT_CHARS: Record<string, number> = {
   grade: 900,
 };
 
-const KEY = "ruecai.timing.v1";
+const KEY = "tutorai.timing.v1";
 type Stats = Record<string, { sec?: number; chars?: number; n: number }>;
 
 function load(): Stats {

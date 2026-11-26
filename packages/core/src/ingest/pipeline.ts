@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { LLMApi } from "@ruecai/sdk";
-import { t } from "@ruecai/sdk";
+import type { LLMApi } from "@tutorai/sdk";
+import { t } from "@tutorai/sdk";
 import { sectionKey, type Store } from "../db/store.ts";
 import type { FileStore } from "../files.ts";
 import { BASE_SYSTEM_PROMPT } from "../llm/prompts.ts";

@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Box, Layers, ListChecks, Network, Search, X } from "lucide-react";
-import { ancestorsOf, buildConceptGraph, conceptInfos, masteryLevel, sectionIdFromKey, type MasteryLevel } from "@ruecai/core";
+import { ancestorsOf, buildConceptGraph, conceptInfos, masteryLevel, sectionIdFromKey, type MasteryLevel } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Button, Card, Empty } from "../ui/components.tsx";
 import { CitationChips } from "../ui/Citations.tsx";
 import { t } from "../i18n.tsx";
-import { isRTL } from "@ruecai/sdk";
+import { isRTL } from "@tutorai/sdk";
 
 /** Display name of a mastery level, in the current language. */
 export function masteryLabel(l: MasteryLevel): string {

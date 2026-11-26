@@ -27,7 +27,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { localDay } from "@ruecai/core";
+import { localDay } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { ChevronForward, isRTL, t, toolText } from "../i18n.tsx";
 import { href, useRoute } from "../router.ts";
@@ -95,7 +95,7 @@ function NavItem({
   );
 }
 
-const LAST_COURSE = "ruecai.lastCourse";
+const LAST_COURSE = "tutorai.lastCourse";
 const kvGet = (k: string) => {
   try {
     return localStorage.getItem(k);
@@ -192,7 +192,7 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
     <div className="flex h-full flex-col">
       <a href={href.home()} onClick={onNavigate} className="mx-3 mt-3 mb-3 flex h-9 items-center gap-2 px-1.5">
         <GraduationCap size={19} strokeWidth={2.1} />
-        <span className="text-[15.5px] font-semibold tracking-tight">RuecAI Teacher</span>
+        <span className="text-[15.5px] font-semibold tracking-tight">TutorAI</span>
       </a>
       <CourseSwitcher currentId={courseId} onNavigate={onNavigate} onNewCourse={onNewCourse} />
 
@@ -347,11 +347,11 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
   const engine = useEngine();
   const route = useRoute();
   const [drawer, setDrawer] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => kvGet("ruecai.sidebar") === "collapsed");
-  const [bannerClosed, setBannerClosed] = useState(() => kvGet("ruecai.banner") === "closed");
+  const [collapsed, setCollapsed] = useState(() => kvGet("tutorai.sidebar") === "collapsed");
+  const [bannerClosed, setBannerClosed] = useState(() => kvGet("tutorai.banner") === "closed");
   useEffect(() => setDrawer(false), [route]);
   const toggle = () => {
-    kvSet("ruecai.sidebar", collapsed ? "open" : "collapsed");
+    kvSet("tutorai.sidebar", collapsed ? "open" : "collapsed");
     setCollapsed(!collapsed);
   };
   const topBtn = "hidden h-7 items-center gap-1.5 rounded-lg border border-black/10 bg-white px-2.5 text-[12.5px] font-medium text-ink-2 hover:bg-hover sm:inline-flex";
@@ -388,7 +388,7 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
             </span>
             <button
               className="absolute end-3 grid h-6 w-6 place-items-center rounded text-white/70 hover:text-white"
-              onClick={() => (kvSet("ruecai.banner", "closed"), setBannerClosed(true))}
+              onClick={() => (kvSet("tutorai.banner", "closed"), setBannerClosed(true))}
               aria-label={t("סגירת ההודעה", "Dismiss")}
             >
               <X size={15} />
@@ -411,17 +411,17 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
             </a>
           )}
           <a
-            href="https://github.com/yairbarak22/RuecAI_Tutor/issues/new/choose"
+            href="https://github.com/yairbarak22/TutorAI/issues/new/choose"
             target="_blank"
             rel="noreferrer"
             className={topBtn}
           >
             <MessageSquare size={13} /> {t("משוב", "Feedback")}
           </a>
-          <a href="https://github.com/yairbarak22/RuecAI_Tutor/blob/main/docs/plugins.md" target="_blank" rel="noreferrer" className={topBtn}>
+          <a href="https://github.com/yairbarak22/TutorAI/blob/main/docs/plugins.md" target="_blank" rel="noreferrer" className={topBtn}>
             {t("מדריך", "Guide")}
           </a>
-          <a href="https://github.com/yairbarak22/RuecAI_Tutor" target="_blank" rel="noreferrer" className={topBtn}>
+          <a href="https://github.com/yairbarak22/TutorAI" target="_blank" rel="noreferrer" className={topBtn}>
             <Code size={13} /> GitHub
           </a>
         </header>

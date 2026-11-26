@@ -1,30 +1,89 @@
 import JSZip from "jszip";
-import type { FileStore } from "@ruecai/core";
-import { t } from "@ruecai/sdk";
+import type { FileStore } from "@tutorai/core";
+import { t } from "@tutorai/sdk";
 
 /**
  * Where the student's data lives.
  *
  *  folder  — a real folder the student picked (File System Access API, Chrome/Edge).
- *            ruecai.db + courses/… are ordinary files: visible, backed up, syncable via Drive/OneDrive.
- *  browser — IndexedDB inside the browser (Safari/Firefox fallback). Backed up via .ruecai export.
+ *            tutorai.db + courses/… are ordinary files: visible, backed up, syncable via Drive/OneDrive.
+ *  browser — IndexedDB inside the browser (Safari/Firefox fallback). Backed up via .tutorai export.
  */
 
-export const DB_FILE = "ruecai.db";
-const LOCK_FILE = ".ruecai-lock";
+export const DB_FILE = "tutorai.db";
+/** The project was called RuecAI before; folders and backups from then hold this file instead. */
+export const LEGACY_DB_FILE = "ruecai.db";
+const LOCK_FILE = ".tutorai-lock";
 
 /* ------------------------------ tiny IndexedDB KV ------------------------------ */
 
-function idb(): Promise<IDBDatabase> {
+const IDB_NAME = "tutorai";
+/** The pre-rename database. Its data is copied once into the new one and left in place. */
+const LEGACY_IDB_NAME = "ruecai";
+
+function openStores(name: string): Promise<{ db: IDBDatabase; created: boolean }> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open("ruecai", 1);
+    let created = false;
+    const req = indexedDB.open(name, 1);
     req.onupgradeneeded = () => {
+      created = true;
       req.result.createObjectStore("kv");
       req.result.createObjectStore("files");
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => resolve({ db: req.result, created });
     req.onerror = () => reject(req.error);
   });
+}
+
+/** Opens the pre-rename database only if it exists; never creates an empty one. */
+function openLegacy(): Promise<IDBDatabase | null> {
+  return new Promise((resolve) => {
+    const req = indexedDB.open(LEGACY_IDB_NAME);
+    req.onupgradeneeded = () => req.transaction?.abort(); // it didn't exist
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
+}
+
+async function copyStore(from: IDBDatabase, to: IDBDatabase, name: "kv" | "files") {
+  const entries = await new Promise<[IDBValidKey, unknown][]>((resolve, reject) => {
+    const out: [IDBValidKey, unknown][] = [];
+    const t = from.transaction(name, "readonly");
+    const cursor = t.objectStore(name).openCursor();
+    cursor.onsuccess = () => {
+      const c = cursor.result;
+      if (!c) return;
+      out.push([c.key, c.value]);
+      c.continue();
+    };
+    t.oncomplete = () => resolve(out);
+    t.onerror = () => reject(t.error);
+  });
+  await new Promise<void>((resolve, reject) => {
+    const t = to.transaction(name, "readwrite");
+    for (const [k, v] of entries) t.objectStore(name).put(v, k);
+    t.oncomplete = () => resolve();
+    t.onerror = () => reject(t.error);
+  });
+}
+
+let opened: Promise<IDBDatabase> | null = null;
+function idb(): Promise<IDBDatabase> {
+  opened ??= (async () => {
+    const { db, created } = await openStores(IDB_NAME);
+    if (created) {
+      const legacy = await openLegacy();
+      if (legacy) {
+        for (const s of ["kv", "files"] as const) if (legacy.objectStoreNames.contains(s)) await copyStore(legacy, db, s);
+        legacy.close();
+      }
+    }
+    return db;
+  })().catch((e) => {
+    opened = null;
+    throw e;
+  });
+  return opened;
 }
 async function tx<T>(store: "kv" | "files", mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await idb();
@@ -132,10 +191,10 @@ export interface DataRoot {
   files: FileStore;
 }
 
-/** Ask the student to pick (or create) their RuecAI folder. Must be called from a click. */
+/** Ask the student to pick (or create) their TutorAI folder. Must be called from a click. */
 export async function pickFolder(): Promise<DataRoot> {
   const handle = (await (window as unknown as { showDirectoryPicker: (o: object) => Promise<DirHandle> }).showDirectoryPicker({
-    id: "ruecai",
+    id: "tutorai",
     mode: "readwrite",
     startIn: "documents",
   })) as DirHandle;
@@ -263,10 +322,10 @@ export class Persistence {
 
 function tabSessionId(): string {
   try {
-    const existing = sessionStorage.getItem("ruecai.session");
+    const existing = sessionStorage.getItem("tutorai.session");
     if (existing) return existing;
     const id = crypto.randomUUID();
-    sessionStorage.setItem("ruecai.session", id);
+    sessionStorage.setItem("tutorai.session", id);
     return id;
   } catch {
     return crypto.randomUUID();
@@ -275,7 +334,7 @@ function tabSessionId(): string {
 
 /* ------------------------------ backup ------------------------------ */
 
-/** Builds a .ruecai backup (zip): ruecai.db + every source file it references. */
+/** Builds a .tutorai backup (zip): tutorai.db + every source file it references. */
 export async function exportBackup(root: DataRoot, dbBytes: Uint8Array, paths: string[]): Promise<Blob> {
   const zip = new JSZip();
   zip.file(DB_FILE, dbBytes);
@@ -291,10 +350,10 @@ export async function exportBackup(root: DataRoot, dbBytes: Uint8Array, paths: s
 
 export async function importBackup(root: DataRoot, file: Blob): Promise<Uint8Array> {
   const zip = await JSZip.loadAsync(file);
-  const db = await zip.file(DB_FILE)?.async("uint8array");
-  if (!db) throw new Error(t("קובץ הגיבוי לא תקין (חסר ruecai.db)", "Invalid backup file (ruecai.db is missing)"));
+  const db = await (zip.file(DB_FILE) ?? zip.file(LEGACY_DB_FILE))?.async("uint8array");
+  if (!db) throw new Error(t("קובץ הגיבוי לא תקין (חסר tutorai.db)", "Invalid backup file (tutorai.db is missing)"));
   for (const [path, entry] of Object.entries(zip.files)) {
-    if (entry.dir || path === DB_FILE) continue;
+    if (entry.dir || path === DB_FILE || path === LEGACY_DB_FILE) continue;
     // Only source files in the exact layout we write; anything else in the archive is ignored.
     if (!/^courses\/\d+\/sources\/[^/\\]+$/.test(path) || path.includes("..")) continue;
     await root.files.write(path, await entry.async("uint8array"));

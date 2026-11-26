@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Quiz, getLanguage, languageName, t, type LLMApi } from "@ruecai/sdk";
+import { Quiz, getLanguage, languageName, t, type LLMApi } from "@tutorai/sdk";
 import type { Card, Mistake, Store } from "../db/store.ts";
 import { baseSystemPrompt } from "../llm/prompts.ts";
 import { retrieve } from "../retrieve.ts";

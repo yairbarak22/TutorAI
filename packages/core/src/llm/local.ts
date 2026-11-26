@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { ChatTurn, LLMApi, LLMCallOptions, LLMLimits, Tier } from "@ruecai/sdk";
-import { t } from "@ruecai/sdk";
+import type { ChatTurn, LLMApi, LLMCallOptions, LLMLimits, Tier } from "@tutorai/sdk";
+import { t } from "@tutorai/sdk";
 import { LLMError, type UsageEvent } from "./anthropic.ts";
 
 /**

@@ -1,4 +1,4 @@
-import { t } from "@ruecai/sdk";
+import { t } from "@tutorai/sdk";
 import { createEmptyCard, fsrs, Rating, type Card as FsrsCard, type Grade } from "ts-fsrs";
 
 /** Spaced repetition with FSRS (the algorithm modern Anki uses). */

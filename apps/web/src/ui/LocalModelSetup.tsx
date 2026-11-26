@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, Copy, PlugZap, Sparkles } from "lucide-react";
-import { DEFAULT_LOCAL, listLocalModels, type LocalConfig, type LocalFlavor } from "@ruecai/core";
+import { DEFAULT_LOCAL, listLocalModels, type LocalConfig, type LocalFlavor } from "@tutorai/core";
 import { secrets } from "../platform/secrets.ts";
 import { Alert, Button, Field, Spinner, errorMessage, inputClass } from "./components.tsx";
 import { Select } from "./Select.tsx";

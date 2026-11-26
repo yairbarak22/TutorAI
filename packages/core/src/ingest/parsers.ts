@@ -1,4 +1,4 @@
-import { t } from "@ruecai/sdk";
+import { t } from "@tutorai/sdk";
 import JSZip from "jszip";
 
 /** One addressable unit of a document: a PDF page, a slide, or a block of a text document. */

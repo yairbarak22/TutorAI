@@ -1,5 +1,5 @@
 /**
- * RuecAI Viz Kit — injected into every interactive widget's sandboxed iframe.
+ * TutorAI Viz Kit — injected into every interactive widget's sandboxed iframe.
  *
  * Model-written widgets call this small, stable API (global `Viz`, plus `THREE`) instead of
  * hand-rolling canvas code, so every explainer gets the same polished look: a real 3D scene

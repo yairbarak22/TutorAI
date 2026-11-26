@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Lightbulb, Timer } from "lucide-react";
-import type { ExamSimulation, GradeResult } from "@ruecai/sdk";
+import type { ExamSimulation, GradeResult } from "@tutorai/sdk";
 import { useEngine } from "../../engine.ts";
 import { Alert, Button, Card, inputClass } from "../../ui/components.tsx";
 import { LongTask } from "../../ui/LongTask.tsx";
@@ -12,7 +12,7 @@ import { t } from "../../i18n.tsx";
 /** Exam mode: timer, answers saved as you type, grading by rubric after submit. */
 export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulation; courseId: number; artifactId: number }) {
   const engine = useEngine();
-  const storeKey = `ruecai.exam.${artifactId}`;
+  const storeKey = `tutorai.exam.${artifactId}`;
   const [answers, setAnswers] = useState<Record<string, string>>(() => {
     try {
       return JSON.parse(localStorage.getItem(storeKey) ?? "{}");

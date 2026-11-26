@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowUp, BookOpen, Box, CalendarDays, ClipboardCheck, Ellipsis, FileText, Flame, Layers, ListChecks, Plus, ScanLine, Trash2, Zap } from "lucide-react";
-import { localDay } from "@ruecai/core";
+import { localDay } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Badge, Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
@@ -42,7 +42,7 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
   const [q, setQ] = useState("");
   let remembered = 0;
   try {
-    remembered = Number(localStorage.getItem("ruecai.lastCourse"));
+    remembered = Number(localStorage.getItem("tutorai.lastCourse"));
   } catch {
     /* ignore */
   }
@@ -52,7 +52,7 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
     if (!q.trim()) return;
     if (!course) return onNewCourse();
     try {
-      sessionStorage.setItem(`ruecai.ask.${course.id}`, q.trim());
+      sessionStorage.setItem(`tutorai.ask.${course.id}`, q.trim());
     } catch {
       /* ignore */
     }

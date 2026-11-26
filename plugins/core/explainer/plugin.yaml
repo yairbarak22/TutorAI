@@ -10,7 +10,7 @@ inputs:
   - { name: concept, label: "Concept", type: concept, default: "" }
   - { name: idea, label: "What to visualize? (optional)", type: text, default: "" }
 retrieval: { mode: search }
-authors: [RuecAI core team]
+authors: [TutorAI core team]
 i18n:
   he:
     name: הסבר אינטראקטיבי

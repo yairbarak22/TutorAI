@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Thinking } from "../../ui/LongTask.tsx";
 import { Dumbbell, Trophy } from "lucide-react";
-import type { GradeResult, Quiz } from "@ruecai/sdk";
+import type { GradeResult, Quiz } from "@tutorai/sdk";
 import { useEngine } from "../../engine.ts";
 import { Button, Card, Spinner, errorMessage, inputClass } from "../../ui/components.tsx";
 import { Markdown } from "../../ui/Markdown.tsx";

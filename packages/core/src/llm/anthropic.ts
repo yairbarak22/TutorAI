@@ -2,8 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { BetaContentBlockParam, BetaMessageParam, BetaTextBlockParam } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import type { z } from "zod";
-import type { ChatTurn, LLMApi, LLMCallOptions, Tier } from "@ruecai/sdk";
-import { t } from "@ruecai/sdk";
+import type { ChatTurn, LLMApi, LLMCallOptions, Tier } from "@tutorai/sdk";
+import { t } from "@tutorai/sdk";
 
 export interface ModelConfig {
   fast: string;
@@ -35,7 +35,7 @@ const supportsFallback = (model: string) => /^claude-(opus-5|sonnet-5-5|fable-5)
 
 /**
  * Claude via the official Anthropic SDK, called directly from the student's browser with
- * the student's own key (the key never touches a RuecAI server — there is none).
+ * the student's own key (the key never touches a TutorAI server — there is none).
  */
 export class AnthropicLLM implements LLMApi {
   private client: Anthropic;

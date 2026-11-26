@@ -1,5 +1,5 @@
 import { parse as parseYaml } from "yaml";
-import { EvalSpec, ToolManifest, type CodeTool, type LoadedTool } from "@ruecai/sdk";
+import { EvalSpec, ToolManifest, type CodeTool, type LoadedTool } from "@tutorai/sdk";
 
 export interface PluginFiles {
   dir: string;

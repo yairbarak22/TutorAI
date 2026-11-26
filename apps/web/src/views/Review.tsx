@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CircleCheck, Layers } from "lucide-react";
-import { previewIntervals, type ReviewGrade } from "@ruecai/core";
+import { previewIntervals, type ReviewGrade } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { href } from "../router.ts";
 import { Button, Card, Empty, ProgressBar } from "../ui/components.tsx";

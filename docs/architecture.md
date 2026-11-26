@@ -1,6 +1,6 @@
 # Architecture
 
-RuecAI Teacher is a **static web app with no backend**. Everything runs in the student's browser, data is stored on the student's device, and model calls go straight from the browser to the model the student chose. The code is TypeScript only.
+TutorAI is a **static web app with no backend**. Everything runs in the student's browser, data is stored on the student's device, and model calls go straight from the browser to the model the student chose. The code is TypeScript only.
 
 ## Principles
 
@@ -31,7 +31,7 @@ RuecAI Teacher is a **static web app with no backend**. Everything runs in the s
 │                 retrieve()     LLM gateway (LLMApi)                                   │
 │        │                                                                              │
 │  platform (apps/web/src/platform):                                                    │
-│   sql.js → <chosen folder>/ruecai.db (File System Access) · IndexedDB fallback ·      │
+│   sql.js → <chosen folder>/tutorai.db (File System Access) · IndexedDB fallback ·      │
 │   pdf.js · Pyodide + SymPy worker · key and model settings                            │
 └───────────────┬─────────────────────────────────────────────┬─────────────────────────┘
                 │ HTTPS, with the student's own key            │ http://localhost
@@ -61,16 +61,16 @@ RuecAI Teacher is a **static web app with no backend**. Everything runs in the s
 ## Where the data lives
 
 ```
-<folder the student picks>/        e.g. ~/Documents/RuecAI
-  ruecai.db                        SQLite: courses, concepts, outputs, progress, flashcards
+<folder the student picks>/        e.g. ~/Documents/TutorAI
+  tutorai.db                        SQLite: courses, concepts, outputs, progress, flashcards
   courses/<id>/sources/…           the original files, as they are
-  .ruecai-lock                     marks the folder as open on another device
+  .tutorai-lock                     marks the folder as open on another device
 ```
 
 - **Chrome and Edge:** the database and files are regular files in a folder the student picks, accessed through the File System Access API. Clearing browsing data deletes nothing, a backup is a folder copy, and a folder inside Google Drive or OneDrive is backed up and available on other computers (one computer at a time; the lock file warns about concurrent use).
-- **Safari and Firefox:** they don't support the API, so data is kept in IndexedDB. The app shows a reminder to back up, and Settings can export and restore a `.ruecai` file (a ZIP of the database and the source files).
+- **Safari and Firefox:** they don't support the API, so data is kept in IndexedDB. The app shows a reminder to back up, and Settings can export and restore a `.tutorai` file (a ZIP of the database and the source files).
 - sql.js keeps the database in memory and writes the whole file after each change (debounced, atomic replace).
-- The API key and the model settings are stored in the browser's local storage for this site, **never** in `ruecai.db`, so syncing the data folder never uploads the key. A student who prefers not to save the key keeps it only in session storage and pastes it once per tab.
+- The API key and the model settings are stored in the browser's local storage for this site, **never** in `tutorai.db`, so syncing the data folder never uploads the key. A student who prefers not to save the key keeps it only in session storage and pastes it once per tab.
 
 ## Models
 
@@ -171,7 +171,7 @@ The full guide, including the `ctx` API, artifact types, input fields, and retri
 
 - Every plugin ships `evals/eval.yaml` (fixture course, parameters, checks: minimum items, citation coverage, Hebrew ratio, required terms, and an LLM-judge question) and `evals/golden.json` (one good output).
 - `npm test` runs every plugin end to end against a fixture course with its recorded golden output, at no cost, on every PR.
-- On pushes to `main`, CI also runs the evals against real Claude with the cheap model (`claude-haiku-5-5`, override with `RUECAI_EVAL_MODEL`) when the `ANTHROPIC_API_KEY` secret is set.
+- On pushes to `main`, CI also runs the evals against real Claude with the cheap model (`claude-haiku-5-5`, override with `TUTORAI_EVAL_MODEL`) when the `ANTHROPIC_API_KEY` secret is set.
 - Playwright E2E covers the student journeys in a real browser.
 - **No plugin is merged without passing evals.**
 
@@ -195,10 +195,10 @@ The full guide, including the `ctx` API, artifact types, input fields, and retri
 ## Repo structure
 
 ```
-RuecAI_Tutor/
+TutorAI/
   apps/web/               React PWA; src/platform = storage, secrets, SymPy worker
   packages/
-    sdk/                  @ruecai/sdk: artifact schemas, tool contract, quality checks, i18n
+    sdk/                  @tutorai/sdk: artifact schemas, tool contract, quality checks, i18n
     core/                 store (sql.js), parsers, ingestion, search, retrieval, model clients,
                           learner model, runtime
   plugins/

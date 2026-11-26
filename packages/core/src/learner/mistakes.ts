@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { baseSystemPrompt } from "../llm/prompts.ts";
-import { getLanguage, languageName, type LLMApi } from "@ruecai/sdk";
+import { getLanguage, languageName, type LLMApi } from "@tutorai/sdk";
 import type { Mistake, Store } from "../db/store.ts";
 
 /**

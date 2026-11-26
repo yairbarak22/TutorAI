@@ -14,7 +14,7 @@ const ENTRY = fileURLToPath(new URL("./src/widget-kit/kit.ts", import.meta.url))
  */
 export function widgetKit(): Plugin {
   return {
-    name: "ruecai-widget-kit",
+    name: "tutorai-widget-kit",
     resolveId: (id) => (id === ID ? RESOLVED : null),
     async load(id) {
       if (id !== RESOLVED) return null;

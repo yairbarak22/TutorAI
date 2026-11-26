@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineTool, ExamSimulation, t } from "@ruecai/sdk";
+import { defineTool, ExamSimulation, t } from "@tutorai/sdk";
 
 const ExamStyle = z.object({
   question_count: z.number().int(),

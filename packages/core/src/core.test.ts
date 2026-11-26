@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import initSqlJs from "sql.js";
 import JSZip from "jszip";
 import { z } from "zod";
-import { checkGrounding, cleanCitations, hebrewRatio, renderTemplate, extractInlineCitations } from "@ruecai/sdk";
+import { checkGrounding, cleanCitations, hebrewRatio, renderTemplate, extractInlineCitations } from "@tutorai/sdk";
 import { Store, sectionKey } from "./db/store.ts";
 import { parseDocx, parsePptx, parseText, detectKind, safeMimeFor } from "./ingest/parsers.ts";
 import { ingestSource, mergeConcepts } from "./ingest/pipeline.ts";
@@ -23,7 +23,7 @@ const SQL = await initSqlJs();
 const fixture = () => structuredClone(probability) as Parameters<typeof seedCourse>[1];
 
 describe("store", () => {
-  it("round-trips through export/import (the ruecai.db file)", () => {
+  it("round-trips through export/import (the tutorai.db file)", () => {
     const a = Store.open(SQL);
     const id = a.createCourse("הסתברות", "2027-02-01");
     a.setSetting("apiKeyHint", "x");

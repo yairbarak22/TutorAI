@@ -3,9 +3,9 @@
 ## Deployment (production)
 
 - Every push to `main` runs `.github/workflows/deploy.yml`: tests, build, and deploy to **GitHub Pages**.
-- URL: https://yairbarak22.github.io/RuecAI_Tutor/
+- URL: https://yairbarak22.github.io/TutorAI/
 - One-time setup: in Settings → Pages, under Source, choose **GitHub Actions**.
-- Worth doing later: a custom domain (for example `ruecai.app`), so the site has an origin separate from other GitHub Pages sites of the same user.
+- Worth doing later: a custom domain (for example `tutorai.app`), so the site has an origin separate from other GitHub Pages sites of the same user.
 
 ## Checking a PR
 
@@ -15,7 +15,7 @@ Every PR goes through CI (typecheck, unit tests, recorded plugin evals, and Play
 
 ## Live evals (real model)
 
-If a secret named `ANTHROPIC_API_KEY` is set, every push to `main` runs every tool's quality checks against Claude, using the cheap model (`claude-haiku-5-5`) for both tiers. You can switch the model with `RUECAI_EVAL_MODEL`. A run costs a few cents. PRs run only the recorded evals, at no cost.
+If a secret named `ANTHROPIC_API_KEY` is set, every push to `main` runs every tool's quality checks against Claude, using the cheap model (`claude-haiku-5-5`) for both tiers. You can switch the model with `TUTORAI_EVAL_MODEL`. A run costs a few cents. PRs run only the recorded evals, at no cost.
 
 ## Review
 

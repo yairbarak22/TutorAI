@@ -12,7 +12,7 @@ inputs:
 retrieval:
   mode: search
   query: "{{params.facts}}"
-authors: [RuecAI law pack]
+authors: [TutorAI law pack]
 i18n:
   he:
     name: ניתוח שאלת אירוע (IRAC)

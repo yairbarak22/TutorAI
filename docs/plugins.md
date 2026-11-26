@@ -1,6 +1,6 @@
 # Writing a tool (plugin): the complete guide
 
-Every tool in RuecAI Teacher is **one folder** under `plugins/<pack>/<tool-id>/`. The core discovers it automatically and adds it to the "Tools" tab. There is no registration code.
+Every tool in TutorAI is **one folder** under `plugins/<pack>/<tool-id>/`. The core discovers it automatically and adds it to the "Tools" tab. There is no registration code.
 
 There are two kinds:
 
@@ -106,7 +106,7 @@ npm run dev       # the tool appears in the "Tools" tab
 ANTHROPIC_API_KEY=sk-ant-... npm run eval:live   # (optional) against the real model
 ```
 
-PRs run only the recorded evals (using `golden.json`). Live evals against real Claude run on pushes to `main`, using the cheap model `claude-haiku-5-5` (override with `RUECAI_EVAL_MODEL`).
+PRs run only the recorded evals (using `golden.json`). Live evals against real Claude run on pushes to `main`, using the cheap model `claude-haiku-5-5` (override with `TUTORAI_EVAL_MODEL`).
 
 ---
 
@@ -147,7 +147,7 @@ The UI already knows how to display all of them. The full schemas are in `packag
 A `plugin.yaml` with `kind: code`, and an `index.ts` file:
 
 ```ts
-import { defineTool, Quiz } from "@ruecai/sdk";
+import { defineTool, Quiz } from "@tutorai/sdk";
 
 export default defineTool<"quiz">({
   async run(ctx) {
@@ -181,14 +181,14 @@ export default defineTool<"quiz">({
 | `ctx.chat` | Only for `output: chat` tools: `{ history, message, onDelta }` |
 | `ctx.math?.verify(claims)` | Real symbolic math (SymPy in a worker) for `{ lhs, rhs }` claims, when the platform provides it. Returns `ok: true / false / null` per claim. See `core/check-solution` |
 
-After `run`, the core validates the output against the schema, removes citations that don't exist in the context, saves the artifact to `ruecai.db`, and creates flashcards if needed.
+After `run`, the core validates the output against the schema, removes citations that don't exist in the context, saves the artifact to `tutorai.db`, and creates flashcards if needed.
 
 **`repair(ctx, artifact, error)`** (optional): called when an artifact fails to render, for example a widget with a JavaScript error. See `core/explainer`.
 
 ## Rules
 
 - `id` is unique and matches the folder name (lowercase letters, digits, and hyphens).
-- A code tool imports only from `@ruecai/sdk`, `zod`, and files inside its own folder.
+- A code tool imports only from `@tutorai/sdk`, `zod`, and files inside its own folder.
 - No `fetch` to external services. If you need one, open an RFC.
 - A new discipline pack (`plugins/economics/`, for example) = a new folder, and you add yourself to CODEOWNERS.
 

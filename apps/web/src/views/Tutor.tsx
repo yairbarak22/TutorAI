@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Thinking } from "../ui/LongTask.tsx";
 import { MessagesSquare, SquarePen } from "lucide-react";
-import { extractInlineCitations, type ChatTurn } from "@ruecai/sdk";
+import { extractInlineCitations, type ChatTurn } from "@tutorai/sdk";
 import { useEngine } from "../engine.ts";
 import { Alert, Button, Card, Spinner, errorMessage, inputClass } from "../ui/components.tsx";
 import { Markdown } from "../ui/Markdown.tsx";
 import { CitationChips } from "../ui/Citations.tsx";
-import { getTool } from "@ruecai/plugins";
+import { getTool } from "@tutorai/plugins";
 import { t, toolText } from "../i18n.tsx";
 
 const modeInput = () => getTool("tutor").manifest.inputs.find((i) => i.name === "mode");
@@ -63,8 +63,8 @@ export function Tutor({ courseId }: { courseId: number }) {
     handed.current = true;
     let q: string | null = null;
     try {
-      q = sessionStorage.getItem(`ruecai.ask.${courseId}`);
-      sessionStorage.removeItem(`ruecai.ask.${courseId}`);
+      q = sessionStorage.getItem(`tutorai.ask.${courseId}`);
+      sessionStorage.removeItem(`tutorai.ask.${courseId}`);
     } catch {
       /* ignore */
     }

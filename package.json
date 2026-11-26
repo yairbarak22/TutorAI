@@ -1,8 +1,8 @@
 {
-  "name": "ruecai",
+  "name": "tutorai",
   "private": true,
   "version": "0.1.0",
-  "description": "RuecAI Teacher — local-first AI study companion (Reichman University students)",
+  "description": "TutorAI — local-first AI study companion (Reichman University students)",
   "license": "Apache-2.0",
   "type": "module",
   "workspaces": [
@@ -14,13 +14,13 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "npm run dev -w @ruecai/web",
-    "build": "npm run build -w @ruecai/web",
-    "preview": "npm run preview -w @ruecai/web",
+    "dev": "npm run dev -w @tutorai/web",
+    "build": "npm run build -w @tutorai/web",
+    "preview": "npm run preview -w @tutorai/web",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "eval": "vitest run plugins",
-    "eval:live": "RUECAI_LIVE=1 vitest run plugins/evals.test.ts",
+    "eval:live": "TUTORAI_LIVE=1 vitest run plugins/evals.test.ts",
     "e2e": "playwright test",
     "check": "npm run typecheck && npm run test && npm run e2e",
     "fixtures": "node scripts/make-fixtures.mjs",

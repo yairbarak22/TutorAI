@@ -1,6 +1,6 @@
 ---
 name: contribute
-description: Guide a student, step by step and in plain language, from choosing a task to a merged pull request in RuecAI Teacher. Use when the user wants to contribute, add a tool, fix an issue, or asks what an issue / PR / fork is.
+description: Guide a student, step by step and in plain language, from choosing a task to a merged pull request in TutorAI. Use when the user wants to contribute, add a tool, fix an issue, or asks what an issue / PR / fork is.
 ---
 
 # /contribute: guide a student to their first (or next) contribution
@@ -12,7 +12,7 @@ The person you're helping is a student, probably not a programmer. Follow **AGEN
 1. Greet them in their language (Hebrew if they write Hebrew) and ask, in one message:
    - what they study and what kind of tool or fix they would like to help with (or "show me what's open");
    - whether they have used GitHub before.
-2. Check the setup silently (`git`, `node` ≥ 22, `gh auth status`, whether this folder is a fork with `origin` = their fork and `upstream` = yairbarak22/RuecAI_Tutor). Fix only what's missing, explaining each step in one sentence.
+2. Check the setup silently (`git`, `node` ≥ 22, `gh auth status`, whether this folder is a fork with `origin` = their fork and `upstream` = yairbarak22/TutorAI). Fix only what's missing, explaining each step in one sentence.
 
 ## Then walk the playbook
 

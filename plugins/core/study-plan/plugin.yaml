@@ -10,7 +10,7 @@ inputs:
   - { name: exam_date, label: "Exam date", type: text, default: "", help: "YYYY-MM-DD. Empty = the course's exam date" }
   - { name: minutes_per_day, label: "Minutes per day", type: number, default: 90 }
 retrieval: { mode: none }
-authors: [RuecAI core team]
+authors: [TutorAI core team]
 i18n:
   he:
     name: תוכנית לימוד למבחן

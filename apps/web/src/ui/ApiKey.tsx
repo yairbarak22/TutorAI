@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
-import { verifyApiKey } from "@ruecai/core";
+import { verifyApiKey } from "@tutorai/core";
 import { secrets } from "../platform/secrets.ts";
 import { Alert, Button, Spinner, inputClass } from "./components.tsx";
 import { t } from "../i18n.tsx";
@@ -80,7 +80,7 @@ export function KeyProtection() {
       </summary>
       <ul className="mt-2 list-disc space-y-1.5 ps-5">
         <li>{t("הוא נשמר רק בדפדפן הזה (או רק עד שתסגרו את הלשונית), לא בתיקיית הנתונים ולא בשום שרת.", "It's stored only in this browser (or only until you close the tab), not in your data folder and not on any server.")}</li>
-        <li>{t("הוא נשלח רק ל-Anthropic, ישירות מהדפדפן. ל-RuecAI אין שרת.", "It's sent only to Anthropic, directly from your browser. RuecAI has no server.")}</li>
+        <li>{t("הוא נשלח רק ל-Anthropic, ישירות מהדפדפן. ל-TutorAI אין שרת.", "It's sent only to Anthropic, directly from your browser. TutorAI has no server.")}</li>
         <li>
           {t(
             "מדיניות אבטחה בדף חוסמת בקשות של האפליקציה לכל כתובת חוץ מ-Anthropic ומהמודל המקומי שלכם.",
@@ -89,7 +89,7 @@ export function KeyProtection() {
         </li>
         <li>
           {t("הקוד פתוח, ואפשר לבדוק את כל זה בעצמכם: ", "The code is open, so you can check all of this yourself: ")}
-          <a className="underline" href="https://github.com/yairbarak22/RuecAI_Tutor/blob/main/SECURITY.md" target="_blank" rel="noreferrer">
+          <a className="underline" href="https://github.com/yairbarak22/TutorAI/blob/main/SECURITY.md" target="_blank" rel="noreferrer">
             SECURITY.md
           </a>
           .
@@ -98,8 +98,8 @@ export function KeyProtection() {
       <p className="mt-3 rounded-lg bg-white px-3 py-2 ring-1 ring-black/[0.06]">
         <b>{t("מומלץ:", "Recommended:")}</b>{" "}
         {t(
-          "צרו מפתח נפרד רק ל-RuecAI, ב-workspace עם מגבלת הוצאה חודשית נמוכה. כך גם במקרה הגרוע ההוצאה מוגבלת, ואפשר לבטל את המפתח בכל רגע ב-",
-          "Create a separate key just for RuecAI, in a workspace with a low monthly spend limit. Even in the worst case the spend is capped, and you can revoke the key at any time in the ",
+          "צרו מפתח נפרד רק ל-TutorAI, ב-workspace עם מגבלת הוצאה חודשית נמוכה. כך גם במקרה הגרוע ההוצאה מוגבלת, ואפשר לבטל את המפתח בכל רגע ב-",
+          "Create a separate key just for TutorAI, in a workspace with a low monthly spend limit. Even in the worst case the spend is capped, and you can revoke the key at any time in the ",
         )}
         <a className="underline" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">
           Anthropic Console

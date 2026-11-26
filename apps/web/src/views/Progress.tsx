@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CalendarDays, ChartLine } from "lucide-react";
-import { conceptInfos, masteryLevel } from "@ruecai/core";
-import type { StudyPlan } from "@ruecai/sdk";
+import { conceptInfos, masteryLevel } from "@tutorai/core";
+import type { StudyPlan } from "@tutorai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Alert, Button, Card, Empty, Panel, ProgressBar, Spinner, errorMessage } from "../ui/components.tsx";

@@ -1,3 +1,4 @@
+import "./platform/legacy-keys.ts"; // must stay first: renames old browser keys before anything reads them
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";

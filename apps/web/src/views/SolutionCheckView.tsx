@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, CircleHelp, Lightbulb, RotateCcw, Sigma, X } from "lucide-react";
-import type { SolutionCheck } from "@ruecai/sdk";
+import type { SolutionCheck } from "@tutorai/sdk";
 import { go, href } from "../router.ts";
 import { Badge, Button, Card, Panel } from "../ui/components.tsx";
 import { Markdown } from "../ui/Markdown.tsx";

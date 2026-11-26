@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 import { Paperclip } from "lucide-react";
-import { sectionIdFromKey } from "@ruecai/core";
+import { sectionIdFromKey } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { Button, Modal } from "./components.tsx";
 import { t } from "../i18n.tsx";

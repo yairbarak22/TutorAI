@@ -17,7 +17,7 @@ inputs:
 retrieval:
   mode: search
   query: "{{params.focus}}"
-authors: [RuecAI core team]
+authors: [TutorAI core team]
 i18n:
   en:
     inputs:

@@ -1,4 +1,4 @@
-import type { MathCheckResult, MathVerifier } from "@ruecai/sdk";
+import type { MathCheckResult, MathVerifier } from "@tutorai/sdk";
 
 /**
  * Browser-side MathVerifier backed by SymPy (Pyodide) in a worker.
