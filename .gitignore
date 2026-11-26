@@ -5,4 +5,8 @@ dist
 test-results
 playwright-report
 .env
-.claude/
+# Local Claude Code files stay private; only the shared /contribute command is in the repo.
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/contribute/

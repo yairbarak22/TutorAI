@@ -1,0 +1,115 @@
+name: Issue claims
+
+# "/claim <plan>" assigns you, "/unclaim" releases. One issue at a time for newcomers.
+# Daily: issues claimed 10 days ago without a pull request get a reminder; after 14 days they're released.
+# Rules and messages live in .github/scripts/claims.mjs (unit-tested).
+
+on:
+  issue_comment:
+    types: [created]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only log what would happen"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  claim:
+    if: >-
+      github.event_name == 'issue_comment' && !github.event.issue.pull_request &&
+      (contains(github.event.comment.body, '/claim') || contains(github.event.comment.body, '/unclaim'))
+    runs-on: ubuntu-latest
+    concurrency: claim-${{ github.event.issue.number }}
+    steps:
+      # Runs the default branch's copy of the rules (issue_comment never runs PR code).
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { parseCommand, decideClaim } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/claims.mjs`);
+            const cmd = parseCommand(context.payload.comment.body);
+            if (!cmd) return;
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            const user = context.payload.comment.user.login;
+            if (context.payload.comment.user.type === "Bot") return;
+            const assignees = (issue.assignees ?? []).map((a) => a.login);
+            const say = (body) => github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body });
+
+            if (cmd.command === "unclaim") {
+              if (!assignees.includes(user)) return say(`@${user} you're not assigned to this issue, so there's nothing to release.`);
+              await github.rest.issues.removeAssignees({ owner, repo, issue_number: issue.number, assignees: [user] });
+              return say(`@${user} released. Thanks for letting us know! Anyone can \`/claim\` this issue now.`);
+            }
+
+            const open = await github.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:issue is:open assignee:${user}` });
+            const merged = await github.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:pr is:merged author:${user}` });
+            const decision = decideClaim({
+              user,
+              assignees,
+              isPullRequest: false,
+              isOpen: issue.state === "open",
+              otherOpenClaims: open.data.items.filter((i) => i.number !== issue.number).length,
+              mergedPrs: merged.data.total_count,
+              plan: cmd.plan,
+            });
+            if (decision.action === "assign") {
+              await github.rest.issues.addAssignees({ owner, repo, issue_number: issue.number, assignees: [user] });
+              const after = await github.rest.issues.get({ owner, repo, issue_number: issue.number });
+              if (!after.data.assignees.some((a) => a.login === user)) {
+                // GitHub refused the assignment (rare): record the claim visibly instead.
+                await github.rest.issues.addLabels({ owner, repo, issue_number: issue.number, labels: ["claimed"] });
+                return say(`@${user} it's yours (GitHub wouldn't let me assign you, so this comment is the record). A maintainer will assign you shortly.`);
+              }
+            }
+            if (decision.reply) await say(decision.reply);
+
+  stale:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    concurrency: claims-stale
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - uses: actions/github-script@v7
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        with:
+          script: |
+            const { decideStale, remindText, releaseText } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/claims.mjs`);
+            const dry = process.env.DRY_RUN === "true";
+            const { owner, repo } = context.repo;
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: "open", assignee: "*", per_page: 100 });
+            let checked = 0;
+            for (const issue of issues.filter((i) => !i.pull_request)) {
+              const events = await github.paginate(github.rest.issues.listEventsForTimeline, { owner, repo, issue_number: issue.number, per_page: 100 });
+              for (const a of issue.assignees) {
+                checked++;
+                const assigned = events.filter((e) => e.event === "assigned" && e.assignee?.login === a.login).pop();
+                if (!assigned) continue;
+                const hasLinkedPr = events.some(
+                  (e) => (e.event === "cross-referenced" && e.source?.issue?.pull_request && e.source.issue.state === "open" && e.source.issue.user?.login === a.login) || e.event === "connected",
+                );
+                const reminded = events.some((e) => e.event === "commented" && e.body?.includes("friendly check-in") && e.created_at > assigned.created_at);
+                const what = decideStale({ assignedAt: assigned.created_at, now: new Date().toISOString(), hasLinkedPr, reminded });
+                core.info(`#${issue.number} @${a.login}: ${what}${dry ? " (dry run)" : ""}`);
+                if (dry || what === "none") continue;
+                if (what === "remind") await github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body: remindText(a.login) });
+                if (what === "release") {
+                  await github.rest.issues.removeAssignees({ owner, repo, issue_number: issue.number, assignees: [a.login] });
+                  await github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body: releaseText(a.login) });
+                }
+              }
+            }
+            core.info(`Checked ${checked} claim(s).`);

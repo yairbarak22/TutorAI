@@ -10,6 +10,24 @@ Thanks for being here! 🙏 The project is built by students from every faculty.
 | **Law, economics, psychology… students** | Write a **declarative tool** (YAML + an English prompt, no code), and add examples and quality checks (evals) for your field |
 | **CS students** | TypeScript code tools, new renderers, engine improvements, tests |
 
+## Never used GitHub? Start here
+
+Most contributors here are not programmers, and that's fine. **Use an AI assistant** (Claude Code, Cursor, ChatGPT, Copilot…): this repo includes [AGENTS.md](AGENTS.md), which tells your assistant how to guide you step by step in plain language, explain every term, and ask before posting anything public. In Claude Code, just type **`/contribute`**.
+
+The whole path, in plain words:
+
+1. **Pick a task.** Open issues are to-do cards. Look for the labels `good first issue` and `no-code`.
+2. **Claim it.** Comment **`/claim`** with 1–3 sentences on what you plan to change. A bot assigns you. New contributors work on **one issue at a time** until their first two PRs are merged.
+3. **Make the change** on your own copy of the project (a *fork*), in a separate *branch*.
+4. **Check it** with `npm test`, and look at it in the app.
+5. **Open a pull request (PR):** a request to add your change. Write `Closes #<issue>` and explain the change in your own words.
+6. **Review:** automatic checks run, and a maintainer may suggest changes. That's normal and friendly.
+7. **Merge:** your change goes live on the site within minutes. 🎉
+
+Can't continue? Comment **`/unclaim`**. An issue with no PR after **10 days** gets a reminder, and after **14 days** it's released so someone else can take it.
+
+AI help is welcome. What matters: you've tried the change yourself and can explain in two sentences what it does and why.
+
 ## Setup (5 minutes)
 
 You need [Node.js 22](https://nodejs.org) and git.
