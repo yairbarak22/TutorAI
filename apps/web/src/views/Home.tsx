@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowUp, BookOpen, Box, CalendarDays, ClipboardCheck, Ellipsis, FileText, Layers, ListChecks, Plus, Workflow } from "lucide-react";
+import { ArrowUp, BookOpen, Box, CalendarDays, ClipboardCheck, Ellipsis, FileText, Layers, ListChecks, Plus, Trash2, Workflow } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Badge, Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
@@ -106,36 +106,6 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
         ))}
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-black/[0.08] bg-white">
-        <div className="grid items-center gap-6 p-6 md:grid-cols-[1fr_1.4fr_1fr]">
-          <ul className="hidden space-y-1.5 text-[13px] text-muted md:block">
-            <li>{t("מפת מושגים מכל החומר", "A concept map of all your material")}</li>
-            <li>{t("מורה פרטי שמצטט עמוד ושקף", "A tutor that cites page and slide")}</li>
-            <li>{t("חידונים וכרטיסיות חזרה", "Quizzes and review flashcards")}</li>
-            <li>{t("מבחן בסגנון המבחנים לדוגמה", "Exams in the style of past papers")}</li>
-            <li>{t("הסברים אינטראקטיביים בתלת-ממד", "Interactive 3D explainers")}</li>
-          </ul>
-          <div className="text-center">
-            <h2 className="text-[22px] font-medium tracking-tight">{t("נסו קורס לדוגמה", "Try a sample course")}</h2>
-            <p className="mt-1 text-[13px] text-muted">{t("חומרים אמיתיים, מוכנים לכל הכלים. בלי להעלות כלום.", "Real materials, ready for every tool. Nothing to upload.")}</p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Button size="sm" onClick={() => go(href.course(engine.loadDemoCourse("probability")))}>
-                {t("קורס לדוגמה: הסתברות", "Sample course: Probability")}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => go(href.course(engine.loadDemoCourse("law")))}>
-                {t("קורס לדוגמה: דיני חוזים", "Sample course: Contract law")}
-              </Button>
-            </div>
-          </div>
-          <div className="relative hidden h-[150px] md:block" aria-hidden>
-            <span className="tile-grad-8 absolute top-2 start-6 h-28 w-28 rounded-full shadow-[inset_0_-14px_24px_rgba(0,0,0,0.12)]" />
-            <span className="tile-grad-5 absolute -top-6 end-2 h-16 w-16 rounded-full opacity-90" />
-            <span className="tile-grad-3 absolute bottom-[-18px] end-10 h-20 w-20 rounded-full opacity-90" />
-            <span className="tile-grad-1 absolute bottom-2 start-0 h-10 w-10 rounded-full opacity-90" />
-          </div>
-        </div>
-      </div>
-
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="flex items-center gap-1 text-[16px] font-semibold tracking-tight">
@@ -149,17 +119,26 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
           <Card>
             <Empty icon={<BookOpen size={26} strokeWidth={1.6} />} title={t("עוד אין קורסים", "No courses yet")}>
               <p>{t("צרו קורס והעלו אליו את חומרי הלימוד, או נסו את אחד מקורסי הדוגמה.", "Create a course and upload your study materials, or try one of the sample courses.")}</p>
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <Button size="sm" onClick={() => go(href.course(engine.loadDemoCourse("probability")))}>
+                  {t("קורס לדוגמה: הסתברות", "Sample course: Probability")}
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => go(href.course(engine.loadDemoCourse("law")))}>
+                  {t("קורס לדוגמה: דיני חוזים", "Sample course: Contract law")}
+                </Button>
+              </div>
             </Empty>
           </Card>
         ) : (
-          <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((c) => {
               const sources = engine.store.sources(c.id);
               const concepts = engine.store.concepts(c.id).length;
               const due = engine.store.dueCards(c.id, now).length;
               const d = daysUntil(c.exam_date);
               return (
-                <a key={c.id} href={href.course(c.id)} className="-mx-2 flex items-start gap-3 rounded-xl p-2 transition hover:bg-black/[0.03]">
+                <div key={c.id} className="group relative rounded-2xl border border-black/[0.08] bg-white transition hover:border-black/20 hover:shadow-sm">
+                <a href={href.course(c.id)} className="flex items-start gap-3 rounded-2xl p-3 pe-11">
                   <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-black/[0.04]">
                     <span className={`tile-grad-${((c.id - 1) % 8) + 1} grid h-9 w-9 place-items-center rounded-full text-[14px] font-semibold text-ink/75 shadow-[inset_0_-6px_12px_rgba(0,0,0,0.08)]`}>
                       {c.name.trim().charAt(0)}
@@ -186,6 +165,16 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
                     </span>
                   </span>
                 </a>
+                <button
+                  type="button"
+                  onClick={() => void engine.deleteCourse(c.id)}
+                  aria-label={t(`מחיקת הקורס ${c.name}`, `Delete course ${c.name}`)}
+                  title={t("מחיקת הקורס", "Delete course")}
+                  className="absolute top-2.5 end-2.5 grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:text-red-600"
+                >
+                  <Trash2 size={15} />
+                </button>
+                </div>
               );
             })}
           </div>

@@ -193,6 +193,23 @@ export class Engine {
     await this.root.files.remove(s.path);
   }
 
+  /** Asks for confirmation, then deletes a course with all its files. Returns false if cancelled. */
+  async deleteCourse(id: number): Promise<boolean> {
+    const c = this.store.course(id);
+    if (!c) return false;
+    const ok = confirm(
+      t(
+        `למחוק את הקורס "${c.name}" וכל מה שבו? הקבצים יימחקו גם מהתיקייה. אי אפשר לבטל.`,
+        `Delete the course "${c.name}" and everything in it? The files will also be deleted from the folder. This cannot be undone.`,
+      ),
+    );
+    if (!ok) return false;
+    for (const s of this.store.sources(id)) await this.deleteSource(s.id);
+    this.store.deleteCourse(id);
+    this.bump();
+    return true;
+  }
+
   async sourceUrl(id: number, page?: number | null): Promise<string> {
     const s = this.store.source(id);
     if (!s) throw new Error("not found");

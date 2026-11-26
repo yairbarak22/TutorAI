@@ -107,17 +107,7 @@ function EditCourse({ open, onClose, id }: { open: boolean; onClose: () => void;
           <Button
             variant="danger"
             onClick={async () => {
-              if (
-                !confirm(
-                  t(
-                    `למחוק את הקורס "${c.name}" וכל מה שבו? הקבצים יימחקו גם מהתיקייה. אי אפשר לבטל.`,
-                    `Delete the course "${c.name}" and everything in it? The files will also be deleted from the folder. This cannot be undone.`,
-                  ),
-                )
-              )
-                return;
-              for (const s of engine.store.sources(id)) await engine.deleteSource(s.id);
-              engine.store.deleteCourse(id);
+              if (!(await engine.deleteCourse(id))) return;
               go(href.home());
             }}
           >
