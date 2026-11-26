@@ -20,7 +20,7 @@ Verified here (macOS arm64):
 4. Windows: Claude Code with and without Git for Windows.
 5. Firefox E2E (Firefox doesn't launch on this macOS version; CI runs it on Linux).
 
-**Maintainer setup before the first release:** create the release signing key with `node apps/local/scripts/release-key.mjs <file>`. Add the private key as the GitHub secret `TUTORAI_RELEASE_SIGNING_KEY`, and paste the public key into `apps/local/src/update/signing.ts`. Then tag `v0.1.0`.
+**Maintainer setup before the first release:** create the release signing key (until then the self-updater stays off and the release workflow refuses to publish) with `node apps/local/scripts/release-key.mjs <file>`. Add the private key as the GitHub secret `TUTORAI_RELEASE_SIGNING_KEY`, and paste the public key into `apps/local/src/update/signing.ts`. Then tag `v0.1.0`.
 
 **Security review fixes (after the build):**
 - **ChatGPT:** refresh race; sign-out now allows switching accounts; scope checked before saving; expiry fallback.

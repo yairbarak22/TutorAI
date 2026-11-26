@@ -7,7 +7,8 @@ import { createPublicKey, verify } from "node:crypto";
  * can't push code to every student. Create the key pair with `node apps/local/scripts/release-key.mjs`
  * and paste the public key here.
  *
- * Empty = signing not set up yet: updates are checked against SHA256SUMS only.
+ * Empty = signing not set up yet: the self-updater stays off (fails closed); students update by
+ * running the install line again.
  */
 export const RELEASE_PUBLIC_KEY = "";
 

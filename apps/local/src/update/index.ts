@@ -98,12 +98,12 @@ export class Updater {
     const sumsRes = await this.fetchFn(sums.browser_download_url);
     if (!sumsRes.ok) throw new Error(`SHA256SUMS ${sumsRes.status}`);
     const sumsText = await sumsRes.text();
+    // Fail closed: without a release key built in, never install an update automatically.
     const publicKey = this.o.publicKey ?? RELEASE_PUBLIC_KEY;
-    if (publicKey) {
-      const sigAsset = rel.assets?.find((a) => a.name === "SHA256SUMS.sig");
-      const sigRes = sigAsset ? await this.fetchFn(sigAsset.browser_download_url) : null;
-      if (!sigRes?.ok || !verifySums(sumsText, await sigRes.text(), publicKey)) throw new Error("release signature is missing or invalid; update skipped");
-    }
+    if (!publicKey) throw new Error("no release signing key in this build; automatic updates are off (reinstall to update)");
+    const sigAsset = rel.assets?.find((a) => a.name === "SHA256SUMS.sig");
+    const sigRes = sigAsset ? await this.fetchFn(sigAsset.browser_download_url) : null;
+    if (!sigRes?.ok || !verifySums(sumsText, await sigRes.text(), publicKey)) throw new Error("release signature is missing or invalid; update skipped");
     const expected = parseSums(sumsText).get(want);
     if (!expected) throw new Error("no checksum for this platform");
     const res = await this.fetchFn(bin.browser_download_url);

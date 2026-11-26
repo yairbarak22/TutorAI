@@ -73,8 +73,16 @@ describe("self-update", () => {
     writeFileSync(bin, "old");
     const data = new TextEncoder().encode("new binary");
     const sum = createHash("sha256").update(data).digest("hex");
+    const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+    const sig = sign(null, Buffer.from(sumsText(sum, assetName())), privateKey).toString("base64");
     let relaunched = "";
-    const u = new Updater({ current: "0.1.0", binary: bin, fetchFn: release(data, sum), relaunch: async (b) => void (relaunched = b) });
+    const u = new Updater({
+      current: "0.1.0",
+      binary: bin,
+      publicKey: publicKey.export({ format: "der", type: "spki" }).toString("base64"),
+      fetchFn: release(data, sum, "v0.2.0", sig),
+      relaunch: async (b) => void (relaunched = b),
+    });
     await u.check();
     expect((await u.status()).staged).toBe(true);
     expect(readFileSync(`${bin}.new`, "utf8")).toBe("new binary");
@@ -83,12 +91,18 @@ describe("self-update", () => {
     expect(relaunched).toBe(bin);
   });
 
-  it("refuses a binary whose checksum doesn't match", async () => {
+  it("refuses a binary whose checksum doesn't match, and any update when the build has no release key", async () => {
     const e = tempEnv();
     const bin = join(e.root, "tutorai");
     writeFileSync(bin, "old");
-    const u = new Updater({ current: "0.1.0", binary: bin, fetchFn: release(new TextEncoder().encode("tampered"), "f".repeat(64)), relaunch: async () => {} });
+    const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+    const fake = "f".repeat(64);
+    const sig = sign(null, Buffer.from(sumsText(fake, assetName())), privateKey).toString("base64");
+    const pub = publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const u = new Updater({ current: "0.1.0", binary: bin, publicKey: pub, fetchFn: release(new TextEncoder().encode("tampered"), fake, "v0.2.0", sig), relaunch: async () => {} });
     await expect(u.check()).rejects.toThrow(/checksum/);
+    const unsigned = new Updater({ current: "0.1.0", binary: bin, publicKey: "", fetchFn: release(new TextEncoder().encode("x"), fake), relaunch: async () => {} });
+    await expect(unsigned.check()).rejects.toThrow(/no release signing key/);
     expect(existsSync(`${bin}.new`)).toBe(false);
     expect((await u.status()).staged).toBe(false);
   });

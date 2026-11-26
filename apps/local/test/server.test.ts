@@ -6,7 +6,7 @@ import type { LLMEvent } from "@tutorai/local-api";
 import { serve, type Running } from "../src/lifecycle.ts";
 import { readRun } from "../src/config.ts";
 import { Security } from "../src/http/security.ts";
-import { DataFolder, PathError, lexicalInside } from "../src/fs/folder.ts";
+import { DataFolder, PathError, lexicalInside, prepareFolder } from "../src/fs/folder.ts";
 import { redact } from "../src/log.ts";
 import { allowed } from "../src/net.ts";
 import type { Services } from "../src/providers/types.ts";
@@ -218,6 +218,28 @@ describe("helpers", () => {
     expect(() => lexicalInside("/d", "../x")).toThrow(PathError);
     expect(() => lexicalInside("/d", "")).toThrow(PathError);
     expect(lexicalInside("/d", "a/b")).toBe(join("/d", "a", "b"));
+  });
+
+  it("never reads or writes hidden paths, except the lock file", () => {
+    expect(() => lexicalInside("/d", ".ssh/id_rsa")).toThrow(PathError);
+    expect(() => lexicalInside("/d", "courses/.secret")).toThrow(PathError);
+    expect(() => lexicalInside("/d", "courses/.tutorai-lock")).toThrow(PathError);
+    expect(lexicalInside("/d", ".tutorai-lock")).toBe(join("/d", ".tutorai-lock"));
+  });
+
+  it("lets the student choose only a regular sub-folder of home", async () => {
+    const e = tempEnv();
+    const home = join(e.root, "home");
+    mkdirSync(join(home, "Documents"), { recursive: true });
+    expect(await prepareFolder(join(home, "Documents", "TutorAI"), home)).toBe(join(home, "Documents", "TutorAI"));
+    for (const bad of [home, join(home, ".ssh"), join(home, "Library", "x"), join(home, "a", ".hidden"), join(e.root, "elsewhere")])
+      await expect(prepareFolder(bad, home)).rejects.toThrow(PathError);
+    process.env.TUTORAI_CONFIG_DIR = join(home, "tutorai-config");
+    await expect(prepareFolder(join(home, "tutorai-config", "data"), home)).rejects.toThrow(PathError);
+    if (process.platform !== "win32") {
+      symlinkSync(join(e.root), join(home, "Documents", "link"));
+      await expect(prepareFolder(join(home, "Documents", "link"), home)).rejects.toThrow(PathError);
+    }
   });
 
   it("writes atomically (no temp files left)", async () => {

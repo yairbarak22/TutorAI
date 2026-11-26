@@ -3,6 +3,10 @@ import { mkdir, readdir, readFile, realpath, rm, stat, writeFile } from "node:fs
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { renameWithRetry } from "../config.ts";
+import { configDir } from "../paths.ts";
+
+/** The only dot-file the app keeps in the data folder (marks it open on another device). */
+const LOCK_FILE = ".tutorai-lock";
 
 /**
  * The student's data folder (tutorai.db, courses/…). Same layout as the web app's folder mode,
@@ -16,6 +20,8 @@ export function lexicalInside(root: string, rel: string): string {
   if (!rel || rel.includes("\0") || isAbsolute(rel) || /^[a-zA-Z]:/.test(rel) || rel.startsWith("\\")) throw new PathError("bad path");
   const parts = rel.split(/[\\/]+/).filter(Boolean);
   if (parts.length === 0 || parts.some((p) => p === ".." || p === ".")) throw new PathError("bad path");
+  // No hidden files or folders (.ssh, .config, …), except the app's own lock file at the top.
+  if (parts.some((p, i) => p.startsWith(".") && !(i === 0 && parts.length === 1 && p === LOCK_FILE))) throw new PathError("bad path");
   return join(root, ...parts);
 }
 
@@ -96,12 +102,26 @@ export class DataFolder {
   }
 }
 
-/** Validates a folder the student chose: inside their home folder, created if missing, writable. */
+const within = (p: string, dir: string) => p === dir || p.startsWith(dir + sep);
+
+/**
+ * Validates a folder the student chose: a sub-folder of their home folder (not home itself), not
+ * hidden, not a system/app-data folder, not TutorAI's own config; created if missing, writable.
+ */
 export async function prepareFolder(path: string, home = homedir()): Promise<string> {
   const abs = resolve(path);
   const realHome = await realpath(home);
-  if (abs !== home && !abs.startsWith(home + sep) && !abs.startsWith(realHome + sep)) throw new PathError("Choose a folder inside your home folder");
+  const inside = (p: string) => (p.startsWith(home + sep) ? p : p.startsWith(realHome + sep) ? home + p.slice(realHome.length) : null);
+  const blocked = [configDir(home), join(home, "Library"), join(home, "AppData"), join(home, ".config"), join(home, ".ssh")];
+  const check = (candidate: string | null) => {
+    if (!candidate) throw new PathError("Choose a folder inside your home folder (not the home folder itself)");
+    const parts = candidate.slice(home.length + 1).split(sep);
+    if (parts.some((p) => p.startsWith("."))) throw new PathError("Choose a regular (not hidden) folder");
+    if (blocked.some((b) => within(candidate, b) || within(b, candidate))) throw new PathError("Choose a different folder");
+  };
+  check(inside(abs)); // before creating anything
   await mkdir(abs, { recursive: true });
+  check(inside(await realpath(abs))); // the real location too, in case a symlink points elsewhere
   const probe = join(abs, `.tutorai-write-test-${randomBytes(3).toString("hex")}`);
   await writeFile(probe, "ok");
   await rm(probe, { force: true });

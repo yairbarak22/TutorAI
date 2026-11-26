@@ -123,11 +123,11 @@ jobs:
           cd release
           sha256sum tutorai-* > SHA256SUMS
           ls -la
-      - name: Sign SHA256SUMS (the self-updater only accepts signed releases once a key is set up)
+      - name: Sign SHA256SUMS (the self-updater accepts only signed releases)
         env:
           TUTORAI_RELEASE_SIGNING_KEY: ${{ secrets.TUTORAI_RELEASE_SIGNING_KEY }}
         run: |
-          if [ -z "$TUTORAI_RELEASE_SIGNING_KEY" ]; then echo "::warning::No TUTORAI_RELEASE_SIGNING_KEY secret; the release is unsigned."; exit 0; fi
+          if [ -z "$TUTORAI_RELEASE_SIGNING_KEY" ]; then echo "::error::Set the TUTORAI_RELEASE_SIGNING_KEY secret first (see docs/impl-local-server.md); releases must be signed."; exit 1; fi
           node apps/local/scripts/sign.mjs release/SHA256SUMS
       - name: Create the GitHub Release
         env:
