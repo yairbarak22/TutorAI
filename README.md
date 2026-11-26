@@ -1,81 +1,162 @@
-# RuecAI Teacher 🎓
+# RuecAI Teacher
 
-**An open-source AI study companion for Reichman University students.** Open a link and start studying: no installation, no server, and your course materials stay on your computer.
+[![Open the app](https://img.shields.io/badge/Open%20the%20app-yairbarak22.github.io-2563EB?labelColor=black&style=for-the-badge)](https://yairbarak22.github.io/RuecAI_Tutor/)
+[![CI](https://img.shields.io/github/actions/workflow/status/yairbarak22/RuecAI_Tutor/ci.yml?branch=main&label=CI&labelColor=black&style=for-the-badge)](https://github.com/yairbarak22/RuecAI_Tutor/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-2563EB?labelColor=black&style=for-the-badge)](LICENSE)
+[![Languages](https://img.shields.io/badge/Hebrew%20%7C%20English-RTL%20%2B%20LTR-2563EB?labelColor=black&style=for-the-badge)](#)
 
-**👉 [Open the app](https://yairbarak22.github.io/RuecAI_Tutor/)** · Hebrew (RTL) and English · Apache-2.0
+![The concept map of a course: concepts in stages from foundations to advanced, colored by mastery, with one concept's prerequisite chain in focus](docs/screenshots/concept-map.png)
 
-Upload a course's materials (PDF, PowerPoint, Word, text or Markdown, and sample exams). RuecAI builds a map of the course's concepts, tracks what you already know, and gives you tools that help you **learn** instead of handing you answers.
+RuecAI Teacher is an open-source study companion for Reichman University students.
 
-## What a student gets
+Upload a course's materials and it builds a map of the course's concepts, tracks what you already know, and gives you tools that help you learn instead of handing you answers. There is nothing to install and no server: it runs in your browser, and your materials stay on your computer.
 
-**Every day**
+Use it with Claude, with a free open-source model running on your own machine, or both.
 
-| | |
-|---|---|
-| ▶️ **Today's session** | One button, about 20 minutes: flashcards that are due, a second try at past mistakes, questions on your weakest concepts, and one older concept mixed in |
-| 📓 **Mistakes notebook** | Every wrong answer is diagnosed ("the misconception behind it") and comes back later as a *new* question on the same idea, until you get it right twice on different days |
-| 🃏 **Review** | Spaced-repetition flashcards (FSRS), scheduled just before you would forget them |
-| 📈 **Progress and concept map** | The course's concepts laid out as a learning path from foundations to advanced, colored by how well you know each one, with a filter for what still needs work |
+**[Open the app →](https://yairbarak22.github.io/RuecAI_Tutor/)**
 
-**Tools** (each one is a plugin; see [`plugins/`](plugins))
+## Features
 
-| Tool | What it does |
-|---|---|
-| 🎓 **Private tutor** | Chat with a tutor that knows your course material. Socratic by default: it asks, guides, and cites the page or slide |
-| ✅ **Check my solution** | Photograph or type your own solution. You get the first mistake, why it is wrong, and graded hints, never the full answer. Algebra is verified with real symbolic math (SymPy) |
-| ❓ **Quiz** | Multiple-choice and open questions with explanations; every answer updates your mastery |
-| 🃏 **Flashcards** | Generated from the material, straight into your daily review |
-| 📝 **Exam from sample exams** | Learns the structure and style of past exams, builds a new one with a rubric, and grades your answers |
-| 📅 **Study plan** | A daily schedule up to the exam, ordered by what you know and by prerequisites |
-| 📄 **Summary** | A structured summary where every claim links to its source page or slide |
-| 🧪 **Interactive explainer** | Simulations, plots, and 3D scenes that run in a sandbox with no network access |
-| 🔀 **Diagram** | Concept maps, flowcharts, and timelines |
-| ⚖️ **Case brief** (law) | IRAC analysis of a legal problem, grounded in the course's statutes and rulings |
-| ➗ **Worked example** (math) | A new exercise with a step-by-step solution and graded hints |
+- A daily study session, prepared for you
+- A mistakes notebook that brings every mistake back until it is fixed
+- Mastery tracking per concept (Bayesian Knowledge Tracing)
+- Spaced-repetition flashcards (FSRS)
+- A private tutor that asks before it tells, and cites the page or slide
+- Step-by-step checking of your own solutions, with algebra verified by SymPy
+- New exams in the style of past exams, graded by rubric
+- Interactive simulations, plots, and 3D scenes
+- Summaries, quizzes, diagrams, and a study plan up to the exam
+- PDF, PowerPoint, Word, text, and Markdown
+- Claude, local models (Ollama, LM Studio), or a hybrid of the two
+- Hebrew and English interface
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### Today's session
+
+One button and about 20 minutes: due flashcards, a second try at past mistakes, questions on your weakest concepts, and one older concept mixed in.
+
+<img src="docs/screenshots/session.png" alt="Today's session: mistakes to fix, flashcards to review, and concepts to strengthen" width="100%">
+
+</td>
+<td width="50%" valign="top">
+
+### A tutor that teaches
+
+Socratic by default: it asks a guiding question before giving an answer, and every claim cites a page or slide from your material.
+
+<img src="docs/screenshots/tutor.png" alt="The private tutor answering with a guiding question and citations to lecture slides" width="100%">
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### Check my solution
+
+Type or photograph your own work. You get the first mistake and graded hints, never the full answer. Algebra is verified with SymPy, which overrides the model.
+
+<img src="docs/screenshots/check-solution.png" alt="A student's solution checked step by step, with the first mistake marked and a hint revealed" width="100%">
+
+</td>
+<td width="50%" valign="top">
+
+### Interactive explainers
+
+Simulations, plots, and 3D scenes generated for a concept, running in a sandbox with no network access.
+
+<img src="docs/screenshots/explainer.png" alt="An interactive explainer of Bayes' theorem with a 2D plot and a 3D surface" width="100%">
+
+</td>
+</tr>
+</table>
+
+The screenshots show the Hebrew interface. The app is also available in English.
 
 ## Why not just study with a chatbot?
 
-A general chatbot is a brilliant tutor with no memory of you. RuecAI is the system around the model:
+A general chatbot is a capable tutor with no memory of you. RuecAI Teacher is the system around the model.
 
 | A general chatbot | RuecAI Teacher |
 |---|---|
 | Waits for you to know what to ask | Prepares today's session for you |
-| Doesn't know which concepts you have mastered | Tracks mastery per concept (Bayesian Knowledge Tracing) across the semester |
+| Doesn't know which concepts you have mastered | Tracks mastery per concept across the semester |
 | Forgets your mistakes when the chat ends | Brings each mistake back until it is fixed |
-| Tends to give the answer | Guides with questions and graded hints by default |
-| Can be confidently wrong on algebra | Checks math steps with SymPy, which overrides the model |
-| Citations may be invented | Every citation must point to a real page or slide in your material; invalid ones are removed |
-| You re-paste material and re-write prompts | The course is indexed once, and every tool is a tested, ready-made workflow |
+| Tends to give the answer | Guides with questions and graded hints |
+| Can be confidently wrong on algebra | Checks math steps with SymPy |
+| Citations may be invented | Every citation must point to a real page or slide; invalid ones are removed |
+| You re-paste material and rewrite prompts | The course is indexed once, and every tool is a tested workflow |
 
-## How it works
+## Getting started
 
-- **Local-first.** Everything runs in your browser. Your data lives in a folder you choose (`ruecai.db` plus your files) in Chrome/Edge, or in browser storage in Safari/Firefox, with backup and restore from Settings. There is no RuecAI server and no telemetry. You can also install the site as an app (PWA).
-- **AI, your choice.** Anthropic's Claude, called directly from the browser with **your own API key** (stored only in your browser); or a **free open-source model running on your own computer** (Ollama or LM Studio); or a hybrid of the two. No key yet? Try **demo mode** with a sample course.
-- **Grounded.** Material is split into sections with page/slide anchors. Tools receive the relevant sections, and every output is validated against a schema and checked for valid citations.
-- **Bilingual.** The interface is in Hebrew (RTL) or English (LTR); AI-generated content follows your choice.
-- **Open to contributions.** Every tool is a folder in [`plugins/`](plugins). A new tool can be written **without code** (a YAML file and a prompt), and none is merged without passing automated quality checks (evals).
+1. Open **[the app](https://yairbarak22.github.io/RuecAI_Tutor/)**. Chrome or Edge is recommended.
+2. Choose where your data lives: a folder on your computer (Chrome and Edge), or browser storage.
+3. Choose a model:
+   - **Claude:** paste an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys). It is stored only in your browser.
+   - **Local model (free):** run Ollama or LM Studio on your computer. Settings has a ready prompt you can paste into Claude Code to do the whole setup for you.
+   - **Demo mode:** no key needed. Answers are prerecorded, on a sample course.
+4. Create a course and drag in your files.
 
-More detail: [Architecture](docs/architecture.md).
+You can install the site as an app from the browser menu.
 
-## Contributing 🙌
+## Privacy
 
-Students from every faculty can contribute, including non-programmers: tool ideas, prompts for your field, quality checks, and translations.
+- There is no RuecAI server and no telemetry.
+- Course files, your progress, and the database (`ruecai.db`) stay on your device. In Chrome and Edge they are regular files in the folder you chose, so you can see them, back them up, or keep them in Google Drive.
+- Model calls go straight from your browser to the model you chose, with your own key.
+- Code written by the model runs in a sandboxed iframe that has no network access and can't read your data.
+- Course materials belong to their lecturers. The app never shares them between students.
 
-- [Contributing guide](CONTRIBUTING.md)
-- [Write a new tool in 30 minutes](docs/plugins.md)
-- [Suggest a tool](https://github.com/yairbarak22/RuecAI_Tutor/issues/new?template=tool-idea.yml) · [Good first issues](https://github.com/yairbarak22/RuecAI_Tutor/issues?q=is%3Aopen+label%3A%22good+first+issue%22)
+See [SECURITY.md](SECURITY.md) for the security model.
+
+## Development
 
 Requires [Node.js 22](https://nodejs.org) and git.
 
 ```bash
-git clone https://github.com/yairbarak22/RuecAI_Tutor.git && cd RuecAI_Tutor
+git clone https://github.com/yairbarak22/RuecAI_Tutor.git
+cd RuecAI_Tutor
 npm install
-npm run dev        # http://localhost:5173
-npm run check      # typecheck + unit tests + plugin evals + browser E2E
+npm run dev
 ```
 
-## Docs
+Open [http://localhost:5173](http://localhost:5173), choose browser storage, and try demo mode. No API key is needed for development.
 
-[Architecture](docs/architecture.md) · [Writing tools](docs/plugins.md) · [Roadmap](docs/roadmap.md) · [For maintainers](docs/maintainers.md) · [Security](SECURITY.md) · [Code of conduct](CODE_OF_CONDUCT.md)
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the app with hot reload |
+| `npm run check` | Typecheck, unit tests, plugin evals, and browser E2E (run before a PR) |
+| `npm test` | Unit tests and recorded plugin evals |
+| `npm run e2e` | Playwright student journeys against a production build |
+| `npm run eval:live` | Plugin evals against real Claude (needs `ANTHROPIC_API_KEY`) |
+| `npm run screenshots` | Regenerate the README screenshots (run against `npm run preview`) |
 
-Licensed under [Apache-2.0](LICENSE). Course materials belong to their lecturers; RuecAI never shares them between students.
+```
+apps/web/          React app (Vite, Tailwind); src/platform = storage, secrets, SymPy worker
+packages/sdk/      Artifact schemas, the tool contract, quality checks
+packages/core/     Storage, parsing, ingestion, retrieval, model clients, learner model, runtime
+plugins/           One folder per tool, discovered automatically
+e2e/               Playwright tests
+docs/              Architecture, plugin guide, roadmap, maintainer guide
+```
+
+## Writing a tool
+
+Every tool is a folder in [`plugins/`](plugins). Most tools need no code: a `plugin.yaml` that describes the inputs and output, and a prompt. The runtime handles retrieval, citations, validation, and rendering, and no tool is merged without passing its evals.
+
+Start with the [plugin guide](docs/plugins.md), or [suggest a tool](https://github.com/yairbarak22/RuecAI_Tutor/issues/new?template=tool-idea.yml) if you'd like someone else to build it. Students from every faculty are welcome, including non-programmers. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [Writing a tool](docs/plugins.md)
+- [Roadmap](docs/roadmap.md)
+- [Maintainer guide](docs/maintainers.md)
+- [Security](SECURITY.md)
+- [Contributing](CONTRIBUTING.md) and [Code of conduct](CODE_OF_CONDUCT.md)
+
+## License
+
+[Apache-2.0](LICENSE)

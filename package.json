@@ -23,7 +23,8 @@
     "eval:live": "RUECAI_LIVE=1 vitest run plugins/evals.test.ts",
     "e2e": "playwright test",
     "check": "npm run typecheck && npm run test && npm run e2e",
-    "fixtures": "node scripts/make-fixtures.mjs"
+    "fixtures": "node scripts/make-fixtures.mjs",
+    "screenshots": "node scripts/readme-screenshots.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

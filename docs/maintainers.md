@@ -31,3 +31,7 @@ When a faculty joins, add its owner to `.github/CODEOWNERS` (for example `/plugi
 ## Releases
 
 Deployment is continuous (every merge). Every so often, tag `vX.Y.Z` in git and write release notes.
+
+## README screenshots
+
+After a visible UI change, regenerate them in demo mode: `npm run build && npm run preview`, then `npm run screenshots` in another terminal. The images go to `docs/screenshots/`.
