@@ -17,6 +17,7 @@ import {
   MessageSquare,
   MessagesSquare,
   Network,
+  NotebookPen,
   PanelLeft,
   PanelRight,
   Plus,
@@ -24,13 +25,16 @@ import {
   Settings as SettingsIcon,
   Sparkles,
   X,
+  Zap,
 } from "lucide-react";
+import { localDay } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { ChevronForward, isRTL, t, toolText } from "../i18n.tsx";
 import { href, useRoute } from "../router.ts";
 import { Alert } from "./components.tsx";
 
 export const COURSE_SECTIONS = [
+  { id: "session", he: "סשן יומי", en: "Daily session", icon: Zap, get label() { return t(this.he, this.en); } },
   { id: "materials", he: "חומרים", en: "Materials", icon: FileText, get label() { return t(this.he, this.en); } },
   { id: "concepts", he: "מפת מושגים", en: "Concept map", icon: Network, get label() { return t(this.he, this.en); } },
   { id: "studio", he: "כלים", en: "Tools", icon: Sparkles, get label() { return t(this.he, this.en); } },
@@ -38,6 +42,7 @@ export const COURSE_SECTIONS = [
   { id: "review", he: "חזרה", en: "Review", icon: Layers, get label() { return t(this.he, this.en); } },
   { id: "progress", he: "התקדמות", en: "Progress", icon: ChartLine, get label() { return t(this.he, this.en); } },
   { id: "artifacts", he: "תוצרים", en: "Outputs", icon: FolderOpen, get label() { return t(this.he, this.en); } },
+  { id: "mistakes", he: "מחברת טעויות", en: "Mistakes", icon: NotebookPen, get label() { return t(this.he, this.en); } },
 ] as const;
 
 export const sectionLabel = (id: string) => COURSE_SECTIONS.find((s) => s.id === id)?.label ?? "";
@@ -107,9 +112,9 @@ const kvSet = (k: string, v: string) => {
 };
 
 const GROUPS: { he: string; en: string; ids: (typeof COURSE_SECTIONS)[number]["id"][] }[] = [
-  { he: "לימוד", en: "Learn", ids: ["materials", "concepts", "tutor", "review"] },
+  { he: "לימוד", en: "Learn", ids: ["session", "materials", "concepts", "tutor", "review"] },
   { he: "יצירה", en: "Create", ids: ["studio", "artifacts"] },
-  { he: "מעקב", en: "Track", ids: ["progress"] },
+  { he: "מעקב", en: "Track", ids: ["progress", "mistakes"] },
 ];
 
 /** Course switcher at the top of the sidebar (like a workspace switcher). */
@@ -177,7 +182,11 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
       : remembered && engine.store.course(remembered)
         ? remembered
         : (courses[0]?.id ?? null);
-  const due = courseId ? engine.store.dueCards(courseId, new Date().toISOString()).length : 0;
+  const nowIso = new Date().toISOString();
+  const due = courseId ? engine.store.dueCards(courseId, nowIso).length : 0;
+  const dueMistakes = courseId ? engine.store.dueMistakes(courseId, nowIso).length : 0;
+  const openMistakes = courseId ? engine.store.mistakes(courseId, "open").length : 0;
+  const doneToday = courseId ? engine.store.sessionDays(courseId)[0] === localDay() : true;
   const inCourse = route.name === "course" && route.id === courseId;
   return (
     <div className="flex h-full flex-col">
@@ -213,7 +222,11 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
                         active={inCourse && route.name === "course" && route.tab === id}
                         onClick={onNavigate}
                         badge={
-                          id === "review" && due > 0 ? (
+                          id === "session" && !doneToday && due + dueMistakes > 0 ? (
+                            <span className="h-2 w-2 rounded-full bg-amber-400" aria-label={t("מחכה לך", "Waiting for you")} />
+                          ) : id === "mistakes" && openMistakes > 0 ? (
+                            <span className="rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2">{openMistakes}</span>
+                          ) : id === "review" && due > 0 ? (
                             <span className="rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2">{due}</span>
                           ) : id === "studio" ? (
                             <span className="rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2">AI</span>

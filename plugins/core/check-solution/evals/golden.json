@@ -1,0 +1,73 @@
+{
+  "check-solution:read": {
+    "title": "בדיקת פתרון: הסתברות בינומית",
+    "problem": "מטילים מטבע הוגן 5 פעמים. מה ההסתברות לקבל בדיוק 2 פעמים עץ?",
+    "steps": [
+      {
+        "text": "$X$ = מספר הפעמים שיצא עץ, $X\\sim \\mathrm{Bin}(5,\\tfrac12)$",
+        "status": "correct",
+        "comment": "הגדרה נכונה של המשתנה וההתפלגות.",
+        "claims": []
+      },
+      {
+        "text": "$P(X=2)=\\binom{5}{2}\\left(\\tfrac12\\right)^2$",
+        "status": "error",
+        "comment": "חסר הגורם של שלושת הכישלונות: $\\left(\\tfrac12\\right)^{3}$.",
+        "claims": []
+      },
+      {
+        "text": "$=10\\cdot\\tfrac14=\\tfrac{10}{4}$",
+        "status": "correct",
+        "comment": "",
+        "claims": [
+          {
+            "lhs": "binomial(5,2)*Rational(1,2)**2",
+            "rhs": "10*Rational(1,4)"
+          },
+          {
+            "lhs": "10*Rational(1,4)",
+            "rhs": "Rational(10,4)"
+          }
+        ]
+      },
+      {
+        "text": "$=2.4$",
+        "status": "correct",
+        "comment": "",
+        "claims": [
+          {
+            "lhs": "Rational(10,4)",
+            "rhs": "2.4"
+          }
+        ]
+      }
+    ],
+    "first_error": 1,
+    "verdict": "incorrect",
+    "hints": [
+      "בדקו את נוסחת ההסתברות הבינומית: כמה גורמים יש בה, ומה כל אחד מייצג?",
+      "בנוסף להצלחות, צריך גם את ההסתברות של שלושת הכישלונות.",
+      "$P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k}$. מה חסר אצלכם?"
+    ],
+    "fix": "$P(X=2)=\\binom{5}{2}\\left(\\tfrac12\\right)^2\\left(\\tfrac12\\right)^3=\\tfrac{10}{32}$",
+    "concept": "משתנה מקרי",
+    "citations": [
+      "S1"
+    ]
+  },
+  "check-solution:feedback": {
+    "verdict": "incorrect",
+    "hints": [
+      "בדקו את נוסחת ההסתברות הבינומית: כמה גורמים יש בה, ומה כל אחד מייצג?",
+      "בנוסף להצלחות, צריך גם את ההסתברות של שלושת הכישלונות.",
+      "$P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k}$. מה חסר אצלכם?"
+    ],
+    "fix": "$P(X=2)=\\binom{5}{2}\\left(\\tfrac12\\right)^2\\left(\\tfrac12\\right)^3=\\tfrac{10}{32}$",
+    "comments": [
+      {
+        "index": 3,
+        "comment": "גם החישוב כאן שגוי: $\\tfrac{10}{4}=2.5$, לא $2.4$. ובכל מקרה, הסתברות לא יכולה להיות גדולה מ-1, וזה סימן שמשהו השתבש קודם. (מצב הדגמה)"
+      }
+    ]
+  }
+}

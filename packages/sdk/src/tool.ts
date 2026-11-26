@@ -8,7 +8,7 @@ import { ARTIFACT_TYPES, type ArtifactPayload, type ArtifactType } from "./artif
 export const InputSpec = z.object({
   name: z.string().regex(/^[a-z_][a-z0-9_]*$/),
   label: z.string(),
-  type: z.enum(["text", "textarea", "select", "number", "concept", "source"]),
+  type: z.enum(["text", "textarea", "select", "number", "concept", "source", "image"]),
   options: z.array(z.string()).optional(),
   default: z.union([z.string(), z.number()]).optional(),
   required: z.boolean().optional(),
@@ -150,6 +150,18 @@ export interface ToolContext {
   signal?: AbortSignal;
   /** Present only for output: "chat" tools. */
   chat?: { history: ChatTurn[]; message: string; onDelta: (text: string) => void };
+  /** Real symbolic math (SymPy) provided by the platform, when available. */
+  math?: MathVerifier;
+}
+
+/** Result of checking one claimed equality: true = equal, false = not equal, null = could not decide/parse. */
+export interface MathCheckResult {
+  ok: boolean | null;
+  detail: string;
+}
+
+export interface MathVerifier {
+  verify(claims: { lhs: string; rhs: string }[]): Promise<MathCheckResult[]>;
 }
 
 export interface ChatReply {

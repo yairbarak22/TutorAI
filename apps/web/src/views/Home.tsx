@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowUp, BookOpen, Box, CalendarDays, ClipboardCheck, Ellipsis, FileText, Layers, ListChecks, Plus, Trash2, Workflow } from "lucide-react";
+import { ArrowUp, BookOpen, Box, CalendarDays, ClipboardCheck, Ellipsis, FileText, Flame, Layers, ListChecks, Plus, ScanLine, Trash2, Zap } from "lucide-react";
+import { localDay } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Badge, Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
@@ -28,7 +29,7 @@ const quick = () => [
   { id: "quiz", label: t("חידון", "Quiz"), icon: ListChecks },
   { id: "flashcards", label: t("כרטיסיות", "Flashcards"), icon: Layers },
   { id: "explainer", label: t("הסבר בתלת-ממד", "3D explainer"), icon: Box },
-  { id: "diagram", label: t("תרשים", "Diagram"), icon: Workflow },
+  { id: "check-solution", label: t("בדיקת פתרון", "Check work"), icon: ScanLine },
   { id: "exam-from-samples", label: t("מבחן", "Exam"), icon: ClipboardCheck },
   { id: "study-plan", label: t("תוכנית", "Plan"), icon: CalendarDays },
   { id: "", label: t("עוד", "More"), icon: Ellipsis },
@@ -82,7 +83,7 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
             <ArrowUp size={16} />
           </button>
         </form>
-        {totalDueLine(engine, courses, now)}
+        {course ? <TodayCard courseId={course.id} /> : totalDueLine(engine, courses, now)}
       </div>
 
       <div className="mx-auto grid max-w-[720px] grid-cols-4 gap-y-5 sm:grid-cols-8">
@@ -218,5 +219,51 @@ export function NewCourse({ open, onClose }: { open: boolean; onClose: () => voi
         </Button>
       </form>
     </Modal>
+  );
+}
+
+/** "Today's session" entry point: what is waiting, how long it takes, and the streak. */
+function TodayCard({ courseId }: { courseId: number }) {
+  const engine = useEngine();
+  const p = engine.sessionPreview(courseId);
+  const items = p.mistakes.length + p.cards.length + p.weak.length * 2 + p.mixed.length;
+  const streak = engine.streak(courseId);
+  const doneToday = engine.store.sessionDays(courseId)[0] === localDay();
+  if (!items && !streak) return null;
+  return (
+    <a
+      href={href.course(courseId, "session")}
+      className="group mt-4 flex items-center gap-3 rounded-2xl border border-black/[0.08] bg-white p-3 text-start transition hover:border-black/15 hover:shadow"
+      data-testid="today-card"
+    >
+      <span className="tile-grad-5 grid h-10 w-10 shrink-0 place-items-center rounded-xl text-ink/80">
+        <Zap size={18} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[14px] font-medium">
+          {doneToday ? t("הסשן של היום הושלם", "Today's session is done") : t("הסשן היומי שלכם", "Your daily session")}
+        </span>
+        <span className="block text-[12.5px] text-muted">
+          {doneToday
+            ? t("כל הכבוד! אפשר לתרגל עוד אם בא לכם.", "Nice work! You can practice more if you like.")
+            : items
+              ? t(`${items} פריטים · כ-${p.minutes} דק'`, `${items} items · ~${p.minutes} min`) +
+                (p.mistakes.length ? t(` · ${p.mistakes.length} טעויות לתיקון`, ` · ${p.mistakes.length} mistakes to fix`) : "")
+              : t("אין עוד מה לתרגל היום", "Nothing more to practice today")}
+        </span>
+      </span>
+      {streak > 0 && (
+        <span className="inline-flex items-center gap-1 text-[12.5px] font-medium text-amber-700">
+          <Flame size={14} /> {streak}
+        </span>
+      )}
+      {items > 0 && (
+        <span
+          className={`inline-flex h-8 items-center gap-1 rounded-[10px] px-3 text-[13px] font-medium ${doneToday ? "border border-black/10 text-ink-2" : "bg-ink text-white"}`}
+        >
+          {doneToday ? t("עוד סשן", "Another one") : t("התחלה", "Start")}
+        </span>
+      )}
+    </a>
   );
 }

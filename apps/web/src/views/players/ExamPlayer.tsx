@@ -55,6 +55,18 @@ export function ExamPlayer({ exam, courseId, artifactId }: { exam: ExamSimulatio
         out[q.id] = g;
         const ratio = g.score / q.points;
         for (const c of q.concepts) engine.recordAttempt(courseId, c, `${artifactId}:${q.id}`, ratio >= 0.7, ratio, "exam", answers[q.id], g.feedback);
+        if (ratio < 0.7 && (answers[q.id] ?? "").trim())
+          engine.recordMistake({
+            courseId,
+            concept: q.concepts[0] ?? "",
+            origin: "exam",
+            itemRef: `${artifactId}:${q.id}`,
+            question: q.prompt,
+            studentAnswer: answers[q.id] ?? "",
+            correctAnswer: q.model_answer,
+            explanation: g.feedback,
+            citations: q.citations,
+          });
         recordRun("grade", (Date.now() - t0) / 1000, undefined, engine.demo);
         setGrading((gr) => (gr ? { ...gr, done: i + 1 } : gr));
       }

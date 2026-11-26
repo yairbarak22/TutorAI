@@ -138,8 +138,38 @@ export const GradeResult = z.object({
 });
 export type GradeResult = z.infer<typeof GradeResult>;
 
+/** A math claim a step makes, in SymPy syntax, checked by real symbolic math (see MathVerifier). */
+export const MathClaim = z.object({
+  lhs: z.string().describe("Left side in SymPy syntax, e.g. (x+1)**2 or binomial(5,2)*Rational(1,2)**5"),
+  rhs: z.string().describe("Right side in SymPy syntax, exactly as the student claimed (even if wrong)"),
+});
+export type MathClaim = z.infer<typeof MathClaim>;
+
+/** Feedback on a student's own solution: step by step, first error, graded hints. */
+export const SolutionCheck = z.object({
+  title: z.string(),
+  problem: z.string().describe("The problem, as stated by the student or read from the photo (Markdown/LaTeX)"),
+  steps: z.array(
+    z.object({
+      text: z.string().describe("The student's step, transcribed faithfully (Markdown/LaTeX). Do not correct it."),
+      status: z.enum(["correct", "error", "unclear"]),
+      comment: z.string().describe("Short note on this step: why it is right, or what is wrong. Empty if obviously fine."),
+      claims: z.array(MathClaim).describe("Equalities this step asserts, in SymPy syntax, exactly as written by the student. Empty for non-math steps."),
+      verified: z.enum(["pass", "fail", "unknown"]).optional().describe("Filled in by the app after symbolic checking; leave empty."),
+    }),
+  ),
+  first_error: z.number().int().describe("0-based index of the first wrong step, or -1 if none"),
+  verdict: z.enum(["correct", "partial", "incorrect"]),
+  hints: z.array(z.string()).describe("2–3 graded hints toward fixing the first error, from gentle to specific. Never the full solution."),
+  fix: z.string().describe("The corrected version of the first wrong step only (revealed on request). Empty if no error."),
+  concept: z.string(),
+  citations: Citations,
+});
+export type SolutionCheck = z.infer<typeof SolutionCheck>;
+
 export const ARTIFACT_SCHEMAS = {
   markdown_doc: MarkdownDoc,
+  solution_check: SolutionCheck,
   quiz: Quiz,
   flashcards: Flashcards,
   concept_map: ConceptMap,

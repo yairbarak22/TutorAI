@@ -2,7 +2,8 @@ import { useState } from "react";
 import { LongTask } from "../ui/LongTask.tsx";
 import { expectedChars, expectedSeconds, recordRun } from "../platform/timing.ts";
 import { FolderOpen, Printer, Trash2 } from "lucide-react";
-import type { Diagram, ExamSimulation, Flashcards, InteractiveWidget, MarkdownDoc, Quiz, StudyPlan } from "@ruecai/sdk";
+import type { Diagram, ExamSimulation, Flashcards, InteractiveWidget, MarkdownDoc, Quiz, SolutionCheck, StudyPlan } from "@ruecai/sdk";
+import { SolutionCheckView } from "./SolutionCheckView.tsx";
 import type { Artifact } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
@@ -104,6 +105,8 @@ function Body({ a, courseId }: { a: Artifact; courseId: number }) {
       return <PlanView plan={a.data as StudyPlan} courseId={courseId} />;
     case "interactive_widget":
       return <WidgetView w={a.data as InteractiveWidget} artifactId={a.id} />;
+    case "solution_check":
+      return <SolutionCheckView c={a.data as SolutionCheck} courseId={courseId} photo={typeof a.params.photo === "string" && a.params.photo.startsWith("data:image/") ? a.params.photo : undefined} />;
     default:
       return <pre className="overflow-auto text-xs">{JSON.stringify(a.data, null, 2)}</pre>;
   }

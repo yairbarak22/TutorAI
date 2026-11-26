@@ -1,0 +1,22 @@
+id: check-solution
+name: Check my solution
+description: Photograph or type your own solution. You get the first mistake, why it is wrong and graded hints, never the full answer. Math steps are verified with real symbolic math (SymPy).
+icon: "✅"
+pack: core
+kind: code
+output: solution_check
+tier: smart
+inputs:
+  - { name: photo, label: "Photo of your solution", type: image, default: "" }
+  - { name: answer, label: "Or type your solution", type: textarea, default: "" }
+  - { name: problem, label: "The question (optional if it is in the photo)", type: textarea, default: "" }
+retrieval: { mode: search }
+authors: [RuecAI core team]
+i18n:
+  he:
+    name: בדיקת הפתרון שלי
+    description: צלמו או הקלידו פתרון שכתבתם. מקבלים את הטעות הראשונה, למה היא טעות ורמזים מדורגים, בלי הפתרון המלא. שלבים מתמטיים נבדקים במתמטיקה סימבולית אמיתית (SymPy).
+    inputs:
+      photo: { label: צילום של הפתרון }
+      answer: { label: או הקלידו את הפתרון }
+      problem: { label: השאלה (לא חובה אם היא בתמונה) }

@@ -15,18 +15,34 @@ export function QuizPlayer({ quiz, courseId, artifactId }: { quiz: Quiz; courseI
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const set = (id: string, a: Answer) => setAnswers((prev) => ({ ...prev, [id]: { ...prev[id], ...a } }));
 
+  /** Wrong answers go to the mistakes notebook and come back later as new questions. */
+  const logMistake = (q: Quiz["questions"][number], studentAnswer: string) =>
+    engine.recordMistake({
+      courseId,
+      concept: q.concept,
+      origin: "quiz",
+      itemRef: `${artifactId}:${q.id}`,
+      question: q.kind === "mcq" ? `${q.prompt}\n\n${q.options.map((o, i) => `${i + 1}. ${o}`).join("\n")}` : q.prompt,
+      studentAnswer,
+      correctAnswer: q.kind === "mcq" ? (q.options[q.correct_index] ?? q.model_answer) : q.model_answer,
+      explanation: q.explanation,
+      citations: q.citations,
+    });
+
   const check = async (q: Quiz["questions"][number]) => {
     const a = answers[q.id] ?? {};
     if (q.kind === "mcq") {
       const correct = a.choice === q.correct_index;
       set(q.id, { checked: true, correct });
       engine.recordAttempt(courseId, q.concept, `${artifactId}:${q.id}`, correct, correct ? 1 : 0, "mcq", String(a.choice));
+      if (!correct) logMistake(q, q.options[a.choice ?? -1] ?? "");
     } else {
       set(q.id, { grading: true, error: undefined });
       try {
         const grade = await engine.grade({ question: q.prompt, answer: a.text ?? "", modelAnswer: q.model_answer, rubric: [], maxPoints: 10, tier: "fast" });
         set(q.id, { checked: true, grading: false, correct: grade.correct, grade });
         engine.recordAttempt(courseId, q.concept, `${artifactId}:${q.id}`, grade.correct, grade.score / 10, "open", a.text, grade.feedback);
+        if (!grade.correct) logMistake(q, a.text ?? "");
       } catch (e) {
         set(q.id, { grading: false, error: errorMessage(e) });
       }

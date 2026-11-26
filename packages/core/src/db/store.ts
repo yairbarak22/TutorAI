@@ -34,6 +34,8 @@ export interface Section {
   title: string;
   summary: string;
   text: string;
+  /** Seconds into a recording (lecture audio/video); null for documents. */
+  t_start: number | null;
 }
 export interface Concept {
   id: number;
@@ -66,6 +68,33 @@ export interface Card {
   due: string;
 }
 
+export interface Mistake {
+  id: number;
+  course_id: number;
+  concept: string;
+  origin: "quiz" | "exam" | "session" | "check";
+  item_ref: string;
+  question: string;
+  student_answer: string;
+  correct_answer: string;
+  explanation: string;
+  citations: string[];
+  misconception: string;
+  status: "open" | "resolved";
+  streak: number;
+  due: string;
+  created_at: string;
+  updated_at: string;
+}
+export interface SessionLog {
+  id: number;
+  course_id: number;
+  day: string;
+  items: number;
+  correct: number;
+  seconds: number;
+}
+
 export const sectionKey = (id: number) => `S${id}`;
 export const sectionIdFromKey = (key: string) => Number(key.replace(/^S/, ""));
 
@@ -88,8 +117,13 @@ export class Store {
 
   private migrate() {
     const v = this.get<{ value: string }>("SELECT value FROM meta WHERE key='schema_version'");
-    if (!v) this.db.run("INSERT INTO meta(key,value) VALUES('schema_version', ?)", [String(SCHEMA_VERSION)]);
-    // future: if (Number(v.value) < 2) { ... }
+    const from = v ? Number(v.value) : SCHEMA_VERSION;
+    if (from < 2) {
+      // v2: recordings (sections.t_start). New tables are created by SCHEMA_SQL (IF NOT EXISTS).
+      const cols = this.all<{ name: string }>("PRAGMA table_info(sections)").map((c) => c.name);
+      if (!cols.includes("t_start")) this.db.run("ALTER TABLE sections ADD COLUMN t_start REAL");
+    }
+    this.db.run("INSERT INTO meta(key,value) VALUES('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", [String(SCHEMA_VERSION)]);
   }
 
   onChange(fn: () => void): () => void {
@@ -208,13 +242,13 @@ export class Store {
   replaceSections(
     courseId: number,
     sourceId: number,
-    sections: { anchor: string; page: number | null; title: string; text: string }[],
+    sections: { anchor: string; page: number | null; title: string; text: string; tStart?: number | null }[],
   ): number[] {
     return this.transaction(() => {
       this.db.run("DELETE FROM sections WHERE source_id=?", [sourceId]);
       const ids: number[] = [];
       sections.forEach((s, i) => {
-        this.db.run("INSERT INTO sections(course_id,source_id,ord,anchor,page,title,text) VALUES(?,?,?,?,?,?,?)", [
+        this.db.run("INSERT INTO sections(course_id,source_id,ord,anchor,page,title,text,t_start) VALUES(?,?,?,?,?,?,?,?)", [
           courseId,
           sourceId,
           i,
@@ -222,6 +256,7 @@ export class Store {
           s.page,
           s.title,
           s.text,
+          s.tStart ?? null,
         ]);
         ids.push(Number(this.db.exec("SELECT last_insert_rowid()")[0].values[0][0]));
       });
@@ -362,6 +397,49 @@ export class Store {
     this.run("INSERT INTO chats(course_id) VALUES(?)", [courseId]);
   }
 
+  /* -------- mistakes notebook -------- */
+  addMistake(m: Omit<Mistake, "id" | "created_at" | "updated_at" | "status" | "streak" | "misconception"> & { misconception?: string }): number {
+    // One open entry per item: answering the same question wrong again just resets its schedule.
+    const existing = m.item_ref ? this.get<{ id: number }>("SELECT id FROM mistakes WHERE course_id=? AND item_ref=? AND status='open'", [m.course_id, m.item_ref]) : undefined;
+    if (existing) {
+      this.run("UPDATE mistakes SET student_answer=?, streak=0, due=?, updated_at=datetime('now') WHERE id=?", [m.student_answer, m.due, existing.id]);
+      return existing.id;
+    }
+    return this.run(
+      "INSERT INTO mistakes(course_id,concept,origin,item_ref,question,student_answer,correct_answer,explanation,citations,misconception,due) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+      [m.course_id, m.concept, m.origin, m.item_ref, m.question, m.student_answer, m.correct_answer, m.explanation, JSON.stringify(m.citations), m.misconception ?? "", m.due],
+    );
+  }
+  mistakes(courseId: number, status?: Mistake["status"]): Mistake[] {
+    const rows = status
+      ? this.all<Row>("SELECT * FROM mistakes WHERE course_id=? AND status=? ORDER BY due, id", [courseId, status])
+      : this.all<Row>("SELECT * FROM mistakes WHERE course_id=? ORDER BY status DESC, due, id", [courseId]);
+    return rows.map(parseMistake);
+  }
+  mistake(id: number): Mistake | undefined {
+    const r = this.get<Row>("SELECT * FROM mistakes WHERE id=?", [id]);
+    return r ? parseMistake(r) : undefined;
+  }
+  dueMistakes(courseId: number, nowIso: string): Mistake[] {
+    return this.all<Row>("SELECT * FROM mistakes WHERE course_id=? AND status='open' AND due<=? ORDER BY due LIMIT 50", [courseId, nowIso]).map(parseMistake);
+  }
+  updateMistake(id: number, patch: Partial<Pick<Mistake, "misconception" | "status" | "streak" | "due" | "concept">>) {
+    const keys = Object.keys(patch) as (keyof typeof patch)[];
+    if (!keys.length) return;
+    this.run(`UPDATE mistakes SET ${keys.map((k) => `${k}=?`).join(", ")}, updated_at=datetime('now') WHERE id=?`, [...keys.map((k) => patch[k] as SqlValue), id]);
+  }
+  deleteMistake(id: number) {
+    this.run("DELETE FROM mistakes WHERE id=?", [id]);
+  }
+
+  /* -------- daily sessions -------- */
+  addSession(s: Omit<SessionLog, "id">): number {
+    return this.run("INSERT INTO sessions(course_id,day,items,correct,seconds) VALUES(?,?,?,?,?)", [s.course_id, s.day, s.items, s.correct, s.seconds]);
+  }
+  sessionDays(courseId: number): string[] {
+    return this.all<{ day: string }>("SELECT DISTINCT day FROM sessions WHERE course_id=? ORDER BY day DESC LIMIT 400", [courseId]).map((r) => r.day);
+  }
+
   /* -------- usage -------- */
   addUsage(u: { tag: string; model: string; input: number; output: number; cacheRead: number }) {
     this.run("INSERT INTO usage(tag,model,input_tokens,output_tokens,cache_read_tokens) VALUES(?,?,?,?,?)", [
@@ -384,4 +462,8 @@ function parseArtifact(r: Row): Artifact {
 }
 function parseCard(r: Row): Card {
   return { ...(r as unknown as Card), citations: JSON.parse(String(r.citations)) };
+}
+
+function parseMistake(r: Row): Mistake {
+  return { ...(r as unknown as Mistake), citations: JSON.parse(String(r.citations ?? "[]")) };
 }

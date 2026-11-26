@@ -1,0 +1,5 @@
+fixture: probability
+params:
+  problem: "מטילים מטבע הוגן 5 פעמים. מה ההסתברות לקבל בדיוק 2 פעמים עץ?"
+  answer: "X~Bin(5,1/2). P(X=2) = C(5,2)*(1/2)^2 = 10/4 = 2.4"
+checks: { min_items: 3, min_citation_coverage: 0, min_hebrew_ratio: 0.3 }

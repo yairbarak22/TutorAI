@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Box, CalendarDays, ClipboardCheck, FileText, Layers, ListChecks, MessagesSquare, Scale, Sigma, Workflow } from "lucide-react";
+import { Box, CalendarDays, ScanLine, ClipboardCheck, FileText, Layers, ListChecks, MessagesSquare, Scale, Sigma, Workflow } from "lucide-react";
 import { IconTile } from "./components.tsx";
 
 /** Line icon + gradient for built-in tools. Community tools fall back to their manifest emoji. */
@@ -14,6 +14,7 @@ const TOOL_ICONS: Record<string, { icon: LucideIcon; grad: number }> = {
   "case-brief": { icon: Scale, grad: 8 },
   "worked-example": { icon: Sigma, grad: 3 },
   tutor: { icon: MessagesSquare, grad: 1 },
+  "check-solution": { icon: ScanLine, grad: 7 },
 };
 
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);

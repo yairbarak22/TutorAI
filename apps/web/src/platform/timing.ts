@@ -18,6 +18,8 @@ const DEFAULT_SECONDS: Record<string, number> = {
   "tool:case-brief": 45,
   "tool:worked-example": 45,
   "repair:explainer": 50,
+  session: 30,
+  "tool:check-solution": 35,
   grade: 12,
   "ingest:per-mb": 25,
   "ingest:base": 15,
@@ -33,6 +35,8 @@ const DEFAULT_CHARS: Record<string, number> = {
   "tool:case-brief": 5000,
   "tool:worked-example": 5000,
   "repair:explainer": 9000,
+  session: 7000,
+  "tool:check-solution": 5000,
   grade: 900,
 };
 

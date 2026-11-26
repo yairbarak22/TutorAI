@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { InputSpec, LoadedTool, ToolManifest } from "@ruecai/sdk";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
-import { Search, Sparkles } from "lucide-react";
+import { Camera, ScanLine, Search, Sparkles, X } from "lucide-react";
 import { ArrowBack, ChevronForward, t, toolText } from "../i18n.tsx";
 import { Alert, Badge, Button, Card, Field, errorMessage, inputClass } from "../ui/components.tsx";
 import { ToolOrb, ToolTile } from "../ui/toolIcons.tsx";
@@ -126,6 +126,7 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
     };
   }, []);
   const key = `tool:${tool.manifest.id}`;
+  const isCheck = tool.manifest.output === "solution_check";
   const [error, setError] = useState<string | null>(null);
   const missing = tool.manifest.inputs.filter((i) => i.required && !String(params[i.name] ?? "").trim());
 
@@ -174,9 +175,19 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
         {error && <Alert kind="error">{error}</Alert>}
         {running ? (
           <LongTask
-            title={t(`יוצר ${toolText(tool.manifest).name}`, `Creating ${toolText(tool.manifest).name}`)}
-            stages={[t("אוסף חומר מהקורס", "Gathering course material"), t("Claude כותב", "Claude is writing"), t("בודק ציטוטים ושומר", "Checking citations and saving")]}
-            stage={running.pct >= 1 ? 3 : running.chars > 0 || running.pct >= 0.2 ? 1 : 0}
+            title={
+              isCheck ? t("בודק את הפתרון שלכם", "Checking your solution") : t(`יוצר ${toolText(tool.manifest).name}`, `Creating ${toolText(tool.manifest).name}`)
+            }
+            stages={
+              isCheck
+                ? [t("Claude קורא את הפתרון", "Claude reads your solution"), t("אימות החישובים ב-SymPy", "Verifying the math with SymPy"), t("כתיבת רמזים", "Writing hints")]
+                : [t("אוסף חומר מהקורס", "Gathering course material"), t("Claude כותב", "Claude is writing"), t("בודק ציטוטים ושומר", "Checking citations and saving")]
+            }
+            stage={
+              isCheck
+                ? running.pct >= 1 ? 3 : running.pct >= 0.75 ? 2 : running.pct >= 0.55 ? 1 : 0
+                : running.pct >= 1 ? 3 : running.chars > 0 || running.pct >= 0.2 ? 1 : 0
+            }
             detail={running.chars > 0 && ["יוצר…", "Generating…"].includes(running.msg) ? t("Claude כותב…", "Claude is writing…") : running.msg}
             startedAt={running.startedAt}
             expectedSec={expectedSeconds(key, engine.demo)}
@@ -194,7 +205,15 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
           />
         ) : (
           <Button size="lg" className="w-full" onClick={run} disabled={missing.length > 0}>
-            <Sparkles size={16} /> {t("יצירה", "Create")}
+            {tool.manifest.output === "solution_check" ? (
+              <>
+                <ScanLine size={16} /> {t("בדיקת הפתרון", "Check my solution")}
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} /> {t("יצירה", "Create")}
+              </>
+            )}
           </Button>
         )}
       </Card>
@@ -251,6 +270,7 @@ function InputControl({
         ]}
       />
     );
+  else if (input.type === "image") control = <ImageInput value={String(value || "")} onChange={onChange} />;
   else if (input.type === "number")
     control = <input type="number" min={0} className={inputClass} value={value} onChange={(e) => onChange(Number(e.target.value))} />;
   else if (input.type === "textarea")
@@ -260,5 +280,65 @@ function InputControl({
     <Field label={tx.label(input.name) + (input.required ? " *" : "")} help={tx.help(input.name)}>
       {control}
     </Field>
+  );
+}
+
+/** Downscale a photo to ≤1600px JPEG so it is fast to send and small to store. */
+async function toJpegDataUrl(file: File): Promise<string> {
+  const bmp = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * scale);
+  c.height = Math.round(bmp.height * scale);
+  c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+
+function ImageInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const pick = async (f?: File) => {
+    if (!f || !f.type.startsWith("image/")) return;
+    setBusy(true);
+    try {
+      onChange(await toJpegDataUrl(f));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div
+      className="rounded-xl border border-dashed border-black/15 bg-sidebar p-3"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        void pick(e.dataTransfer.files[0]);
+      }}
+    >
+      <input ref={ref} type="file" accept="image/*" capture="environment" hidden data-testid="image-input" onChange={(e) => void pick(e.target.files?.[0])} />
+      {value ? (
+        <div className="flex items-center gap-3">
+          <img src={value} alt="" className="h-20 w-20 rounded-lg border border-black/10 object-cover" />
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="secondary" onClick={() => ref.current?.click()}>
+              <Camera size={14} /> {t("החלפת תמונה", "Replace photo")}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => onChange("")}>
+              <X size={14} /> {t("הסרה", "Remove")}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className="flex w-full items-center gap-3 text-start" onClick={() => ref.current?.click()} disabled={busy}>
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-ink shadow-sm ring-1 ring-black/[0.08]">
+            <Camera size={18} />
+          </span>
+          <span>
+            <span className="block text-[13.5px] font-medium">{busy ? t("מכין את התמונה…", "Preparing the photo…") : t("צילום או העלאת תמונה", "Take or upload a photo")}</span>
+            <span className="block text-[12px] text-muted">{t("כתב יד ברור, באור טוב. אפשר גם לגרור לכאן.", "Clear handwriting, good light. You can also drop it here.")}</span>
+          </span>
+        </button>
+      )}
+    </div>
   );
 }

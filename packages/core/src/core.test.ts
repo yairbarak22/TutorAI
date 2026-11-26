@@ -12,6 +12,8 @@ import { retrieve } from "./retrieve.ts";
 import { hebrewTerms, searchSections } from "./search.ts";
 import { bktUpdate } from "./learner/bkt.ts";
 import { newCardState, reviewCard } from "./learner/srs.ts";
+import { diagnoseMistake, scheduleRetry } from "./learner/mistakes.ts";
+import { buildSession, streakDays } from "./learner/session.ts";
 import { gradeAnswer, recordAttempt } from "./runtime.ts";
 import { seedCourse } from "./seed.ts";
 import probability from "../../../plugins/_fixtures/probability.json";
@@ -237,5 +239,88 @@ describe("sdk helpers", () => {
       context: '<section id="S40"></section><section id="S41"></section>',
     });
     expect(out.citations).toEqual(["S40", "S41"]);
+  });
+});
+
+describe("mistakes notebook & daily session", () => {
+  const mistakeFor = (store: Store, courseId: number, due: string) =>
+    store.addMistake({
+      course_id: courseId,
+      concept: "הסתברות מותנית",
+      origin: "quiz",
+      item_ref: "1:q1",
+      question: "מהו P(A|B)?",
+      student_answer: "P(B|A)",
+      correct_answer: "P(A∩B)/P(B)",
+      explanation: "",
+      citations: [],
+      due,
+    });
+
+  it("schedules retries and resolves after two correct answers in a row", () => {
+    const now = new Date("2027-01-10T10:00:00Z");
+    const s1 = scheduleRetry({ streak: 0 }, true, now);
+    expect(s1).toMatchObject({ streak: 1, status: "open" });
+    expect(Date.parse(s1.due)).toBeGreaterThan(now.getTime());
+    expect(scheduleRetry({ streak: 1 }, true, now).status).toBe("resolved");
+    expect(scheduleRetry({ streak: 1 }, false, now)).toMatchObject({ streak: 0, status: "open" });
+  });
+
+  it("keeps one open entry per question and stores the model's diagnosis", async () => {
+    const store = Store.open(SQL);
+    const courseId = seedCourse(store, fixture());
+    const due = new Date().toISOString();
+    const a = mistakeFor(store, courseId, due);
+    const b = mistakeFor(store, courseId, due);
+    expect(b).toBe(a);
+    expect(store.mistakes(courseId)).toHaveLength(1);
+    await diagnoseMistake(new MockLLM(coreGolden), store, a);
+    expect(store.mistake(a)?.misconception).toContain("P(A|B)");
+  });
+
+  it("builds an interleaved session from due mistakes, due cards and weak concepts", async () => {
+    const store = Store.open(SQL);
+    const courseId = seedCourse(store, fixture());
+    const now = new Date("2027-01-10T10:00:00Z");
+    mistakeFor(store, courseId, new Date(now.getTime() - 1000).toISOString());
+    const s = newCardState(now);
+    for (let i = 0; i < 3; i++)
+      store.addCard({ course_id: courseId, artifact_id: null, front: `f${i}`, back: `b${i}`, concept: "תוחלת", citations: [], fsrs: s.fsrs, due: now.toISOString() });
+    const plan = await buildSession({ store, llm: new MockLLM(coreGolden), courseId, now });
+    expect(plan.counts.retry).toBe(1);
+    expect(plan.counts.cards).toBe(3);
+    expect(plan.items[0]).toMatchObject({ kind: "question", reason: "retry" });
+    const kinds = plan.items.map((i) => i.kind);
+    expect(kinds).toContain("card");
+    expect(kinds.join(",")).not.toContain("card,card,card,card"); // interleaved, not grouped
+    const retry = plan.items.find((i) => i.kind === "question" && i.reason === "retry");
+    expect(retry && retry.kind === "question" && retry.q.concept).toBe("הסתברות מותנית");
+  });
+
+  it("falls back to the original question when the model is unavailable", async () => {
+    const store = Store.open(SQL);
+    const courseId = seedCourse(store, fixture());
+    const now = new Date();
+    mistakeFor(store, courseId, now.toISOString());
+    const broken = new MockLLM({});
+    const plan = await buildSession({ store, llm: broken, courseId, now: new Date(now.getTime() + 1000) });
+    const q = plan.items.find((i) => i.kind === "question");
+    expect(q && q.kind === "question" && q.q.prompt).toBe("מהו P(A|B)?");
+  });
+
+  it("counts streaks of consecutive study days", () => {
+    expect(streakDays(["2027-01-10", "2027-01-09", "2027-01-08", "2027-01-05"], "2027-01-10")).toBe(3);
+    expect(streakDays(["2027-01-09", "2027-01-08"], "2027-01-10")).toBe(2);
+    expect(streakDays(["2027-01-07"], "2027-01-10")).toBe(0);
+  });
+
+  it("migrates a v1 database (adds sections.t_start)", () => {
+    const db = new SQL.Database();
+    db.run("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT INTO meta VALUES('schema_version','1');");
+    db.run("CREATE TABLE sections (id INTEGER PRIMARY KEY AUTOINCREMENT, course_id INTEGER NOT NULL, source_id INTEGER NOT NULL, ord INTEGER NOT NULL, anchor TEXT NOT NULL, page INTEGER, title TEXT NOT NULL DEFAULT '', summary TEXT NOT NULL DEFAULT '', text TEXT NOT NULL);");
+    const store = Store.open(SQL, db.export());
+    const cols = store.all<{ name: string }>("PRAGMA table_info(sections)").map((c) => c.name);
+    expect(cols).toContain("t_start");
+    expect(store.get<{ value: string }>("SELECT value FROM meta WHERE key='schema_version'")?.value).toBe("2");
   });
 });

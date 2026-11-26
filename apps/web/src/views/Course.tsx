@@ -7,6 +7,8 @@ import { COURSE_SECTIONS, CourseMark, sectionLabel } from "../ui/Shell.tsx";
 import { daysUntil } from "./Home.tsx";
 import { t } from "../i18n.tsx";
 import { Materials } from "./Materials.tsx";
+import { DailySession } from "./Session.tsx";
+import { MistakesNotebook } from "./Mistakes.tsx";
 import { Concepts } from "./Concepts.tsx";
 import { Studio } from "./Studio.tsx";
 import { ArtifactView, ArtifactList } from "./ArtifactView.tsx";
@@ -65,6 +67,8 @@ export function CourseView({ id, tab, sub }: { id: number; tab: string; sub?: st
           </a>
         ))}
       </nav>
+      {tab === "session" && <DailySession courseId={id} />}
+      {tab === "mistakes" && <MistakesNotebook courseId={id} />}
       {tab === "materials" && <Materials courseId={id} />}
       {tab === "concepts" && <Concepts courseId={id} />}
       {tab === "studio" && <Studio courseId={id} preselect={sub} />}

@@ -33,6 +33,8 @@ export interface RunDeps {
   /** Output characters written by the model so far in this run (across all its LLM calls). */
   onOutput?: (chars: number) => void;
   chat?: ToolContext["chat"];
+  /** Symbolic math checker (SymPy in a worker), injected by the app; tests pass a fake. */
+  math?: ToolContext["math"];
   signal?: AbortSignal;
 }
 
@@ -89,6 +91,7 @@ export function buildContext(tool: LoadedTool, deps: RunDeps, seen: Set<string>)
     today: deps.today ?? new Date().toISOString().slice(0, 10),
     signal: deps.signal,
     chat: deps.chat,
+    math: deps.math,
     progress: (pct, msg) => deps.onProgress?.(pct, msg),
     concepts: async () => conceptInfos(deps.store, deps.courseId),
     retrieve: async (opts = {}) => {

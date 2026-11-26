@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS sections (
   page INTEGER,                                     -- 1-based page/slide number when known
   title TEXT NOT NULL DEFAULT '',
   summary TEXT NOT NULL DEFAULT '',
-  text TEXT NOT NULL
+  text TEXT NOT NULL,
+  t_start REAL                                      -- seconds into a recording (lecture audio/video), else NULL
 );
 CREATE INDEX IF NOT EXISTS sections_course ON sections(course_id, source_id, ord);
 
@@ -100,6 +101,38 @@ CREATE TABLE IF NOT EXISTS chats (
   course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   messages TEXT NOT NULL DEFAULT '[]',
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Every wrong answer worth coming back to, with a diagnosis and a retry schedule.
+CREATE TABLE IF NOT EXISTS mistakes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  concept TEXT NOT NULL DEFAULT '',
+  origin TEXT NOT NULL,                             -- quiz | exam | session | check
+  item_ref TEXT NOT NULL DEFAULT '',
+  question TEXT NOT NULL,
+  student_answer TEXT NOT NULL DEFAULT '',
+  correct_answer TEXT NOT NULL DEFAULT '',
+  explanation TEXT NOT NULL DEFAULT '',
+  citations TEXT NOT NULL DEFAULT '[]',
+  misconception TEXT NOT NULL DEFAULT '',           -- one-sentence diagnosis written by the model
+  status TEXT NOT NULL DEFAULT 'open',              -- open | resolved
+  streak INTEGER NOT NULL DEFAULT 0,                -- correct retries in a row
+  due TEXT NOT NULL,                                -- next retry (ISO)
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS mistakes_due ON mistakes(course_id, status, due);
+
+-- Finished daily sessions (for streaks and history).
+CREATE TABLE IF NOT EXISTS sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  day TEXT NOT NULL,                                -- YYYY-MM-DD (local)
+  items INTEGER NOT NULL,
+  correct INTEGER NOT NULL,
+  seconds INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS usage (

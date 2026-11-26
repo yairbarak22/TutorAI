@@ -81,6 +81,7 @@ export function countItems(type: string, data: Record<string, unknown>): number 
     concept_map: "concepts",
     exam_simulation: "questions",
     study_plan: "days",
+    solution_check: "steps",
   };
   const k = key[type];
   if (!k) return 1;

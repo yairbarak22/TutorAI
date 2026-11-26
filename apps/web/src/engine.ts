@@ -18,12 +18,21 @@ import {
   safeFileName,
   seedCourse,
   sha256Hex,
+  buildSession,
+  diagnoseMistake,
+  firstRetry,
+  localDay,
+  previewSession,
+  scheduleRetry,
+  streakDays,
+  type Mistake,
   type GradeInput,
   type ReviewGrade,
   type RunResult,
   type Source,
 } from "@ruecai/core";
-import { t, type ArtifactPayload, type ChatTurn, type LLMApi, type LoadedTool } from "@ruecai/sdk";
+import { t, type ArtifactPayload, type ChatTurn, type LLMApi, type LoadedTool, type SolutionCheck } from "@ruecai/sdk";
+import { sympyVerifier } from "./platform/sympy.ts";
 import { courseFixtures, demoFixtures, getTool, tools } from "@ruecai/plugins";
 import { DB_FILE, Persistence, exportBackup, type DataRoot } from "./platform/storage.ts";
 import { secrets } from "./platform/secrets.ts";
@@ -227,7 +236,25 @@ export class Engine {
     onProgress?: (pct: number, msg: string) => void,
     onOutput?: (chars: number) => void,
   ): Promise<RunResult> {
-    return runTool(getTool(toolId), { store: this.store, llm: this.llm, courseId, params, onProgress, onOutput });
+    const res = await runTool(getTool(toolId), { store: this.store, llm: this.llm, courseId, params, onProgress, onOutput, math: sympyVerifier });
+    // A checked solution with a mistake goes to the notebook, so it comes back in the daily session.
+    if (res.kind === "artifact" && res.payload.type === "solution_check") {
+      const d = res.payload.data as SolutionCheck;
+      const step = d.steps[d.first_error];
+      if (d.verdict !== "correct" && step)
+        this.recordMistake({
+          courseId,
+          concept: d.concept,
+          origin: "check",
+          itemRef: `check:${res.artifactId}`,
+          question: d.problem,
+          studentAnswer: step.text,
+          correctAnswer: d.fix || d.hints[d.hints.length - 1] || "",
+          explanation: step.comment,
+          citations: d.citations,
+        });
+    }
+    return res;
   }
 
   /** Position in the ingestion queue (0 = being processed now), or -1 when not queued. */
@@ -273,6 +300,63 @@ export class Engine {
     const next = reviewCard(fsrs, grade, new Date());
     this.store.updateCard(cardId, next.fsrs, next.due);
     this.recordAttempt(courseId, concept, `card:${cardId}`, grade === "good" || grade === "easy", grade === "again" ? 0 : 1, "card");
+  }
+
+  /* ---------------- mistakes notebook & daily session ---------------- */
+  /** Log a wrong answer (one open entry per question) and diagnose it in the background. */
+  recordMistake(m: {
+    courseId: number;
+    concept: string;
+    origin: Mistake["origin"];
+    itemRef: string;
+    question: string;
+    studentAnswer: string;
+    correctAnswer: string;
+    explanation?: string;
+    citations?: string[];
+  }): number {
+    const id = this.store.addMistake({
+      course_id: m.courseId,
+      concept: m.concept,
+      origin: m.origin,
+      item_ref: m.itemRef,
+      question: m.question,
+      student_answer: m.studentAnswer,
+      correct_answer: m.correctAnswer,
+      explanation: m.explanation ?? "",
+      citations: m.citations ?? [],
+      due: firstRetry(new Date()),
+    });
+    void diagnoseMistake(this.llm, this.store, id).catch((e) => console.warn("diagnosis failed", e));
+    return id;
+  }
+
+  /** A second chance on a logged mistake: right twice in a row resolves it. */
+  retryMistake(id: number, correct: boolean) {
+    const m = this.store.mistake(id);
+    if (m) this.store.updateMistake(id, scheduleRetry(m, correct, new Date()));
+  }
+
+  /** Minutes for the daily session: a quarter of the course's daily study time, 10–25 min. */
+  sessionBudget(courseId: number) {
+    const per = this.store.course(courseId)?.minutes_per_day ?? 90;
+    return Math.min(25, Math.max(10, Math.round(per / 4)));
+  }
+
+  sessionPreview(courseId: number) {
+    return previewSession(this.store, courseId, new Date(), this.sessionBudget(courseId));
+  }
+
+  buildSession(courseId: number, onOutput?: (chars: number) => void) {
+    return buildSession({ store: this.store, llm: this.llm, courseId, budgetMinutes: this.sessionBudget(courseId), onOutput });
+  }
+
+  finishSession(courseId: number, items: number, correct: number, seconds: number) {
+    this.store.addSession({ course_id: courseId, day: localDay(), items, correct, seconds: Math.round(seconds) });
+  }
+
+  streak(courseId: number) {
+    return streakDays(this.store.sessionDays(courseId), localDay());
   }
 
   /* ---------------- backup ---------------- */
