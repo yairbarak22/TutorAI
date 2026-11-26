@@ -101,6 +101,29 @@ A general chatbot is a capable tutor with no memory of you. RuecAI Teacher is th
 
 You can install the site as an app from the browser menu.
 
+## Ask Claude about this project
+
+Paste this into Claude to get a plain-language tour: what the app does, how to start, and how you can contribute.
+
+```text
+Help me get to know RuecAI Teacher, an open-source study companion for Reichman University students.
+First read these files from GitHub:
+https://raw.githubusercontent.com/yairbarak22/RuecAI_Tutor/main/README.md
+https://raw.githubusercontent.com/yairbarak22/RuecAI_Tutor/main/CONTRIBUTING.md
+https://raw.githubusercontent.com/yairbarak22/RuecAI_Tutor/main/docs/architecture.md
+https://raw.githubusercontent.com/yairbarak22/RuecAI_Tutor/main/AGENTS.md
+
+Then explain, briefly and in plain language:
+1. What the app does, and how it differs from studying with a regular chatbot.
+2. How to start using it (https://yairbarak22.github.io/RuecAI_Tutor/), including the free options.
+3. How I can contribute, even if I can't code.
+
+Finally, ask me what I study and what interests me, and suggest one specific way I could help.
+Answer only from these files. If something isn't in them, say so.
+```
+
+Claude needs web access to read the links (Claude Code, or claude.ai with web search on).
+
 ## Privacy
 
 - There is no RuecAI server and no telemetry.
