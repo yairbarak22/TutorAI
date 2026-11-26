@@ -10,7 +10,7 @@ import { createPublicKey, verify } from "node:crypto";
  * Empty = signing not set up yet: the self-updater stays off (fails closed); students update by
  * running the install line again.
  */
-export const RELEASE_PUBLIC_KEY = "";
+export const RELEASE_PUBLIC_KEY = "MCowBQYDK2VwAyEAmLqAfzYeWBxSMnM1ulMsCsESuw30ltH3AlOOeQA0dgE=";
 
 export function verifySums(sums: string, signatureB64: string, publicKeyB64 = RELEASE_PUBLIC_KEY): boolean {
   if (!publicKeyB64) return false;
