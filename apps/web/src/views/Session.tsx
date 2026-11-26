@@ -73,7 +73,7 @@ export function DailySession({ courseId }: { courseId: number }) {
       <div className="mx-auto max-w-2xl">
         <LongTask
           title={t("מכין את הסשן של היום", "Preparing today's session")}
-          stages={[t("בוחר מה לתרגל", "Choosing what to practice"), t("Claude כותב שאלות חדשות", "Claude is writing new questions"), t("מוכן", "Ready")]}
+          stages={[t("בוחר מה לתרגל", "Choosing what to practice"), t(`${engine.writer} כותב שאלות חדשות`, `${engine.writer} is writing new questions`), t("מוכן", "Ready")]}
           stage={building.chars > 0 ? 1 : 0}
           startedAt={building.startedAt}
           expectedSec={expectedSeconds("session", engine.demo)}

@@ -6,6 +6,9 @@ import { useSyncExternalStore } from "react";
 import {
   AnthropicLLM,
   DEFAULT_MODELS,
+  LocalLLM,
+  TieredLLM,
+  type UsageEvent,
   MockLLM,
   Store,
   detectKind,
@@ -53,6 +56,7 @@ export class Engine {
   version = 0;
   llm!: LLMApi;
   demo = false;
+  provider: "claude" | "local" | "hybrid" | "demo" = "demo";
   ingestStatus = new Map<number, IngestEvent>();
   private queue: number[] = [];
   private ingesting = false;
@@ -109,11 +113,26 @@ export class Engine {
   /* ---------------- LLM ---------------- */
   configureLLM() {
     const key = secrets.getApiKey();
-    this.demo = secrets.isDemo() || !key;
-    this.llm = this.demo
-      ? new MockLLM(demoFixtures(), { delayMs: 900 })
-      : new AnthropicLLM(key!, secrets.getModels() ?? DEFAULT_MODELS, (u) => this.store.addUsage(u));
+    const provider = secrets.getProvider();
+    const local = secrets.getLocal();
+    const usage = (u: UsageEvent) => this.store.addUsage(u);
+    const claude = key ? new AnthropicLLM(key, secrets.getModels() ?? DEFAULT_MODELS, usage) : null;
+    const loc = local && (local.fast || local.smart) ? new LocalLLM(local, usage) : null;
+    let llm: LLMApi | null = null;
+    if (!secrets.isDemo()) {
+      if (provider === "local") llm = loc;
+      else if (provider === "hybrid") llm = loc && claude ? new TieredLLM(loc, claude) : (claude ?? loc);
+      else llm = claude;
+    }
+    this.demo = !llm;
+    this.provider = !llm ? "demo" : llm === loc ? "local" : llm instanceof TieredLLM ? "hybrid" : "claude";
+    this.llm = llm ?? new MockLLM(demoFixtures(), { delayMs: 900 });
     this.bump();
+  }
+
+  /** Who is writing, for progress labels ("Claude is writing…" / "The local model is writing…"). */
+  get writer(): string {
+    return this.provider === "local" ? t("המודל המקומי", "The local model") : this.provider === "hybrid" ? t("ה-AI", "The AI") : "Claude";
   }
 
   get tools(): LoadedTool[] {
@@ -176,7 +195,7 @@ export class Engine {
               files: this.root.files,
               llm: this.llm,
               pdf: { pdfjs },
-              ocrSparsePages: !this.demo,
+              ocrSparsePages: !this.demo && this.llm.limitsFor?.("fast")?.vision !== false,
               onProgress: (sourceId, pct, message) => {
                 const startedAt = this.ingestStatus.get(sourceId)?.startedAt ?? Date.now();
                 this.ingestStatus.set(sourceId, { sourceId, pct, message, startedAt });

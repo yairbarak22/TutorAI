@@ -19,7 +19,7 @@ import {
 } from "@ruecai/sdk";
 import type { Store } from "./db/store.ts";
 import { baseSystemPrompt, CONCEPTS_HINT } from "./llm/prompts.ts";
-import { retrieve } from "./retrieve.ts";
+import { DEFAULT_BUDGET_CHARS, retrieve } from "./retrieve.ts";
 import { bktUpdate, BKT_DEFAULTS, guessFor } from "./learner/bkt.ts";
 import { newCardState } from "./learner/srs.ts";
 
@@ -73,6 +73,7 @@ function trackOutput(llm: LLMApi, onOutput: (chars: number) => void): LLMApi {
     }
   }
   return {
+    limitsFor: llm.limitsFor?.bind(llm),
     object: (schema, opts) => call(opts, (o) => llm.object(schema, o)),
     text: (opts) => call(opts, (o) => llm.text(o)),
     stream: (opts, onDelta) => call(opts, (o) => llm.stream({ ...opts, ...o }, onDelta)),
@@ -98,6 +99,8 @@ export function buildContext(tool: LoadedTool, deps: RunDeps, seen: Set<string>)
       const sourceIds = opts.sourceIds ?? sourceParam(params);
       const r = retrieve(deps.store, deps.courseId, {
         ...opts,
+        // A small local model gets less material per request; the BM25 ranking picks the most relevant.
+        budgetChars: Math.min(opts.budgetChars ?? DEFAULT_BUDGET_CHARS, deps.llm.limitsFor?.(tool.manifest.tier)?.contextChars ?? Infinity),
         sourceIds,
         concept: opts.concept ?? (params.concept ? String(params.concept) : undefined),
       });

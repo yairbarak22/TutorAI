@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ChartLine, ClipboardCheck, FolderOpen, Globe, GraduationCap, Lock, Network, Sparkles, Upload } from "lucide-react";
+import { ChartLine, ClipboardCheck, Cpu, FolderOpen, Globe, GraduationCap, Lock, Network, Sparkles, Upload } from "lucide-react";
 import { verifyApiKey } from "@ruecai/core";
 import { folderSupported, pickFolder, useBrowserStorage, type DataRoot } from "../platform/storage.ts";
 import { secrets } from "../platform/secrets.ts";
 import { Alert, Badge, Button, Field, IconTile, Spinner, errorMessage, inputClass } from "../ui/components.tsx";
 import { switchLanguage, t, useLanguage } from "../i18n.tsx";
+import { LocalModelSetup } from "../ui/LocalModelSetup.tsx";
 
 /** Three steps, under 3 minutes: storage → API key → start. */
 export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
@@ -14,6 +15,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
   const [key, setKey] = useState("");
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localOpen, setLocalOpen] = useState(false);
   const canFolder = folderSupported();
 
   const choose = async (kind: "folder" | "browser") => {
@@ -209,6 +211,27 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
             <p className="text-center text-[12px] text-muted">
               {t("במצב הדגמה התשובות מוקלטות מראש ולא מבוססות על החומר שלכם.", "In demo mode, answers are prerecorded and not based on your material.")}
             </p>
+            <div className="rounded-xl border border-black/10 p-4">
+              <button type="button" className="flex w-full cursor-pointer items-center gap-2 text-start text-[14px] font-medium" aria-expanded={localOpen} onClick={() => setLocalOpen(!localOpen)}>
+                <Cpu size={16} /> {t("מודל מקומי בחינם (Ollama / LM Studio)", "Free local model (Ollama / LM Studio)")}
+              </button>
+              <p className="mt-1 text-[12px] text-muted">
+                {t("מריצים מודל פתוח על המחשב שלכם: בלי מפתח ובלי עלות. איטי יותר וחלש יותר בעברית.", "Run an open model on your own computer: no key, no cost. Slower and weaker in Hebrew.")}
+              </p>
+              {localOpen && (
+                <div className="mt-4">
+                  <LocalModelSetup
+                    saveLabel={t("סיום והתחלה", "Finish and start")}
+                    onSaved={() => {
+                      if (!root) return;
+                      secrets.setProvider("local");
+                      secrets.setDemo(false);
+                      onDone(root);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

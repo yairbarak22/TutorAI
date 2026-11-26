@@ -8,6 +8,7 @@ export * from "./retrieve.ts";
 export * from "./llm/prompts.ts";
 export * from "./llm/anthropic.ts";
 export * from "./llm/mock.ts";
+export * from "./llm/local.ts";
 export * from "./learner/bkt.ts";
 export * from "./learner/srs.ts";
 export * from "./learner/mistakes.ts";

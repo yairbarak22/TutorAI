@@ -1,3 +1,5 @@
+import type { LocalConfig } from "@ruecai/core";
+
 /**
  * The API key stays on this device only (browser storage) — deliberately NOT in ruecai.db,
  * so syncing the data folder to Drive/OneDrive never uploads the key.
@@ -5,6 +7,11 @@
 const KEY = "ruecai.apiKey";
 const DEMO = "ruecai.demo";
 const MODELS = "ruecai.models";
+const PROVIDER = "ruecai.provider";
+const LOCAL = "ruecai.local";
+
+/** Which backend answers: Claude, a model on this computer, or local for fast work + Claude for the rest. */
+export type Provider = "claude" | "local" | "hybrid";
 
 const safe = <T>(fn: () => T, fallback: T): T => {
   try {
@@ -22,4 +29,8 @@ export const secrets = {
   setDemo: (on: boolean) => safe(() => (on ? localStorage.setItem(DEMO, "1") : localStorage.removeItem(DEMO)), undefined),
   getModels: (): { fast: string; smart: string } | null => safe(() => JSON.parse(localStorage.getItem(MODELS) ?? "null"), null),
   setModels: (m: { fast: string; smart: string }) => safe(() => localStorage.setItem(MODELS, JSON.stringify(m)), undefined),
+  getProvider: (): Provider => safe(() => (localStorage.getItem(PROVIDER) as Provider | null) ?? "claude", "claude"),
+  setProvider: (p: Provider) => safe(() => localStorage.setItem(PROVIDER, p), undefined),
+  getLocal: (): LocalConfig | null => safe(() => JSON.parse(localStorage.getItem(LOCAL) ?? "null"), null),
+  setLocal: (c: LocalConfig) => safe(() => localStorage.setItem(LOCAL, JSON.stringify(c)), undefined),
 };

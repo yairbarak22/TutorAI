@@ -181,14 +181,14 @@ function ToolRunner({ courseId, tool, preset, onBack }: { courseId: number; tool
             stages={
               isCheck
                 ? [t("Claude קורא את הפתרון", "Claude reads your solution"), t("אימות החישובים ב-SymPy", "Verifying the math with SymPy"), t("כתיבת רמזים", "Writing hints")]
-                : [t("אוסף חומר מהקורס", "Gathering course material"), t("Claude כותב", "Claude is writing"), t("בודק ציטוטים ושומר", "Checking citations and saving")]
+                : [t("אוסף חומר מהקורס", "Gathering course material"), t(`${engine.writer} כותב`, `${engine.writer} is writing`), t("בודק ציטוטים ושומר", "Checking citations and saving")]
             }
             stage={
               isCheck
                 ? running.pct >= 1 ? 3 : running.pct >= 0.75 ? 2 : running.pct >= 0.55 ? 1 : 0
                 : running.pct >= 1 ? 3 : running.chars > 0 || running.pct >= 0.2 ? 1 : 0
             }
-            detail={running.chars > 0 && ["יוצר…", "Generating…"].includes(running.msg) ? t("Claude כותב…", "Claude is writing…") : running.msg}
+            detail={running.chars > 0 && ["יוצר…", "Generating…"].includes(running.msg) ? t(`${engine.writer} כותב…`, `${engine.writer} is writing…`) : running.msg}
             startedAt={running.startedAt}
             expectedSec={expectedSeconds(key, engine.demo)}
             chars={running.chars}

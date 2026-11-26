@@ -211,7 +211,7 @@ function WidgetView({ w, artifactId }: { w: InteractiveWidget; artifactId: numbe
       {repair && (
         <LongTask
           title={t("מתקן את ההסבר האינטראקטיבי", "Fixing the interactive explainer")}
-          stages={[t("קורא את השגיאה", "Reading the error"), t("Claude כותב קוד מתוקן", "Claude is writing fixed code"), t("טוען מחדש", "Reloading")]}
+          stages={[t("קורא את השגיאה", "Reading the error"), t(`${engine.writer} כותב קוד מתוקן`, `${engine.writer} is writing fixed code`), t("טוען מחדש", "Reloading")]}
           stage={repair.chars > 0 ? 1 : 0}
           startedAt={repair.startedAt}
           expectedSec={expectedSeconds("repair:explainer", engine.demo)}

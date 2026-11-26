@@ -36,7 +36,7 @@ export function App() {
   useEffect(() => {
     (async () => {
       const r = await restoreStorage();
-      if (r.status === "ready" && (secrets.getApiKey() || secrets.isDemo())) await startWith(r.root);
+      if (r.status === "ready" && (secrets.getApiKey() || secrets.isDemo() || secrets.getLocal())) await startWith(r.root);
       else if (r.status === "needs-permission") setBoot({ stage: "permission", folderName: r.folderName, grant: r.grant });
       else setBoot({ stage: "onboarding" });
     })().catch((e) => setBoot({ stage: "error", message: errorMessage(e) }));

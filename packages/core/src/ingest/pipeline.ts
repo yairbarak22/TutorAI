@@ -108,11 +108,13 @@ async function analyzeSource(deps: IngestDeps, sourceId: number, onPart: (p: num
   const sections = store.sectionsOfSource(sourceId);
   const names = new Map([[source.id, source.name]]);
 
+  // Smaller batches for small local models, so a batch plus the instructions fits their context.
+  const batchChars = Math.min(ANALYSIS_BATCH_CHARS, llm.limitsFor?.("fast")?.contextChars ?? Infinity);
   const batches: (typeof sections)[] = [];
   let cur: typeof sections = [];
   let size = 0;
   for (const s of sections) {
-    if (size + s.text.length > ANALYSIS_BATCH_CHARS && cur.length) {
+    if (size + s.text.length > batchChars && cur.length) {
       batches.push(cur);
       cur = [];
       size = 0;

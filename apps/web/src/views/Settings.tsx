@@ -4,6 +4,7 @@ import { DEFAULT_MODELS, verifyApiKey } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { download, forgetStorage, importBackup } from "../platform/storage.ts";
 import { secrets } from "../platform/secrets.ts";
+import { LocalModelSetup } from "../ui/LocalModelSetup.tsx";
 import { Alert, Badge, Button, Field, Row, Spinner, Tabs, errorMessage, inputClass } from "../ui/components.tsx";
 import { fmtTime, switchLanguage, t, useLanguage } from "../i18n.tsx";
 
@@ -30,6 +31,7 @@ export function Settings() {
     return p ? n + (u.input * p[0] + u.output * p[1]) / 1e6 : n;
   }, 0);
   const hasKey = !!secrets.getApiKey();
+  const [provider, setProvider] = useState(secrets.getProvider());
 
   const [tab, setTab] = useState<"ai" | "data" | "about">("ai");
   return (
@@ -80,12 +82,15 @@ export function Settings() {
           <Row
             title={t("מצב", "Status")}
             desc={
-              engine.demo
-                ? t("מצב הדגמה: התשובות מוקלטות מראש ולא מבוססות על החומר שלכם.", "Demo mode: answers are prerecorded and not based on your material.")
-                : t("מחובר ל-Claude עם המפתח שלכם.", "Connected to Claude with your key.")
+              {
+                demo: t("מצב הדגמה: התשובות מוקלטות מראש ולא מבוססות על החומר שלכם.", "Demo mode: answers are prerecorded and not based on your material."),
+                claude: t("מחובר ל-Claude עם המפתח שלכם.", "Connected to Claude with your key."),
+                local: t("עובד עם מודל מקומי במחשב שלכם, בלי עלות.", "Using a local model on your computer, at no cost."),
+                hybrid: t("היברידי: מודל מקומי לעבודה המהירה, Claude להסברים ולמבחנים.", "Hybrid: a local model for fast work, Claude for explanations and exams."),
+              }[engine.provider]
             }
             action={
-              hasKey ? (
+              hasKey || secrets.getLocal() ? (
                 <Button
                   variant="secondary"
                   size="sm"
@@ -101,6 +106,56 @@ export function Settings() {
               )
             }
           />
+          <Row
+            title={t("מאיפה מגיע המודל", "Where the model runs")}
+            desc={t("מודל מקומי רץ על המחשב שלכם וחוסך את כל העלות, אבל איטי יותר וחלש יותר בעברית.", "A local model runs on your computer and costs nothing, but it is slower and weaker in Hebrew.")}
+            wide
+          >
+            <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={t("ספק המודל", "Model provider")}>
+              {([
+                ["claude", t("Claude (בענן)", "Claude (cloud)")],
+                ["local", t("מקומי בלבד (חינם)", "Local only (free)")],
+                ["hybrid", t("היברידי (מקומי + Claude)", "Hybrid (local + Claude)")],
+              ] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={provider === id}
+                  onClick={() => {
+                    secrets.setProvider(id);
+                    setProvider(id);
+                    if (id === "claude" || secrets.getLocal()) {
+                      secrets.setDemo(false);
+                      engine.configureLLM();
+                    }
+                  }}
+                  className={`h-8 cursor-pointer rounded-full border px-3 text-[13px] transition-colors ${
+                    provider === id ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-ink-2 hover:bg-hover"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {provider === "hybrid" && (
+              <p className="mt-2 text-xs text-muted">
+                {t("ניתוח קבצים, מושגים וכרטיסיות רצים מקומית (רוב השימוש); הסברים, מבחנים ובדיקה לפי מחוון עוברים ל-Claude. צריך גם מפתח API.", "File analysis, concepts and flashcards run locally (most of the usage); explanations, exams and rubric grading go to Claude. Needs an API key too.")}
+              </p>
+            )}
+            {provider !== "claude" && (
+              <div className="mt-4">
+                <LocalModelSetup
+                  onSaved={() => {
+                    secrets.setDemo(false);
+                    engine.configureLLM();
+                    setMsg({ kind: "success", text: t("המודל המקומי נשמר.", "Local model saved.") });
+                  }}
+                />
+              </div>
+            )}
+          </Row>
+          {provider !== "local" && (
+            <>
           <Row
             title={hasKey ? t("החלפת מפתח API", "Replace API key") : t("מפתח API", "API key")}
             desc={t("המפתח נשמר רק בדפדפן הזה, לא בתיקיית הנתונים.", "The key is stored only in this browser, not in the data folder.")}
@@ -163,6 +218,8 @@ export function Settings() {
               {t("שמירת מודלים", "Save models")}
             </Button>
           </Row>
+            </>
+          )}
           <Row
             title={t("שימוש ועלות", "Usage and cost")}
             desc={

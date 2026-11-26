@@ -114,7 +114,17 @@ export interface ChatTurn {
   content: string;
 }
 
+/** What a model backend can handle. Absent = no limits worth adapting to (cloud models). */
+export interface LLMLimits {
+  /** Characters of course material that fit comfortably in one request. */
+  contextChars: number;
+  /** Whether the model reads images (used for OCR of scanned pages). */
+  vision: boolean;
+}
+
 export interface LLMApi {
+  /** Limits of the model that serves a given tier (local models are small; cloud models: undefined). */
+  limitsFor?(tier: Tier): LLMLimits | undefined;
   object<S extends z.ZodType>(schema: S, opts: LLMCallOptions): Promise<z.infer<S>>;
   text(opts: LLMCallOptions): Promise<string>;
   stream(opts: LLMCallOptions & { history?: ChatTurn[] }, onDelta: (text: string) => void): Promise<string>;
