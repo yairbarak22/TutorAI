@@ -121,3 +121,53 @@ test("interactive explainer runs sandboxed without errors", async ({ page }) => 
   await expect(page.locator("iframe")).toHaveAttribute("sandbox", "allow-scripts");
   await expect(page.getByText("יש שגיאה בהמחשה")).toHaveCount(0);
 });
+
+test("a wrong answer goes to the mistakes notebook and comes back in the daily session", async ({ page }) => {
+  await onboard(page);
+  await page.getByRole("button", { name: "קורס לדוגמה: הסתברות" }).click();
+  await tab(page, /כלים/).click();
+  await page.getByTestId("tool-quiz").click();
+  await page.getByRole("button", { name: /יצירה/ }).click();
+  const q = page.getByTestId("quiz-question").first();
+  await q.getByRole("radio").nth(3).click(); // the demo quiz's first answer is option 1
+  await q.getByRole("button", { name: "בדיקה" }).click();
+
+  await tab(page, /מחברת טעויות/).click();
+  const card = page.getByTestId("mistake-card").first();
+  await expect(card).toBeVisible();
+  await expect(card).toContainText("למה זה כנראה קרה"); // the diagnosis arrives in the background
+  await expect(card).toContainText("P(A|B)");
+
+  await card.getByRole("button", { name: "תרגול עכשיו" }).click();
+  await expect(page.getByTestId("session-start")).toContainText("טעויות לתיקון");
+  await page.getByRole("button", { name: /התחלת הסשן/ }).click();
+  await expect(page.getByTestId("session-question").first()).toContainText("הזדמנות שנייה");
+  for (let i = 0; i < 20 && !(await page.getByTestId("session-done").count()); i++) {
+    const r = page.getByTestId("session-question").getByRole("radio");
+    if (await r.count()) await r.first().click();
+    else if (await page.getByLabel("תשובה").count()) await page.getByLabel("תשובה").fill("תשובה");
+    else {
+      await page.getByRole("button", { name: "הצגת התשובה" }).click();
+      await page.getByRole("button", { name: /^טוב/ }).click();
+      continue;
+    }
+    await page.getByRole("button", { name: "בדיקה" }).click();
+    await page.getByRole("button", { name: "המשך" }).click();
+  }
+  await expect(page.getByTestId("session-done")).toContainText("ימים ברצף");
+});
+
+test("check my solution finds the first mistake and reveals hints one at a time", async ({ page }) => {
+  await onboard(page);
+  await page.getByRole("button", { name: "קורס לדוגמה: הסתברות" }).click();
+  await tab(page, /כלים/).click();
+  await page.getByTestId("tool-check-solution").click();
+  await page.getByLabel(/או הקלידו את הפתרון/).fill("C(5,2)*(1/2)^2 = 10/4 = 2.4");
+  await page.getByRole("button", { name: /בדיקת הפתרון/ }).click();
+  await expect(page.getByTestId("solution-check")).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByTestId("solution-step").nth(1)).toContainText("כאן הטעות הראשונה");
+  await page.getByRole("button", { name: "רמז ראשון" }).click();
+  await expect(page.getByTestId("solution-check")).toContainText("נוסחת ההסתברות הבינומית");
+  await tab(page, /מחברת טעויות/).click();
+  await expect(page.getByTestId("mistake-card").first()).toContainText("בדיקת פתרון");
+});
