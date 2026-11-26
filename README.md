@@ -21,7 +21,7 @@ Use it with Claude, with a free open-source model running on your own machine, o
 - A mistakes notebook that brings every mistake back until it is fixed
 - Mastery tracking per concept (Bayesian Knowledge Tracing)
 - Spaced-repetition flashcards (FSRS)
-- A private tutor that asks before it tells, and cites the page or slide
+- A private tutor that asks before it tells, cites the page or slide, and keeps your past conversations
 - Step-by-step checking of your own solutions, with algebra verified by SymPy
 - New exams in the style of past exams, graded by rubric
 - Interactive simulations, plots, and 3D scenes

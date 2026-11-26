@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { Thinking } from "../ui/LongTask.tsx";
-import { MessagesSquare, SquarePen } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ArrowUp, Check, Copy, GraduationCap, History, SquarePen, Trash2, User } from "lucide-react";
 import { extractInlineCitations, type ChatTurn } from "@tutorai/sdk";
+import type { ChatSummary } from "@tutorai/core";
+import { getTool } from "@tutorai/plugins";
 import { useEngine } from "../engine.ts";
-import { Alert, Button, Card, Spinner, errorMessage, inputClass } from "../ui/components.tsx";
+import { Alert, Modal, errorMessage } from "../ui/components.tsx";
 import { Markdown } from "../ui/Markdown.tsx";
 import { CitationChips } from "../ui/Citations.tsx";
-import { getTool } from "@tutorai/plugins";
+import { Thinking } from "../ui/LongTask.tsx";
+import { Select } from "../ui/Select.tsx";
 import { t, toolText } from "../i18n.tsx";
 
 const modeInput = () => getTool("tutor").manifest.inputs.find((i) => i.name === "mode");
@@ -17,23 +19,45 @@ const starters = () => [
   t("לא הבנתי את השיעור האחרון", "I didn't understand the last lesson"),
 ];
 
+/**
+ * The private tutor: a conversation in one reading column (no bubbles), with the course's past
+ * conversations beside it. A new conversation is saved only once it has a first exchange.
+ */
 export function Tutor({ courseId }: { courseId: number }) {
   const engine = useEngine();
-  const chat = engine.store.chat(courseId);
-  const [messages, setMessages] = useState<ChatTurn[]>(chat.messages);
+  const [chatId, setChatId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
-  const tutorManifest = getTool("tutor").manifest;
   const modes = modeInput()?.options ?? [];
   const [mode, setMode] = useState<string>(() => String(modeInput()?.default ?? modes[0] ?? ""));
   const [streaming, setStreaming] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const chats = engine.store.chats(courseId);
   const bottom = useRef<HTMLDivElement>(null);
+  const busy = streaming !== null;
+
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (messages.length) bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, streaming]);
 
+  const open = (id: number | null) => {
+    if (busy) return;
+    setError(null);
+    setHistoryOpen(false);
+    setChatId(id);
+    setMessages(id === null ? [] : (engine.store.chatById(id)?.messages ?? []));
+    window.scrollTo({ top: 0 });
+  };
+
+  const remove = (c: ChatSummary) => {
+    if (!confirm(t(`למחוק את השיחה "${c.title}"?`, `Delete the conversation "${c.title}"?`))) return;
+    engine.store.deleteChat(c.id);
+    if (c.id === chatId) open(null);
+  };
+
   const send = async (text: string) => {
-    if (!text.trim() || streaming !== null) return;
+    if (!text.trim() || busy) return;
     setError(null);
     setInput("");
     const history = messages.slice(-20);
@@ -44,7 +68,8 @@ export function Tutor({ courseId }: { courseId: number }) {
       const reply = await engine.chat(courseId, text, history, mode, (d) => setStreaming((s) => (s ?? "") + d));
       const done = [...next, { role: "assistant" as const, content: reply.text }];
       setMessages(done);
-      engine.store.saveChat(chat.id, done);
+      if (chatId === null) setChatId(engine.store.createChat(courseId, done));
+      else engine.store.saveChat(chatId, done);
     } catch (e) {
       setError(errorMessage(e));
       setMessages(messages);
@@ -73,92 +98,307 @@ export function Tutor({ courseId }: { courseId: number }) {
   }, []);
 
   const hasMaterial = engine.store.sources(courseId).some((s) => s.status === "ready");
+  const empty = messages.length === 0 && !busy;
+  const composer = (
+    <Composer
+      value={input}
+      onChange={setInput}
+      onSend={() => void send(input)}
+      busy={busy}
+      autoFocus={empty}
+      mode={mode}
+      onMode={setMode}
+      modes={modes}
+    />
+  );
+  const historyList = <ChatHistory chats={chats} current={chatId} disabled={busy} onOpen={open} onDelete={remove} />;
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-slate-600">{t("מצב:", "Mode:")}</span>
-        {modes.map((m) => (
-          <button key={m} onClick={() => setMode(m)} className={`rounded-full px-3 py-1 text-sm ${mode === m ? "bg-brand-600 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>
-            {toolText(tutorManifest).option("mode", m)}
+    <div className="flex gap-8">
+      <aside className="sticky top-4 hidden max-h-[calc(100vh-6rem)] w-60 shrink-0 self-start overflow-y-auto lg:block" aria-label={t("שיחות קודמות", "Past conversations")}>
+        {historyList}
+      </aside>
+
+      <div className="mx-auto flex min-h-[calc(100vh-14rem)] w-full max-w-[760px] min-w-0 flex-col">
+        <div className="mb-2 flex items-center gap-1 lg:hidden">
+          <button type="button" onClick={() => setHistoryOpen(true)} className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[13px] text-ink-2 hover:bg-hover">
+            <History size={15} /> {t("שיחות קודמות", "Past conversations")}
           </button>
-        ))}
-        <Button
-          size="sm"
-          variant="ghost"
-          className="ms-auto"
-          onClick={() => {
-            engine.store.newChat(courseId);
-            setMessages([]);
-          }}
-        >
-          <SquarePen size={14} /> {t("שיחה חדשה", "New chat")}
-        </Button>
-      </div>
+          {!empty && (
+            <button type="button" onClick={() => open(null)} disabled={busy} className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[13px] text-ink-2 hover:bg-hover disabled:opacity-40">
+              <SquarePen size={15} /> {t("שיחה חדשה", "New chat")}
+            </button>
+          )}
+        </div>
+        <Modal open={historyOpen} onClose={() => setHistoryOpen(false)} title={t("שיחות קודמות", "Past conversations")}>
+          {historyList}
+        </Modal>
 
-      {!hasMaterial && <Alert kind="info">{t("המורה הפרטי עונה מתוך החומרים שלכם. העלו קבצים כדי לקבל תשובות עם ציטוטים.", "The tutor answers from your materials. Upload files to get answers with citations.")}</Alert>}
-
-      <div className="space-y-3" aria-live="polite">
-        {messages.length === 0 && streaming === null && (
-          <Card className="p-6 text-center">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl tile-grad-1 text-ink/80"><MessagesSquare size={26} strokeWidth={1.7} /></div>
-            <p className="mt-2 font-semibold">{t("על מה נלמד היום?", "What shall we learn today?")}</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
+        {empty ? (
+          <div className="flex flex-1 flex-col justify-center py-10">
+            <h2 className="text-center text-[26px] font-semibold tracking-tight">{t("על מה נלמד היום?", "What shall we learn today?")}</h2>
+            <p className="mt-2 mb-6 text-center text-sm text-muted">
+              {t("המורה הפרטי עונה מתוך החומרים של הקורס, עם הפניה לעמוד או לשקף.", "The tutor answers from your course materials, citing the page or slide.")}
+            </p>
+            {!hasMaterial && (
+              <div className="mb-4">
+                <Alert kind="info">{t("עוד אין חומר מעובד בקורס. העלו קבצים כדי לקבל תשובות עם ציטוטים.", "No processed material yet. Upload files to get answers with citations.")}</Alert>
+              </div>
+            )}
+            {error && (
+              <div className="mb-4">
+                <Alert kind="error">{error}</Alert>
+              </div>
+            )}
+            {composer}
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
               {starters().map((s) => (
-                <button key={s} onClick={() => send(s)} className="rounded-full bg-brand-50 px-3 py-1.5 text-sm text-brand-700 hover:bg-brand-100">
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => send(s)}
+                  className="cursor-pointer rounded-xl border border-black/[0.08] px-4 py-3 text-start text-[13.5px] text-ink-2 transition hover:border-black/20 hover:bg-hover"
+                >
                   {s}
                 </button>
               ))}
             </div>
-          </Card>
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 divide-y divide-black/[0.05]" aria-live="polite">
+              {messages.map((m, i) => (
+                <Message key={i} turn={m} />
+              ))}
+              {busy && (streaming ? <Message turn={{ role: "assistant", content: streaming }} streaming /> : <Message thinking turn={{ role: "assistant", content: "" }} />)}
+            </div>
+            <div ref={bottom} />
+            <div className="sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent pt-6 pb-3">
+              {error && (
+                <div className="mb-3">
+                  <Alert kind="error">{error}</Alert>
+                </div>
+              )}
+              {composer}
+              <p className="mt-2 text-center text-[11.5px] text-muted">
+                {t("התשובות מבוססות על חומרי הקורס ועלולות לטעות. כדאי לבדוק את המקורות.", "Answers are based on your course materials and can be wrong. Check the cited sources.")}
+              </p>
+            </div>
+          </>
         )}
-        {messages.map((m, i) => (
-          <Bubble key={i} turn={m} />
-        ))}
-        {streaming !== null && (streaming ? <Bubble turn={{ role: "assistant", content: streaming }} /> : <TutorThinking />)}
-        <div ref={bottom} />
       </div>
-
-      {error && <Alert kind="error">{error}</Alert>}
-
-      <form
-        className="sticky bottom-3 flex gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void send(input);
-        }}
-      >
-        <textarea
-          rows={1}
-          className={`${inputClass} resize-none border-0 focus:ring-0`}
-          placeholder={t("שאלו כל דבר על החומר…", "Ask anything about the material…")}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void send(input);
-            }
-          }}
-          aria-label={t("הודעה למורה הפרטי", "Message to the tutor")}
-        />
-        <Button type="submit" disabled={!input.trim() || streaming !== null}>
-          {t("שליחה", "Send")}
-        </Button>
-      </form>
     </div>
   );
 }
 
-function Bubble({ turn }: { turn: ChatTurn }) {
+/* ------------------------------------------------------------------------------------------ */
+
+function Message({ turn, streaming, thinking }: { turn: ChatTurn; streaming?: boolean; thinking?: boolean }) {
   const mine = turn.role === "user";
+  const [copied, setCopied] = useState(false);
   return (
-    <div className={`flex ${mine ? "justify-start" : "justify-end"}`}>
-      <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${mine ? "bg-brand-600 text-white" : "border border-slate-200 bg-white"}`} data-testid={mine ? "msg-user" : "msg-assistant"}>
-        {mine ? <p className="whitespace-pre-wrap" dir="auto">{turn.content}</p> : <Markdown text={turn.content} />}
-        {!mine && <CitationChips ids={extractInlineCitations(turn.content)} />}
+    <article className="group py-6 first:pt-2" data-testid={mine ? "msg-user" : "msg-assistant"}>
+      <header className="mb-2 flex items-center gap-2.5 text-[13px] font-semibold text-ink">
+        {mine ? (
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-black/[0.06] text-ink-2">
+            <User size={15} />
+          </span>
+        ) : (
+          <span className="tile-grad-1 grid h-7 w-7 place-items-center rounded-full text-ink/80">
+            <GraduationCap size={15} />
+          </span>
+        )}
+        {mine ? t("אתם", "You") : t("המורה הפרטי", "Tutor")}
+      </header>
+      <div className="ps-[38px] text-[15px] leading-7">
+        {thinking ? (
+          <TutorThinking />
+        ) : mine ? (
+          <p className="whitespace-pre-wrap text-ink" dir="auto">
+            {turn.content}
+          </p>
+        ) : (
+          <>
+            <Markdown text={turn.content} />
+            {!streaming && <CitationChips ids={extractInlineCitations(turn.content)} />}
+            {!streaming && (
+              <div className="mt-2 flex opacity-0 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void navigator.clipboard?.writeText(turn.content);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  }}
+                  className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2 text-xs text-muted hover:bg-hover hover:text-ink"
+                >
+                  {copied ? <Check size={13} /> : <Copy size={13} />} {copied ? t("הועתק", "Copied") : t("העתקה", "Copy")}
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
-    </div>
+    </article>
+  );
+}
+
+function Composer({
+  value,
+  onChange,
+  onSend,
+  busy,
+  autoFocus,
+  mode,
+  onMode,
+  modes,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSend: () => void;
+  busy: boolean;
+  autoFocus?: boolean;
+  mode: string;
+  onMode: (m: string) => void;
+  modes: string[];
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const manifest = getTool("tutor").manifest;
+  // Grow with the text (up to a limit), and re-measure when the width changes.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      el.style.height = "0px";
+      el.style.height = `${Math.min(Math.max(el.scrollHeight, 40), 220)}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [value]);
+  useEffect(() => {
+    if (autoFocus) ref.current?.focus();
+  }, [autoFocus]);
+  const canSend = value.trim().length > 0 && !busy;
+  return (
+    <form
+      className="rounded-[26px] border border-black/10 bg-white p-2 shadow-[0_2px_14px_rgba(0,0,0,0.06)] transition focus-within:border-black/25"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (canSend) onSend();
+      }}
+    >
+      <textarea
+        ref={ref}
+        rows={1}
+        dir="auto"
+        className="block max-h-[220px] w-full resize-none bg-transparent px-3 py-2 text-[15px] leading-6 placeholder:text-slate-400"
+        style={{ outline: "none" }}
+        placeholder={t("שאלו כל דבר על החומר…", "Ask anything about the material…")}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            if (canSend) onSend();
+          }
+        }}
+        aria-label={t("הודעה למורה הפרטי", "Message to the tutor")}
+      />
+      <div className="flex items-center justify-between gap-2 ps-1">
+        <div className="w-48">
+          <Select
+            size="sm"
+            aria-label={t("מצב המורה", "Tutor mode")}
+            value={mode}
+            onChange={onMode}
+            options={modes.map((m) => ({ value: m, label: toolText(manifest).option("mode", m) }))}
+            className="border-transparent bg-transparent hover:bg-hover"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={!canSend}
+          aria-label={t("שליחה", "Send")}
+          className="grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-ink text-white transition hover:bg-black/80 disabled:cursor-not-allowed disabled:bg-black/10 disabled:text-black/30"
+        >
+          <ArrowUp size={18} />
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function ChatHistory({
+  chats,
+  current,
+  disabled,
+  onOpen,
+  onDelete,
+}: {
+  chats: ChatSummary[];
+  current: number | null;
+  disabled: boolean;
+  onOpen: (id: number | null) => void;
+  onDelete: (c: ChatSummary) => void;
+}) {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const groups: { label: string; items: ChatSummary[] }[] = [
+    { label: t("היום", "Today"), items: [] },
+    { label: t("7 הימים האחרונים", "Previous 7 days"), items: [] },
+    { label: t("קודם לכן", "Older"), items: [] },
+  ];
+  for (const c of chats) {
+    const at = Date.parse(c.updatedAt);
+    groups[at >= startOfToday ? 0 : at >= startOfToday - 7 * 86_400_000 ? 1 : 2].items.push(c);
+  }
+  return (
+    <nav className="space-y-4">
+      <button
+        type="button"
+        onClick={() => onOpen(null)}
+        disabled={disabled}
+        className={`flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-[13.5px] font-medium transition hover:bg-hover disabled:cursor-not-allowed disabled:opacity-40 ${current === null ? "bg-hover" : ""}`}
+      >
+        <SquarePen size={15} /> {t("שיחה חדשה", "New chat")}
+      </button>
+      {chats.length === 0 && <p className="px-2.5 text-xs leading-5 text-muted">{t("השיחות שלכם יישמרו כאן.", "Your conversations will be saved here.")}</p>}
+      {groups
+        .filter((g) => g.items.length)
+        .map((g) => (
+          <div key={g.label}>
+            <div className="mb-1 px-2.5 text-[11.5px] font-medium text-muted">{g.label}</div>
+            <ul>
+              {g.items.map((c) => (
+                <li key={c.id} className="group relative">
+                  <button
+                    type="button"
+                    onClick={() => onOpen(c.id)}
+                    disabled={disabled}
+                    aria-current={c.id === current ? "true" : undefined}
+                    title={c.title}
+                    className={`block w-full cursor-pointer truncate rounded-lg py-2 ps-2.5 pe-9 text-start text-[13.5px] text-ink-2 transition hover:bg-hover disabled:cursor-not-allowed ${
+                      c.id === current ? "bg-hover font-medium text-ink" : ""
+                    }`}
+                  >
+                    {c.title || t("שיחה", "Conversation")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(c)}
+                    aria-label={t(`מחיקת השיחה ${c.title}`, `Delete conversation ${c.title}`)}
+                    className="absolute end-1 top-1/2 grid h-7 w-7 -translate-y-1/2 cursor-pointer place-items-center rounded-md text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+    </nav>
   );
 }
 
@@ -179,9 +419,5 @@ function TutorThinking() {
         : s < 15
           ? t("מנסח תשובה עם ציטוטים", "Writing an answer with citations")
           : t("עוד רגע, התשובה כמעט מוכנה", "One moment, the answer is almost ready");
-  return (
-    <div className="rounded-2xl bg-[#f7f7f7] px-4 py-3">
-      <Thinking label={label} />
-    </div>
-  );
+  return <Thinking label={label} />;
 }

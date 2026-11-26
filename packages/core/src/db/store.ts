@@ -37,6 +37,14 @@ export interface Section {
   /** Seconds into a recording (lecture audio/video); null for documents. */
   t_start: number | null;
 }
+export interface ChatSummary {
+  id: number;
+  /** The first question, trimmed. */
+  title: string;
+  /** ISO timestamp of the last message. */
+  updatedAt: string;
+  count: number;
+}
 export interface Concept {
   id: number;
   course_id: number;
@@ -395,6 +403,30 @@ export class Store {
   }
   newChat(courseId: number) {
     this.run("INSERT INTO chats(course_id) VALUES(?)", [courseId]);
+  }
+  /** Past tutor conversations of a course, most recent first. Empty ones are skipped. */
+  chats(courseId: number): ChatSummary[] {
+    return this.all<{ id: number; messages: string; updated_at: string }>(
+      "SELECT id, messages, updated_at FROM chats WHERE course_id=? ORDER BY updated_at DESC, id DESC",
+      [courseId],
+    )
+      .map((r) => {
+        const messages = JSON.parse(r.messages) as { role: string; content: string }[];
+        const first = messages.find((m) => m.role === "user")?.content ?? "";
+        return { id: r.id, title: first.replace(/\s+/g, " ").trim().slice(0, 80), updatedAt: r.updated_at.replace(" ", "T") + "Z", count: messages.length };
+      })
+      .filter((c) => c.count > 0);
+  }
+  chatById(id: number): { id: number; courseId: number; messages: { role: "user" | "assistant"; content: string }[] } | undefined {
+    const r = this.get<{ id: number; course_id: number; messages: string }>("SELECT id, course_id, messages FROM chats WHERE id=?", [id]);
+    return r ? { id: r.id, courseId: r.course_id, messages: JSON.parse(r.messages) } : undefined;
+  }
+  /** Starts a conversation with its first messages; returns the new id. */
+  createChat(courseId: number, messages: unknown[]): number {
+    return this.run("INSERT INTO chats(course_id, messages) VALUES(?, ?)", [courseId, JSON.stringify(messages)]);
+  }
+  deleteChat(id: number) {
+    this.run("DELETE FROM chats WHERE id=?", [id]);
   }
 
   /* -------- mistakes notebook -------- */
