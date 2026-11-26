@@ -32,7 +32,16 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT INT TERM
 
 say "Downloading TutorAI ($OS, $ARCH)…"
-fetch() { curl -fsSL --retry 3 -o "$2" "$1" || fail "could not download $1"; }
+fetch() {
+  case "$1" in file://*) curl -fsSL -o "$2" "$1" || fail "could not read $1"; return ;; esac # local test releases
+  code="$(curl -sSL --retry 3 -w '%{http_code}' -o "$2" "$1" || echo 000)"
+  case "$code" in
+    200) ;;
+    404) fail "no TutorAI release for $ASSET was found yet. Use the browser version for now: https://yairbarak22.github.io/TutorAI/" ;;
+    000) fail "couldn't reach GitHub. Check your internet connection and try again." ;;
+    *) fail "download failed (HTTP $code): $1" ;;
+  esac
+}
 fetch "$BASE/$ASSET" "$TMP/tutorai"
 fetch "$BASE/SHA256SUMS" "$TMP/SHA256SUMS"
 
