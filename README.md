@@ -4,7 +4,7 @@
 
 **👉 [Open the app](https://yairbarak22.github.io/RuecAI_Tutor/)** · Hebrew (RTL) and English · Apache-2.0
 
-Upload a course's materials (PDFs, slides, Word documents, sample exams). RuecAI builds a map of the course's concepts, tracks what you already know, and gives you tools that help you **learn** instead of handing you answers.
+Upload a course's materials (PDF, PowerPoint, Word, text or Markdown, and sample exams). RuecAI builds a map of the course's concepts, tracks what you already know, and gives you tools that help you **learn** instead of handing you answers.
 
 ## What a student gets
 
@@ -15,7 +15,7 @@ Upload a course's materials (PDFs, slides, Word documents, sample exams). RuecAI
 | ▶️ **Today's session** | One button, about 20 minutes: flashcards that are due, a second try at past mistakes, questions on your weakest concepts, and one older concept mixed in |
 | 📓 **Mistakes notebook** | Every wrong answer is diagnosed ("the misconception behind it") and comes back later as a *new* question on the same idea, until you get it right twice on different days |
 | 🃏 **Review** | Spaced-repetition flashcards (FSRS), scheduled just before you would forget them |
-| 📈 **Progress and concept map** | The course's concepts laid out as a learning path from foundations to advanced, colored by how well you know each one |
+| 📈 **Progress and concept map** | The course's concepts laid out as a learning path from foundations to advanced, colored by how well you know each one, with a filter for what still needs work |
 
 **Tools** (each one is a plugin; see [`plugins/`](plugins))
 
@@ -49,7 +49,7 @@ A general chatbot is a brilliant tutor with no memory of you. RuecAI is the syst
 
 ## How it works
 
-- **Local-first.** Everything runs in your browser. Your data lives in a folder you choose (`ruecai.db` plus your files) in Chrome/Edge, or in browser storage in Safari/Firefox. There is no RuecAI server and no telemetry.
+- **Local-first.** Everything runs in your browser. Your data lives in a folder you choose (`ruecai.db` plus your files) in Chrome/Edge, or in browser storage in Safari/Firefox, with backup and restore from Settings. There is no RuecAI server and no telemetry. You can also install the site as an app (PWA).
 - **AI, your choice.** Anthropic's Claude, called directly from the browser with **your own API key** (stored only in your browser); or a **free open-source model running on your own computer** (Ollama or LM Studio); or a hybrid of the two. No key yet? Try **demo mode** with a sample course.
 - **Grounded.** Material is split into sections with page/slide anchors. Tools receive the relevant sections, and every output is validated against a schema and checked for valid citations.
 - **Bilingual.** The interface is in Hebrew (RTL) or English (LTR); AI-generated content follows your choice.
@@ -64,6 +64,8 @@ Students from every faculty can contribute, including non-programmers: tool idea
 - [Contributing guide](CONTRIBUTING.md)
 - [Write a new tool in 30 minutes](docs/plugins.md)
 - [Suggest a tool](https://github.com/yairbarak22/RuecAI_Tutor/issues/new?template=tool-idea.yml) · [Good first issues](https://github.com/yairbarak22/RuecAI_Tutor/issues?q=is%3Aopen+label%3A%22good+first+issue%22)
+
+Requires [Node.js 22](https://nodejs.org) and git.
 
 ```bash
 git clone https://github.com/yairbarak22/RuecAI_Tutor.git && cd RuecAI_Tutor
