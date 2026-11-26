@@ -101,7 +101,10 @@ jobs:
           retention-days: 7
       - uses: actions/upload-artifact@v4
         if: failure()
-        with: { name: traces-${{ matrix.asset }}, path: test-results, retention-days: 7 }
+        with:
+          name: traces-${{ matrix.asset }}
+          path: test-results
+          retention-days: 7
 
   release:
     name: Publish release
