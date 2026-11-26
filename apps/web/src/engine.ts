@@ -5,6 +5,7 @@ import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { useSyncExternalStore } from "react";
 import {
   AnthropicLLM,
+  LLMError,
   DEFAULT_MODELS,
   LocalLLM,
   TieredLLM,
@@ -38,7 +39,9 @@ import { getLanguage, onLanguageChange, t, type ArtifactPayload, type ChatTurn, 
 import { sympyVerifier } from "./platform/sympy.ts";
 import { demoCourse, demoFixtures, getTool, tools } from "@tutorai/plugins";
 import { DB_FILE, LEGACY_DB_FILE, Persistence, exportBackup, type DataRoot } from "./platform/storage.ts";
-import { secrets } from "./platform/secrets.ts";
+import { isPlanProvider, secrets } from "./platform/secrets.ts";
+import { localApi, localServer } from "./platform/local-server.ts";
+import { ServerLLM } from "./platform/server-llm.ts";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -56,7 +59,10 @@ export class Engine {
   version = 0;
   llm!: LLMApi;
   demo = false;
-  provider: "claude" | "local" | "hybrid" | "demo" = "demo";
+  provider: "claude" | "local" | "hybrid" | "claude-code" | "chatgpt" | "demo" = "demo";
+  /** Sources paused by a plan's usage limit → when the limit resets (ISO), if known. */
+  private waiting = new Map<number, string | undefined>();
+  private resumeTimer: ReturnType<typeof setTimeout> | null = null;
   ingestStatus = new Map<number, IngestEvent>();
   private queue: number[] = [];
   private ingesting = false;
@@ -105,7 +111,7 @@ export class Engine {
     onLanguageChange(() => engine.demo && engine.configureLLM());
     // Resume ingestion interrupted by a closed tab.
     for (const c of store.courses())
-      for (const s of store.sources(c.id)) if (["pending", "parsing", "analyzing"].includes(s.status)) engine.enqueue(s.id);
+      for (const s of store.sources(c.id)) if (["pending", "parsing", "analyzing", "waiting"].includes(s.status)) engine.enqueue(s.id);
     return engine;
   }
 
@@ -126,22 +132,34 @@ export class Engine {
     const local = secrets.getLocal();
     const usage = (u: UsageEvent) => this.store.addUsage(u);
     const claude = key ? new AnthropicLLM(key, secrets.getModels() ?? DEFAULT_MODELS, usage) : null;
-    const loc = local && (local.fast || local.smart) ? new LocalLLM(local, usage) : null;
+    // In TutorAI Local, local model servers are reached through the server (no CORS setup needed).
+    const loc = local && (local.fast || local.smart) ? new LocalLLM(local, usage, localServer() ? localApi.proxyFetch : undefined) : null;
+    const plan = (p: "claude-code" | "chatgpt") => (localServer() ? new ServerLLM(p, usage) : null);
     let llm: LLMApi | null = null;
+    let which: Engine["provider"] = "demo";
     if (!secrets.isDemo()) {
-      if (provider === "local") llm = loc;
-      else if (provider === "hybrid") llm = loc && claude ? new TieredLLM(loc, claude) : (claude ?? loc);
-      else llm = claude;
+      if (provider === "local") [llm, which] = [loc, "local"];
+      else if (isPlanProvider(provider)) [llm, which] = [plan(provider), provider];
+      else if (provider === "hybrid") {
+        const hs = secrets.getHybridSmart();
+        const smart = hs === "claude" ? claude : plan(hs);
+        if (loc && smart) [llm, which] = [new TieredLLM(loc, smart), "hybrid"];
+        else if (smart) [llm, which] = [smart, hs];
+        else [llm, which] = [loc, "local"];
+      } else [llm, which] = [claude, "claude"];
     }
     this.demo = !llm;
-    this.provider = !llm ? "demo" : llm === loc ? "local" : llm instanceof TieredLLM ? "hybrid" : "claude";
+    this.provider = llm ? which : "demo";
     this.llm = llm ?? new MockLLM(demoFixtures(getLanguage()), { delayMs: 900 });
     this.bump();
   }
 
   /** Who is writing, for progress labels ("Claude is writing…" / "The local model is writing…"). */
   get writer(): string {
-    return this.provider === "local" ? t("המודל המקומי", "The local model") : this.provider === "hybrid" ? t("ה-AI", "The AI") : "Claude";
+    if (this.provider === "local") return t("המודל המקומי", "The local model");
+    if (this.provider === "hybrid") return t("ה-AI", "The AI");
+    if (this.provider === "chatgpt") return "ChatGPT";
+    return "Claude";
   }
 
   get tools(): LoadedTool[] {
@@ -191,7 +209,8 @@ export class Engine {
   }
 
   private async drain() {
-    if (this.ingesting) return;
+    // Paused by a plan's usage limit: wait for the scheduled resume instead of hitting it again.
+    if (this.ingesting || this.resumeTimer) return;
     this.ingesting = true;
     try {
       while (this.queue.length) {
@@ -214,13 +233,42 @@ export class Engine {
             id,
           );
         } catch (e) {
+          if (e instanceof LLMError && e.kind === "rate_limit" && this.store.source(id)?.status === "waiting") {
+            // A plan's usage limit: everything after this would hit it too. Pause the queue and
+            // resume after the reset (from the last finished batch, see ingestSource).
+            this.waiting.set(id, e.resetAt);
+            this.queue.unshift(id);
+            this.scheduleResume(e.resetAt);
+            break;
+          }
           console.warn("ingest failed", id, e);
         }
+        this.waiting.delete(id);
       }
     } finally {
       this.ingesting = false;
       this.bump();
     }
+  }
+
+  private scheduleResume(resetAt?: string) {
+    if (this.resumeTimer) clearTimeout(this.resumeTimer);
+    const at = resetAt ? Date.parse(resetAt) + 60_000 : Date.now() + 30 * 60_000;
+    // Timers are capped at ~24.8 days; a plan limit is hours at most.
+    const ms = Math.min(Math.max(at - Date.now(), 30_000), 24 * 3600_000);
+    this.resumeTimer = setTimeout(() => {
+      this.resumeTimer = null;
+      void this.drain();
+    }, ms);
+  }
+
+  /** The "resumes at HH:MM" line for a source paused by a plan limit. */
+  waitingMessage(sourceId: number): string | null {
+    if (!this.waiting.has(sourceId)) return null;
+    const at = this.waiting.get(sourceId);
+    if (!at) return t("הגעתם למגבלת השימוש של המנוי. הניתוח ימשיך אוטומטית בעוד זמן מה.", "You reached your plan's usage limit. Analysis continues automatically in a while.");
+    const hhmm = new Date(at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return t(`הגעתם למגבלת השימוש של המנוי. הניתוח ימשיך מאותה נקודה ב-${hhmm}.`, `You reached your plan's usage limit. Analysis continues from the same point at ${hhmm}.`);
   }
 
   async deleteSource(id: number) {

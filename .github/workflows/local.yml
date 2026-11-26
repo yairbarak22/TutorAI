@@ -1,0 +1,139 @@
+name: TutorAI Local
+on:
+  pull_request:
+    paths:
+      - "apps/local/**"
+      - "packages/local-api/**"
+      - "apps/web/**"
+      - "packages/core/**"
+      - "e2e-local/**"
+      - "playwright.local.config.ts"
+      - ".github/workflows/local.yml"
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: local-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test (${{ matrix.asset }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest, asset: tutorai-macos-arm64 }
+          - { os: macos-15-intel, asset: tutorai-macos-x64 }
+          - { os: ubuntu-latest, asset: tutorai-linux-x64 }
+          - { os: ubuntu-24.04-arm, asset: tutorai-linux-arm64 }
+          - { os: windows-latest, asset: tutorai-windows-x64.exe }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Server unit tests
+        run: npx vitest run apps/local
+      - name: Build the single binary
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then export TUTORAI_VERSION="${GITHUB_REF_NAME#v}"; fi
+          node apps/local/scripts/build.mjs
+      - name: Binary smoke test
+        shell: bash
+        env: { TUTORAI_NO_OPEN: "1" }
+        run: |
+          BIN="apps/local/out/${{ matrix.asset }}"
+          "$BIN" --version
+          export TUTORAI_CONFIG_DIR="$RUNNER_TEMP/tutorai-smoke"
+          "$BIN" doctor
+      - name: Browsers for E2E
+        run: npx playwright install --with-deps chromium firefox ${{ startsWith(matrix.os, 'macos') && 'webkit' || '' }}
+      - name: E2E against the binary
+        shell: bash
+        env: { CI: "1" }
+        run: |
+          export TUTORAI_BIN="$PWD/apps/local/out/${{ matrix.asset }}"
+          PROJECTS="--project=chromium --project=firefox"
+          if [[ "${{ matrix.os }}" == macos-* ]]; then PROJECTS="$PROJECTS --project=webkit"; fi
+          npx playwright test -c playwright.local.config.ts $PROJECTS
+      - name: Installer test (local release folder)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          REL="$RUNNER_TEMP/rel"; HOMEDIR="$RUNNER_TEMP/home"
+          mkdir -p "$REL" "$HOMEDIR"
+          cp "apps/local/out/${{ matrix.asset }}" "$REL/"
+          (cd "$REL" && (shasum -a 256 "${{ matrix.asset }}" 2>/dev/null || sha256sum "${{ matrix.asset }}") > SHA256SUMS)
+          HOME="$HOMEDIR" TUTORAI_RELEASE_BASE="file://$REL" TUTORAI_NO_OPEN=1 sh apps/web/public/install.sh
+          HOME="$HOMEDIR" "$HOMEDIR/.local/bin/tutorai" doctor
+          HOME="$HOMEDIR" "$HOMEDIR/.local/bin/tutorai" uninstall
+          test ! -e "$HOMEDIR/.local/bin/tutorai"
+      - name: Installer test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $Rel = Join-Path $env:RUNNER_TEMP 'rel'
+          New-Item -ItemType Directory -Force -Path $Rel | Out-Null
+          Copy-Item "apps/local/out/${{ matrix.asset }}" $Rel
+          $Hash = (Get-FileHash -Algorithm SHA256 (Join-Path $Rel '${{ matrix.asset }}')).Hash.ToLower()
+          "$Hash  ${{ matrix.asset }}" | Set-Content (Join-Path $Rel 'SHA256SUMS')
+          $env:TUTORAI_RELEASE_BASE = "file:///$($Rel -replace '\\','/')"
+          $env:TUTORAI_NO_OPEN = '1'
+          ./apps/web/public/install.ps1
+          & (Join-Path $env:LOCALAPPDATA 'TutorAI\tutorai.exe') doctor
+      - name: Launcher icons
+        if: matrix.os == 'macos-latest'
+        run: apps/local/scripts/icons.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: |
+            apps/local/out/${{ matrix.asset }}
+            apps/local/out/icon.*
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: traces-${{ matrix.asset }}
+          path: test-results
+          retention-days: 7
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - name: Collect binaries, icons and checksums
+        run: |
+          mkdir release
+          find artifacts -type f \( -name 'tutorai-*' -o -name 'icon.*' \) -exec cp {} release/ \;
+          cd release
+          sha256sum tutorai-* > SHA256SUMS
+          ls -la
+      - name: Sign SHA256SUMS (the self-updater accepts only signed releases)
+        env:
+          TUTORAI_RELEASE_SIGNING_KEY: ${{ secrets.TUTORAI_RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -z "$TUTORAI_RELEASE_SIGNING_KEY" ]; then echo "::error::Set the TUTORAI_RELEASE_SIGNING_KEY secret first (see docs/impl-local-server.md); releases must be signed."; exit 1; fi
+          node apps/local/scripts/sign.mjs release/SHA256SUMS
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --title "TutorAI $GITHUB_REF_NAME" --generate-notes

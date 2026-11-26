@@ -10,7 +10,7 @@
 
 TutorAI is an open-source study companion for university students.
 
-Upload a course's materials and it builds a map of the course's concepts, tracks what you already know, and gives you tools that help you learn instead of handing you answers. There is nothing to install and no server: it runs in your browser, and your materials stay on your computer.
+Upload a course's materials and it builds a map of the course's concepts, tracks what you already know, and gives you tools that help you learn instead of handing you answers. It runs in your browser with nothing to install and no server, and your materials stay on your computer. If you already pay for Claude or ChatGPT, a one-line install lets you use that plan instead of an API key.
 
 Use it with Claude, with a free open-source model running on your own machine, or both.
 
@@ -95,12 +95,34 @@ A general chatbot is a capable tutor with no memory of you. TutorAI is the syste
 1. Open **[the app](https://yairbarak22.github.io/TutorAI/)**. Chrome or Edge is recommended.
 2. Choose where your data lives: a folder on your computer (Chrome and Edge), or browser storage.
 3. Choose a model:
-   - **Claude:** paste an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys). It is stored only in your browser.
+   - **Your Claude or ChatGPT plan:** install TutorAI on your computer with one line ([below](#use-your-claude-or-chatgpt-plan-instead-of-an-api-key)) and connect the plan you already pay for.
+   - **Claude API key:** paste an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys). It is stored only in your browser.
    - **Local model (free):** run Ollama or LM Studio on your computer. Settings has a ready prompt you can paste into Claude Code to do the whole setup for you.
    - **Demo mode:** no key needed. Answers are prerecorded, on a sample course.
 4. Create a course and drag in your files.
 
 You can install the site as an app from the browser menu.
+
+### Use your Claude or ChatGPT plan instead of an API key
+
+Install **TutorAI Local** on your computer with one line. It opens TutorAI in your usual browser and lets you connect:
+
+- **A Claude plan (Pro / Max)** through Anthropic's official Claude Code, which you sign in to yourself. TutorAI never sees your sign-in, and usage counts against your plan. Your use of Claude Code is subject to [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance).
+- **A ChatGPT plan (Plus / Pro)** with **Continue with ChatGPT** (OpenAI's sign-in for open-source apps).
+
+macOS or Linux, in Terminal:
+
+```bash
+curl -fsSL https://yairbarak22.github.io/TutorAI/install.sh | sh
+```
+
+Windows, in PowerShell:
+
+```powershell
+irm https://yairbarak22.github.io/TutorAI/install.ps1 | iex
+```
+
+The installer downloads the program for your computer from this repository's GitHub Releases and checks its checksum. It adds a TutorAI icon and opens the app. No administrator rights are needed, and there are no security warnings to click through. After that, open TutorAI from its icon. It saves your data in `Documents/TutorAI` (in any browser), updates itself, and `tutorai uninstall` removes it (your data folder is kept).
 
 ## Ask Claude about this project
 
@@ -116,7 +138,7 @@ https://raw.githubusercontent.com/yairbarak22/TutorAI/main/AGENTS.md
 
 Then explain, briefly and in plain language:
 1. What the app does, and how it differs from studying with a regular chatbot.
-2. How to start using it (https://yairbarak22.github.io/TutorAI/), including the free options.
+2. How to start using it (https://yairbarak22.github.io/TutorAI/), including the free options and using a Claude or ChatGPT plan through TutorAI Local.
 3. How I can contribute, even if I can't code.
 
 Finally, ask me what I study and what interests me, and suggest one specific way I could help.
@@ -136,6 +158,8 @@ Claude needs web access to read the links (Claude Code, or claude.ai with web se
 See [SECURITY.md](SECURITY.md) for the security model.
 
 ## Development
+
+TutorAI Local (the program from the install line above) lives in `apps/local`. To run it from source, use `npm run local:dev`. To build the single binary, use `npm run local:build`. Its end-to-end tests run with `npm run e2e:local`. Design: [docs/rfc-local-server.md](docs/rfc-local-server.md).
 
 Requires [Node.js 22](https://nodejs.org) and git.
 

@@ -13,6 +13,7 @@ TutorAI is a local-first study app: a static TypeScript web app with **no backen
 - **A new study tool → a new folder in `plugins/<pack>/<tool-id>/`.** Prefer a declarative tool (`plugin.yaml` + `prompt.md`); use a code tool (`index.ts`) only for multi-step logic. Guide: [docs/plugins.md](docs/plugins.md).
 - Every tool needs `evals/eval.yaml` and `evals/golden.json`. No tool is merged without passing evals.
 - Core or SDK changes (`packages/`) start with an RFC issue. Keep the core small.
+- **TutorAI Local** (the optional program that serves the app on `127.0.0.1` and connects a Claude or ChatGPT plan) is `apps/local`, with its HTTP contract in `packages/local-api`. Read [docs/rfc-local-server.md](docs/rfc-local-server.md) first. It must keep the localhost security rules in SECURITY.md, must never read Claude credentials, and must never put ChatGPT tokens in the browser. "No backend" means no TutorAI server on the internet; this server runs only on the student's computer.
 
 ## Commands
 

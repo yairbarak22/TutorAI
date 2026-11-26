@@ -7,7 +7,8 @@ Every step ends with something a real student uses through the link.
 - Choose one course and get the lecturer's permission to use its materials
 - Recruit 10–20 students and run a short onboarding session
 - Measure: return rate to today's session without reminders, mastery change per concept, cost per active student (Claude vs. local model), and qualitative feedback
-- Decide how students get model access for the pilot: personal keys, local models, or a university-funded key
+- Decide how students get model access for the pilot: their own Claude or ChatGPT plans (TutorAI Local), personal keys, local models, or a university-funded key
+- TutorAI Local before the pilot: create the release signing key and publish `v0.1.0`; check it with real Claude Pro and ChatGPT Plus accounts and on clean macOS and Windows machines (see [impl-local-server.md](impl-local-server.md#status))
 - Agree on an academic-integrity policy with the university
 
 ## Then
@@ -21,4 +22,4 @@ Every step ends with something a real student uses through the link.
 
 ## Only if the pilot shows a need
 
-- A desktop app (Electron, same code) for long background work and fully local transcription
+- Long background work and fully local transcription inside TutorAI Local (it already runs on the student's computer; an Electron app is no longer needed for this)

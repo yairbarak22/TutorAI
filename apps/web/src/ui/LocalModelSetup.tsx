@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, Copy, PlugZap, Sparkles } from "lucide-react";
 import { DEFAULT_LOCAL, listLocalModels, type LocalConfig, type LocalFlavor } from "@tutorai/core";
+import { localApi, localServer } from "../platform/local-server.ts";
 import { secrets } from "../platform/secrets.ts";
 import { Alert, Button, Field, Spinner, errorMessage, inputClass } from "./components.tsx";
 import { Select } from "./Select.tsx";
@@ -24,7 +25,9 @@ export function LocalModelSetup({ onSaved, saveLabel }: { onSaved: (cfg: LocalCo
     setBusy(true);
     setError(null);
     try {
-      const list = await listLocalModels(cfg.baseUrl, cfg.flavor);
+      // TutorAI Local reaches the model server through itself (no CORS setup needed).
+      if (localServer()) await localApi.saveSettings({ localModelBase: cfg.baseUrl.replace(/\/+$/, "") });
+      const list = await listLocalModels(cfg.baseUrl, cfg.flavor, localServer() ? localApi.proxyFetch : undefined);
       setModels(list);
       if (!list.length) setError(t("השרת פועל אבל אין בו מודלים. התקינו מודל (שלב 2 בהוראות).", "The server is running but has no models. Install one (step 2 below)."));
       const pick = (m: string) => (list.includes(m) ? m : (list[0] ?? ""));
@@ -211,7 +214,7 @@ function SetupGuide({ flavor }: { flavor: LocalFlavor }) {
             </ul>
             <p className="mt-1 text-xs text-muted">{t("Gemma 3 מבין גם תמונות. העברית של מודלים מקומיים טובה פחות מזו של Claude.", "Gemma 3 also reads images. Local models are weaker in Hebrew than Claude.")}</p>
           </li>
-          <li>
+          {!localServer() && <li>
             {t("אשרו לאתר הזה לדבר עם Ollama, ואז סגרו ופתחו מחדש את Ollama:", "Allow this site to talk to Ollama, then quit and reopen Ollama:")}
             <ul className="mt-1 space-y-1">
               <li className="flex flex-wrap items-center gap-1.5">
@@ -224,7 +227,7 @@ function SetupGuide({ flavor }: { flavor: LocalFlavor }) {
                 <span>Linux</span> <Cmd>{`OLLAMA_ORIGINS="${origin}" ollama serve`}</Cmd>
               </li>
             </ul>
-          </li>
+          </li>}
           <li>{t("לחצו על \"בדיקת חיבור\" למעלה.", "Click \"Test connection\" above.")}</li>
         </ol>
       ) : (
@@ -236,7 +239,11 @@ function SetupGuide({ flavor }: { flavor: LocalFlavor }) {
             </a>{" "}
             {t("והורידו מודל (למשל Qwen3 8B או Gemma 3 12B).", "and download a model (e.g. Qwen3 8B or Gemma 3 12B).")}
           </li>
-          <li>{t("בלשונית Developer: הפעילו את השרת (Start server) ואת האפשרות Enable CORS.", "In the Developer tab: start the server and turn on Enable CORS.")}</li>
+          <li>
+            {localServer()
+              ? t("בלשונית Developer: הפעילו את השרת (Start server).", "In the Developer tab: start the server.")
+              : t("בלשונית Developer: הפעילו את השרת (Start server) ואת האפשרות Enable CORS.", "In the Developer tab: start the server and turn on Enable CORS.")}
+          </li>
           <li>{t("לחצו על \"בדיקת חיבור\" למעלה.", "Click \"Test connection\" above.")}</li>
         </ol>
       )}

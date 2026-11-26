@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChartLine, ClipboardCheck, Cpu, FolderOpen, Globe, GraduationCap, Lock, Network, Sparkles, Upload } from "lucide-react";
-import { folderSupported, pickFolder, useBrowserStorage, type DataRoot } from "../platform/storage.ts";
+import { folderSupported, importBackup, pickFolder, serverRoot, useBrowserStorage, type DataRoot } from "../platform/storage.ts";
 import { secrets } from "../platform/secrets.ts";
+import { localServer } from "../platform/local-server.ts";
+import { ChatGptPlanCard, ClaudePlanCard } from "../ui/ConnectionCards.tsx";
+import { InstallLocal } from "../ui/InstallLocal.tsx";
 import { Alert, Badge, Button, IconTile, errorMessage } from "../ui/components.tsx";
 import { switchLanguage, t, useLanguage } from "../i18n.tsx";
 import { LocalModelSetup } from "../ui/LocalModelSetup.tsx";
@@ -15,6 +18,25 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
   const [error, setError] = useState<string | null>(null);
   const [localOpen, setLocalOpen] = useState(false);
   const canFolder = folderSupported();
+  const local = localServer();
+  const [installOpen, setInstallOpen] = useState(false);
+  const backupInput = useRef<HTMLInputElement>(null);
+
+  /** TutorAI Local: the data folder is set up by the server, so skip the storage step. */
+  const start = async () => {
+    if (!local) return setStep(2);
+    try {
+      setRoot(await serverRoot());
+      setStep(3);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  };
+
+  const usePlan = (p: "claude-code" | "chatgpt") => {
+    secrets.setProvider(p);
+    finish(false);
+  };
 
   const choose = async (kind: "folder" | "browser") => {
     setError(null);
@@ -108,7 +130,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
                 )}
               </span>
             </p>
-            <Button size="lg" className="w-full" onClick={() => setStep(2)}>
+            <Button size="lg" className="w-full" onClick={() => void start()}>
               {t("בואו נתחיל", "Let's get started")}
             </Button>
           </div>
@@ -166,10 +188,26 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
           </div>
         )}
 
-        {step === 3 && (
-          <div className="space-y-5">
+        {step === 3 && local && (
+          <div className="space-y-4">
             <div className="text-center">
-              <h2 className="text-[26px] font-semibold leading-tight tracking-tight">{t("מפתח API של Claude", "Claude API key")}</h2>
+              <h2 className="text-[26px] font-semibold leading-tight tracking-tight">{t("איך לחבר את ה-AI?", "How do you want to connect the AI?")}</h2>
+              <p className="mt-2 text-[14px] text-muted">
+                {t("הנתונים נשמרים בתיקייה", "Your data is saved in the folder")} <b dir="ltr">{root?.files.label}</b>
+              </p>
+            </div>
+            <ChatGptPlanCard onReady={() => usePlan("chatgpt")} />
+            {local.features.claudeCode && <ClaudePlanCard onReady={() => usePlan("claude-code")} />}
+            <div className="flex items-center gap-3 text-[12px] text-slate-400">
+              <span className="h-px flex-1 bg-black/[0.08]" /> {t("או", "or")} <span className="h-px flex-1 bg-black/[0.08]" />
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className={local ? "mt-4 space-y-5" : "space-y-5"}>
+            <div className="text-center">
+              <h2 className={local ? "text-[18px] font-semibold" : "text-[26px] font-semibold leading-tight tracking-tight"}>{t("מפתח API של Claude", "Claude API key")}</h2>
               <p className="mt-2 text-[14px] text-muted">
                 {t("צרו מפתח ב-", "Create a key at ")}
                 <a className="font-medium text-ink underline underline-offset-2" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">
@@ -209,6 +247,47 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
                 </div>
               )}
             </div>
+            {!local && (
+              <div className="rounded-xl border border-black/10 p-4">
+                <button type="button" className="flex w-full cursor-pointer items-center gap-2 text-start text-[14px] font-medium" aria-expanded={installOpen} onClick={() => setInstallOpen(!installOpen)}>
+                  <Sparkles size={16} /> {t("יש לי מנוי Claude או ChatGPT", "I have a Claude or ChatGPT plan")}
+                </button>
+                <p className="mt-1 text-[12px] text-muted">
+                  {t("התקינו את TutorAI על המחשב בשורה אחת, והשתמשו במנוי שלכם במקום מפתח API.", "Install TutorAI on your computer with one line and use your plan instead of an API key.")}
+                </p>
+                {installOpen && (
+                  <div className="mt-4">
+                    <InstallLocal />
+                  </div>
+                )}
+              </div>
+            )}
+            {local && root && (
+              <div className="text-center text-[12.5px] text-muted">
+                {t("עוברים מהגרסה בדפדפן?", "Moving from the browser version?")}{" "}
+                <button type="button" className="cursor-pointer underline" onClick={() => backupInput.current?.click()}>
+                  {t("שחזור מקובץ גיבוי", "Restore a backup file")}
+                </button>
+                <input
+                  ref={backupInput}
+                  type="file"
+                  accept=".tutorai,.ruecai,.zip"
+                  hidden
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    try {
+                      const db = await importBackup(root, f);
+                      await root.files.write("tutorai.db", db);
+                      setError(null);
+                      alert(t("הגיבוי שוחזר. עכשיו בחרו איך לחבר את ה-AI.", "Backup restored. Now choose how to connect the AI."));
+                    } catch (err) {
+                      setError(errorMessage(err));
+                    }
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

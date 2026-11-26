@@ -8,6 +8,8 @@ import { parseDocx, parsePptx, parseText, detectKind, safeMimeFor } from "./inge
 import { ingestSource, mergeConcepts } from "./ingest/pipeline.ts";
 import { MemoryFileStore, sha256Hex } from "./files.ts";
 import { MockLLM } from "./llm/mock.ts";
+import { LLMError } from "./llm/anthropic.ts";
+import type { LLMApi } from "@tutorai/sdk";
 import { retrieve } from "./retrieve.ts";
 import { hebrewTerms, searchSections } from "./search.ts";
 import { bktUpdate } from "./learner/bkt.ts";
@@ -169,6 +171,56 @@ describe("ingestion pipeline", () => {
     expect(store.source(sid)?.error).toMatch(/לא נתמך/);
   });
 
+  it("waits on a plan's usage limit and resumes from the next batch without re-parsing", async () => {
+    const store = Store.open(SQL);
+    const files = new MemoryFileStore();
+    const cid = store.createCourse("קורס");
+    // Five sections; a tiny context limit makes each one its own analysis batch.
+    const md = [1, 2, 3, 4, 5].map((i) => `# חלק ${i}\n\n${"תוכן החלק. ".repeat(8)}${i}`).join("\n\n");
+    const bytes = new TextEncoder().encode(md);
+    await files.write("courses/1/b.md", bytes);
+    const sid = store.addSource({ course_id: cid, name: "b.md", kind: "material", mime: "text/markdown", path: "courses/1/b.md", hash: "h", size: bytes.length });
+    let calls = 0;
+    let limitOnce = true;
+    const llm: LLMApi = {
+      limitsFor: () => ({ contextChars: 120, vision: false }),
+      object: (async () => {
+        calls++;
+        if (calls === 3 && limitOnce) {
+          limitOnce = false;
+          throw new LLMError("limit", "rate_limit", "2026-11-26T18:00:00Z");
+        }
+        return { sections: [], concepts: [] };
+      }) as LLMApi["object"],
+      text: async () => "",
+      stream: async () => "",
+    };
+    await expect(ingestSource({ store, files, llm }, sid)).rejects.toThrow("limit");
+    expect(store.source(sid)?.status).toBe("waiting");
+    expect(store.source(sid)?.analyzed_batches).toBe(2);
+    const sectionIds = store.sectionsOfSource(sid).map((x) => x.id);
+    expect(sectionIds).toHaveLength(5);
+
+    calls = 0;
+    await ingestSource({ store, files, llm }, sid);
+    expect(calls).toBe(3); // batches 3, 4, 5 only
+    expect(store.source(sid)?.status).toBe("ready");
+    expect(store.sectionsOfSource(sid).map((x) => x.id)).toEqual(sectionIds); // not re-parsed
+  });
+
+  it("starts over when the batch size changed (a different model)", async () => {
+    const store = Store.open(SQL);
+    const files = new MemoryFileStore();
+    const cid = store.createCourse("קורס");
+    const bytes = new TextEncoder().encode("# א\n\nטקסט.\n\n# ב\n\nעוד טקסט.");
+    await files.write("c.md", bytes);
+    const sid = store.addSource({ course_id: cid, name: "c.md", kind: "material", mime: "text/markdown", path: "c.md", hash: "h2", size: bytes.length });
+    store.setAnalysisCursor(sid, 1, 999);
+    await ingestSource({ store, files, llm: new MockLLM(coreGolden) }, sid);
+    expect(store.source(sid)?.status).toBe("ready");
+    expect(store.source(sid)?.batch_chars).toBe(60_000);
+  });
+
   it("merges duplicate concepts by name / English name", () => {
     const store = Store.open(SQL);
     const cid = store.createCourse("c");
@@ -321,6 +373,15 @@ describe("mistakes notebook & daily session", () => {
     const store = Store.open(SQL, db.export());
     const cols = store.all<{ name: string }>("PRAGMA table_info(sections)").map((c) => c.name);
     expect(cols).toContain("t_start");
-    expect(store.get<{ value: string }>("SELECT value FROM meta WHERE key='schema_version'")?.value).toBe("2");
+    expect(store.get<{ value: string }>("SELECT value FROM meta WHERE key='schema_version'")?.value).toBe("3");
+  });
+
+  it("migrates a v2 database (adds the analysis resume columns)", () => {
+    const db = new SQL.Database();
+    db.run("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT INTO meta VALUES('schema_version','2');");
+    db.run("CREATE TABLE sources (id INTEGER PRIMARY KEY AUTOINCREMENT, course_id INTEGER NOT NULL, name TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'material', mime TEXT NOT NULL DEFAULT '', path TEXT NOT NULL, hash TEXT NOT NULL, size INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT 'pending', progress REAL NOT NULL DEFAULT 0, error TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')));");
+    const store = Store.open(SQL, db.export());
+    const cols = store.all<{ name: string }>("PRAGMA table_info(sources)").map((c) => c.name);
+    expect(cols).toEqual(expect.arrayContaining(["analyzed_batches", "batch_chars"]));
   });
 });

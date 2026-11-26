@@ -1,0 +1,21 @@
+{
+  "name": "@tutorai/local",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "TutorAI Local: serves the app on 127.0.0.1 and connects your Claude or ChatGPT plan",
+  "scripts": {
+    "dev": "tsx src/main.ts serve --dev",
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@tutorai/local-api": "0.1.0",
+    "jose": "^6.0.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "postject": "^1.0.0-alpha.6"
+  }
+}
