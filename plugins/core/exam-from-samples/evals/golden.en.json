@@ -1,0 +1,44 @@
+{
+  "exam-from-samples:analyze": {
+    "question_count": 2,
+    "duration_minutes": 180,
+    "question_types": ["Fact-pattern question"],
+    "points_pattern": "2 questions × 50 points",
+    "topics": ["Offer and acceptance", "Remedies for breach"],
+    "style_notes": "Long fact-pattern questions with several issues; references to legislation and case law are expected; statute book allowed."
+  },
+  "exam-from-samples": {
+    "title": "Practice exam — Contract Law",
+    "instructions": "Duration: 3 hours. Allowed material: statute book only. Answer all questions and explain, with reference to legislation and case law.",
+    "duration_minutes": 180,
+    "style_notes": "As in past exams: two fact-pattern questions, 50 points each. Graders look for identifying the issues, a precise rule, and application to both sides.",
+    "questions": [
+      {
+        "id": "e1",
+        "prompt": "Ron emailed Galit: \"I'll sell you my car for ₪40,000; the offer is open until Thursday\". On Wednesday Galit replied: \"I accept, on condition that you replace the tires\". On Thursday morning she wrote: \"Forget the tires, I accept\". Ron refuses. Discuss.",
+        "points": 50,
+        "rubric": [
+          { "criterion": "Identifying the offer and examining intent and definiteness (s. 2)", "points": 15 },
+          { "criterion": "Wednesday's reply as a counter-offer (s. 6(a))", "points": 20 },
+          { "criterion": "The status of Thursday's message and a reasoned conclusion", "points": 15 }
+        ],
+        "model_answer": "The email is an offer (intent and definiteness). An acceptance with a material condition is a counter-offer and rejects the original offer; Thursday's message is a new offer, not an acceptance, so no contract was made.",
+        "concepts": ["Offer", "Acceptance"],
+        "citations": ["S1", "S2"]
+      },
+      {
+        "id": "e2",
+        "prompt": "A supplier undertook to deliver equipment to an event hall by June 1 and didn't. The hall cancelled two events. May the hall rescind the contract immediately? What damages is it entitled to?",
+        "points": 50,
+        "rubric": [
+          { "criterion": "Classifying the breach as fundamental or not, and the effect on rescission (s. 7)", "points": 20 },
+          { "criterion": "Damages under the foreseeability test (s. 10)", "points": 20 },
+          { "criterion": "Conclusion and reasoning", "points": 10 }
+        ],
+        "model_answer": "If the delivery date is essential, the breach is fundamental and the hall may rescind immediately; otherwise extra time is required. Damages cover harm the supplier foresaw or should have foreseen, such as cancelled events.",
+        "concepts": ["Remedies for breach"],
+        "citations": ["S4"]
+      }
+    ]
+  }
+}

@@ -19,6 +19,10 @@ retrieval:
   query: "{{params.concept}}"
 authors: [RuecAI math pack]
 i18n:
+  en:
+    inputs:
+      difficulty:
+        options: { basic: Basic, medium: Medium, challenging: Challenging }
   he:
     name: פתרון מודרך
     description: תרגיל חדש עם פתרון צעד אחר צעד, רמזים מדורגים ובדיקת סבירות — לקורסים כמותיים.

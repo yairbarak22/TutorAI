@@ -20,6 +20,10 @@ retrieval:
   query: "{{params.concept}}"
 authors: [RuecAI core team]
 i18n:
+  en:
+    inputs:
+      difficulty:
+        options: { basic: Basic, medium: Medium, challenging: Challenging }
   he:
     name: חידון
     description: שאלות אמריקאיות ופתוחות עם משוב והסבר — מעדכן את מעקב השליטה שלכם.

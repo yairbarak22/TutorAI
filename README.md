@@ -73,7 +73,7 @@ Simulations, plots, and 3D scenes generated for a concept, running in a sandbox 
 </tr>
 </table>
 
-The screenshots show the Hebrew interface. The app is also available in English.
+The app is available in English and in Hebrew (right-to-left), and demo mode works in both.
 
 ## Why not just study with a chatbot?
 

@@ -1,0 +1,12 @@
+{
+  "flashcards": {
+    "title": "Flashcards: probability basics",
+    "cards": [
+      { "front": "What is the definition of conditional probability $P(A\\mid B)$?", "back": "$P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}$, when $P(B)>0$.", "concept": "Conditional probability", "citations": ["S3"] },
+      { "front": "What does Bayes' theorem say?", "back": "$P(B\\mid A)=\\frac{P(A\\mid B)P(B)}{P(A)}$", "concept": "Bayes' theorem", "citations": ["S5"] },
+      { "front": "What is the difference between disjoint and independent events?", "back": "Disjoint: $A\\cap B=\\emptyset$. Independent: $P(A\\cap B)=P(A)P(B)$. Disjoint events with positive probability are always dependent.", "concept": "Independence", "citations": ["S6"] },
+      { "front": "What is inclusion–exclusion for two events?", "back": "$P(A\\cup B)=P(A)+P(B)-P(A\\cap B)$", "concept": "Probability axioms", "citations": ["S2"] },
+      { "front": "Does linearity of expectation require independence?", "back": "No. $E[X+Y]=E[X]+E[Y]$ always.", "concept": "Expectation", "citations": ["S8"] }
+    ]
+  }
+}

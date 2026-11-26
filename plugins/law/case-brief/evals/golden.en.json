@@ -1,0 +1,12 @@
+{
+  "case-brief": {
+    "title": "Analysis: the laptop sale — offer, counter-offer, and acceptance",
+    "sections": [
+      { "heading": "Issues", "markdown": "1. Is the post an **offer** or an invitation to make offers?\n2. What is the status of the reply \"Agreed, but for ₪2,800\"?\n3. Is the next day's reply a valid **acceptance**?", "citations": ["S1", "S2"] },
+      { "heading": "Rule and application — offer", "markdown": "Under **section 2**, intent to be bound and definiteness are required. The post names the item and the price (definiteness), and \"first come first served\" may show intent to be bound under the objective test — but it can be argued that it is an invitation to make offers.", "citations": ["S1"] },
+      { "heading": "Rule and application — counter-offer and acceptance", "markdown": "Under **section 6(a)**, an acceptance with a material change (the price) is a **counter-offer**, so the original offer was rejected. The message \"I accept ₪3,000\" is at most a new offer, which Dana is free to decline.", "citations": ["S2"] },
+      { "heading": "Conclusion", "markdown": "Most likely no contract was made between Dana and Yossi, and Dana was entitled to sell to Michal.", "citations": ["S2"] },
+      { "heading": "Exam-writing tips", "markdown": "- Open with a list of issues.\n- State the rule before applying it.\n- Present arguments for both sides, then a conclusion.", "citations": ["S1"] }
+    ]
+  }
+}

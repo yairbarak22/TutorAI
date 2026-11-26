@@ -34,9 +34,9 @@ import {
   type RunResult,
   type Source,
 } from "@ruecai/core";
-import { t, type ArtifactPayload, type ChatTurn, type LLMApi, type LoadedTool, type SolutionCheck } from "@ruecai/sdk";
+import { getLanguage, onLanguageChange, t, type ArtifactPayload, type ChatTurn, type LLMApi, type LoadedTool, type SolutionCheck } from "@ruecai/sdk";
 import { sympyVerifier } from "./platform/sympy.ts";
-import { courseFixtures, demoFixtures, getTool, tools } from "@ruecai/plugins";
+import { demoCourse, demoFixtures, getTool, tools } from "@ruecai/plugins";
 import { DB_FILE, Persistence, exportBackup, type DataRoot } from "./platform/storage.ts";
 import { secrets } from "./platform/secrets.ts";
 
@@ -94,6 +94,8 @@ export class Engine {
       await persistence.flush();
     }
     engine.configureLLM();
+    // Demo answers follow the interface language.
+    onLanguageChange(() => engine.demo && engine.configureLLM());
     // Resume ingestion interrupted by a closed tab.
     for (const c of store.courses())
       for (const s of store.sources(c.id)) if (["pending", "parsing", "analyzing"].includes(s.status)) engine.enqueue(s.id);
@@ -126,7 +128,7 @@ export class Engine {
     }
     this.demo = !llm;
     this.provider = !llm ? "demo" : llm === loc ? "local" : llm instanceof TieredLLM ? "hybrid" : "claude";
-    this.llm = llm ?? new MockLLM(demoFixtures(), { delayMs: 900 });
+    this.llm = llm ?? new MockLLM(demoFixtures(getLanguage()), { delayMs: 900 });
     this.bump();
   }
 
@@ -141,7 +143,7 @@ export class Engine {
 
   /* ---------------- courses ---------------- */
   loadDemoCourse(which: "probability" | "law"): number {
-    return seedCourse(this.store, structuredClone(courseFixtures[which]));
+    return seedCourse(this.store, structuredClone(demoCourse(which, getLanguage())));
   }
 
   /* ---------------- sources ---------------- */

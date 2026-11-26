@@ -1,0 +1,66 @@
+{
+  "course": "Contract Law",
+  "exam_date": "2027-02-03",
+  "sources": [
+    {
+      "name": "Class 2 - Formation of a contract.pdf",
+      "kind": "material",
+      "sections": [
+        {
+          "anchor": "p. 3",
+          "title": "Offer",
+          "summary": "What an offer requires under section 2 of the Contracts Law: intent to be bound and definiteness.",
+          "text": "Section 2 of the Contracts (General Part) Law, 5733-1973: an approach by one person to another is an offer to make a contract if it shows the offeror's intent to enter into a contract with the offeree and is definite enough to allow the contract to be made by accepting the offer.\nIntent to be bound — an objective test: how a reasonable person would understand the approach.\nDefiniteness — the essential terms (parties, subject matter, price) appear or can be completed (section 26)."
+        },
+        {
+          "anchor": "p. 4",
+          "title": "Acceptance",
+          "summary": "Acceptance under sections 5 and 6; an acceptance with changes is a counter-offer.",
+          "text": "Section 5: acceptance is the offeree's notice to the offeror that they agree to the proposed contract.\nSection 6(a): a notice of acceptance that materially changes the offer is treated as a counter-offer.\nThe acceptance must reach the offeror within the time set in the offer, or, if none was set, within a reasonable time (section 8)."
+        },
+        {
+          "anchor": "p. 7",
+          "title": "Good faith in negotiations",
+          "summary": "The duty of good faith under section 12, and damages for harm caused by negotiations.",
+          "text": "Section 12(a): in negotiations toward making a contract, a person must act in a customary manner and in good faith.\nSection 12(b): a party who did not act so owes the other party damages for the harm caused by the negotiations — usually reliance damages (the negative interest).\nCase law: Kal Binyan v. A.R.M. — breaking off advanced negotiations without justification."
+        }
+      ]
+    },
+    {
+      "name": "Class 6 - Remedies for breach.pdf",
+      "kind": "material",
+      "sections": [
+        {
+          "anchor": "p. 2",
+          "title": "Remedies for breach of contract",
+          "summary": "Enforcement, rescission, and damages under the Contracts (Remedies) Law.",
+          "text": "Contracts (Remedies for Breach of Contract) Law, 5731-1970: the injured party may sue for enforcement or rescind the contract, and in addition or instead — claim damages.\nRescission for a fundamental breach (section 7(a)) is possible immediately; for a non-fundamental breach — only after giving extra time (section 7(b)).\nDamages (section 10): for harm the breaching party foresaw or should have foreseen as a probable result of the breach."
+        }
+      ]
+    },
+    {
+      "name": "Sample exam - Moed A.pdf",
+      "kind": "sample_exam",
+      "sections": [
+        {
+          "anchor": "p. 1",
+          "title": "Instructions and question 1",
+          "summary": "A 3-hour exam; a fact-pattern question on contract formation.",
+          "text": "Duration: 3 hours. Allowed material: statute book only. Answer all questions.\nQuestion 1 (50 points): Dana posted on Facebook \"Selling a laptop in excellent condition, ₪3,000, first come first served\". Yossi replied in a private message \"Agreed, but for ₪2,800\". The next day he wrote \"Fine, I accept ₪3,000\", but Dana had already sold it to Michal. Discuss all the issues, with reference to legislation and case law."
+        },
+        {
+          "anchor": "p. 2",
+          "title": "Question 2",
+          "summary": "A fact-pattern question on remedies for breach.",
+          "text": "Question 2 (50 points): A contractor undertook to finish a renovation by September 1 and was two months late. The apartment owner rented another apartment and is suing for the rent, and for distress. Can she rescind the contract? What damages is she entitled to? Explain."
+        }
+      ]
+    }
+  ],
+  "concepts": [
+    { "name": "Offer", "name_en": "", "definition": "An approach that shows intent to be bound and is definite enough (section 2).", "prerequisites": [], "sections": [[0, 0]] },
+    { "name": "Acceptance", "name_en": "", "definition": "The offeree's notice of agreement to the proposed contract; an acceptance with a material change is a counter-offer.", "prerequisites": ["Offer"], "sections": [[0, 1]] },
+    { "name": "Good faith in negotiations", "name_en": "", "definition": "The duty to act in a customary manner and in good faith during negotiations (section 12).", "prerequisites": ["Offer"], "sections": [[0, 2]] },
+    { "name": "Remedies for breach", "name_en": "", "definition": "Enforcement, rescission, and damages under the Remedies Law.", "prerequisites": ["Acceptance"], "sections": [[1, 0]] }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "check-solution:read": {
+    "title": "Solution check: a binomial probability",
+    "problem": "A fair coin is tossed 5 times. What is the probability of exactly 2 heads?",
+    "steps": [
+      {
+        "text": "$X$ = the number of heads, $X\\sim \\mathrm{Bin}(5,\\tfrac12)$",
+        "status": "correct",
+        "comment": "Correct definition of the variable and its distribution.",
+        "claims": []
+      },
+      {
+        "text": "$P(X=2)=\\binom{5}{2}\\left(\\tfrac12\\right)^2$",
+        "status": "error",
+        "comment": "The factor for the three failures is missing: $\\left(\\tfrac12\\right)^{3}$.",
+        "claims": []
+      },
+      {
+        "text": "$=10\\cdot\\tfrac14=\\tfrac{10}{4}$",
+        "status": "correct",
+        "comment": "",
+        "claims": [
+          { "lhs": "binomial(5,2)*Rational(1,2)**2", "rhs": "10*Rational(1,4)" },
+          { "lhs": "10*Rational(1,4)", "rhs": "Rational(10,4)" }
+        ]
+      },
+      {
+        "text": "$=2.4$",
+        "status": "correct",
+        "comment": "",
+        "claims": [{ "lhs": "Rational(10,4)", "rhs": "2.4" }]
+      }
+    ],
+    "first_error": 1,
+    "verdict": "incorrect",
+    "hints": [
+      "Look at the binomial formula: how many factors does it have, and what does each one stand for?",
+      "Besides the successes, you also need the probability of the three failures.",
+      "$P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k}$. What is missing in yours?"
+    ],
+    "fix": "$P(X=2)=\\binom{5}{2}\\left(\\tfrac12\\right)^2\\left(\\tfrac12\\right)^3=\\tfrac{10}{32}$",
+    "concept": "Random variable",
+    "citations": ["S1"]
+  },
+  "check-solution:feedback": {
+    "verdict": "incorrect",
+    "hints": [
+      "Look at the binomial formula: how many factors does it have, and what does each one stand for?",
+      "Besides the successes, you also need the probability of the three failures.",
+      "$P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k}$. What is missing in yours?"
+    ],
+    "fix": "$P(X=2)=\\binom{5}{2}\\left(\\tfrac12\\right)^2\\left(\\tfrac12\\right)^3=\\tfrac{10}{32}$",
+    "comments": [
+      {
+        "index": 3,
+        "comment": "The arithmetic here is also wrong: $\\tfrac{10}{4}=2.5$, not $2.4$. And a probability can't be greater than 1, which is a sign that something went wrong earlier. (demo mode)"
+      }
+    ]
+  }
+}

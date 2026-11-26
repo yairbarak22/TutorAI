@@ -1,0 +1,11 @@
+{
+  "quiz": {
+    "title": "Quiz: conditional probability and Bayes",
+    "questions": [
+      { "id": "q1", "kind": "mcq", "prompt": "Roll two fair dice. Given that the sum is 7, what is the probability that the first die shows 2?", "options": ["1/6", "1/36", "2/7", "1/3"], "correct_index": 0, "model_answer": "1/6 — there are 6 outcomes with sum 7, and only (2,5) fits.", "explanation": "Restrict the sample space to the 6 outcomes whose sum is 7. 1/36 forgets to restrict; 2/7 and 1/3 don't come from a correct count.", "concept": "Conditional probability", "citations": ["S3"] },
+      { "id": "q2", "kind": "mcq", "prompt": "A disease affects 2% of people, the test's sensitivity is 90%, and its false-positive rate is 10%. Roughly what is P(sick | positive)?", "options": ["90%", "About 16%", "2%", "50%"], "correct_index": 1, "model_answer": "0.9·0.02 / (0.9·0.02 + 0.1·0.98) ≈ 0.155", "explanation": "By Bayes, the denominator also includes the false positives among healthy people. 90% confuses P(+|sick) with P(sick|+).", "concept": "Bayes' theorem", "citations": ["S5", "S4"] },
+      { "id": "q3", "kind": "mcq", "prompt": "A and B are disjoint events with P(A)=0.3 and P(B)=0.4. Which is true?", "options": ["A and B are independent", "A and B are dependent", "P(A∩B)=0.12", "It can't be determined"], "correct_index": 1, "model_answer": "Dependent: P(A∩B)=0 ≠ 0.12 = P(A)P(B).", "explanation": "Disjointness with positive probabilities implies dependence — if A happened, B certainly didn't.", "concept": "Independence", "citations": ["S6"] },
+      { "id": "q4", "kind": "open", "prompt": "In your own words, explain why linearity of expectation is useful even when the variables are dependent, and give an example.", "options": [], "correct_index": -1, "model_answer": "E[X+Y]=E[X]+E[Y] follows from the linearity of the sum and doesn't require independence; for example, counting the fixed points of a permutation as a sum of dependent indicators gives an expectation of 1.", "explanation": "The key point is that you don't need the joint distribution.", "concept": "Expectation", "citations": ["S8"] }
+    ]
+  }
+}

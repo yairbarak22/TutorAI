@@ -18,6 +18,10 @@ retrieval:
   query: "{{params.topic}}"
 authors: [RuecAI core team]
 i18n:
+  en:
+    inputs:
+      style:
+        options: { concept-map: Concept map, decision-flowchart: Decision flowchart, timeline: Timeline }
   he:
     name: תרשים
     description: תרשים (Mermaid), כמו מפת מושגים, תרשים זרימה להחלטה או ציר זמן.

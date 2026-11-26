@@ -1,0 +1,8 @@
+{
+  "diagram": {
+    "title": "Concept map: from conditioning to Bayes",
+    "mermaid": "flowchart TD\n  A[\"Sample space\"] --> B[\"Probability axioms\"]\n  B --> C[\"Conditional probability\"]\n  C -->|\"multiplication rule\"| D[\"Law of total probability\"]\n  C --> E[\"Independence\"]\n  D --> F[\"Bayes' theorem\"]\n  C --> F",
+    "explanation": "The arrows show prerequisites: to understand Bayes' theorem you need conditional probability and the law of total probability. Independence is defined through conditioning.",
+    "citations": ["S3", "S4", "S5", "S6"]
+  }
+}

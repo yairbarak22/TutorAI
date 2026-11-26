@@ -1,0 +1,13 @@
+{
+  "summary": {
+    "title": "Summary: probability basics",
+    "sections": [
+      { "heading": "Sample spaces and axioms", "markdown": "The **sample space** $\\Omega$ is the set of all outcomes; an **event** is a subset of it.\n\nKolmogorov's axioms: $P(A)\\ge 0$, $P(\\Omega)=1$, additivity for disjoint events.\n\nA useful property: $P(A\\cup B)=P(A)+P(B)-P(A\\cap B)$.", "citations": ["S1", "S2"] },
+      { "heading": "Conditional probability", "markdown": "$$P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}$$\nIntuition: restrict the sample space to $B$.\n\n**Multiplication rule:** $P(A\\cap B)=P(A\\mid B)P(B)$.", "citations": ["S3"] },
+      { "heading": "Total probability and Bayes' theorem", "markdown": "If $B_1..B_n$ is a partition: $P(A)=\\sum P(A\\mid B_i)P(B_i)$.\n\n**Bayes:** $P(B\\mid A)=\\frac{P(A\\mid B)P(B)}{P(A)}$. The medical-test example gives only about 16.7% — the base rate fallacy.", "citations": ["S4", "S5"] },
+      { "heading": "Independence", "markdown": "$A,B$ are independent if $P(A\\cap B)=P(A)P(B)$. **Independence is not disjointness.**", "citations": ["S6"] },
+      { "heading": "Random variables and expectation", "markdown": "$E[X]=\\sum x\\,P(X=x)$, and **linearity of expectation** holds even for dependent variables.", "citations": ["S7", "S8"] },
+      { "heading": "Common mistakes and exam points", "markdown": "- Confusing $P(A\\mid B)$ with $P(B\\mid A)$.\n- Assuming disjoint ⇒ independent.\n- Pairwise independence is not mutual independence.", "citations": ["S3", "S6"] }
+    ]
+  }
+}

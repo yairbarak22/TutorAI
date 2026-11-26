@@ -1,0 +1,3 @@
+{
+  "tutor": "Great question! Let's build it together.\n\nBayes' theorem helps you \"reverse\" a condition: you know $P(A\\mid B)$ and you want $P(B\\mid A)$ [S5].\n\nA guiding question: in the medical-test example, which do you think is larger — the number of sick people who tested positive, or the number of healthy people who got a false positive? Hint: the disease affects only 1% of people [S5], and the denominator is $P(+)$ from the law of total probability [S4]."
+}

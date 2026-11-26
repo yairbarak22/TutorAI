@@ -15,6 +15,10 @@ inputs:
 retrieval: { mode: search }
 authors: [RuecAI core team]
 i18n:
+  en:
+    inputs:
+      mode:
+        options: { socratic: Socratic, direct: Direct explanation, quiz-me: Quiz me, simple: "Simply, like I'm 12" }
   he:
     name: מורה פרטי
     description: שיחה עם מורה פרטי שמכיר את חומר הקורס. מצב סוקרטי כברירת מחדל — שואל, מכוון ומצטט.

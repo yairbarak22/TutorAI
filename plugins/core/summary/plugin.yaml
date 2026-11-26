@@ -19,6 +19,10 @@ retrieval:
   query: "{{params.focus}}"
 authors: [RuecAI core team]
 i18n:
+  en:
+    inputs:
+      length:
+        options: { concise: Concise, medium: Medium, detailed: Detailed }
   he:
     name: סיכום
     description: סיכום מסודר של הרצאה, קובץ או נושא — עם ציטוט לכל טענה.

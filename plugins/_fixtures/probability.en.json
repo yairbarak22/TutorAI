@@ -1,0 +1,82 @@
+{
+  "course": "Probability for Computer Science",
+  "exam_date": "2027-02-10",
+  "sources": [
+    {
+      "name": "Lecture 1 - Sample spaces and axioms.pdf",
+      "kind": "material",
+      "sections": [
+        {
+          "anchor": "p. 1",
+          "title": "Sample spaces and events",
+          "summary": "The sample space Ω, events as subsets, and operations on events.",
+          "text": "The sample space Ω is the set of all possible outcomes of an experiment. An event is a subset of Ω.\nExample: rolling a fair die — Ω = {1,2,3,4,5,6}. The event \"an even number\" is A = {2,4,6}.\nOperations on events: union A∪B (at least one happened), intersection A∩B (both happened), complement A^c (A did not happen).\nDisjoint events: A∩B = ∅."
+        },
+        {
+          "anchor": "p. 2",
+          "title": "The axioms of probability",
+          "summary": "Kolmogorov's three axioms and the properties that follow from them.",
+          "text": "A probability function P satisfies Kolmogorov's axioms:\n1. P(A) ≥ 0 for every event A.\n2. P(Ω) = 1.\n3. If A1, A2, ... are pairwise disjoint then P(∪Ai) = ΣP(Ai).\nProperties: P(A^c) = 1 − P(A); P(∅) = 0; if A⊆B then P(A) ≤ P(B); inclusion–exclusion: P(A∪B) = P(A) + P(B) − P(A∩B).\nIn a symmetric space (all outcomes equally likely): P(A) = |A| / |Ω|."
+        }
+      ]
+    },
+    {
+      "name": "Lecture 3 - Conditional probability and Bayes.pptx",
+      "kind": "material",
+      "sections": [
+        {
+          "anchor": "Slide 2",
+          "title": "Conditional probability",
+          "summary": "P(A|B) as restricting the sample space to B, and the multiplication rule.",
+          "text": "Conditional probability: given that B happened and P(B) > 0,\nP(A|B) = P(A∩B) / P(B).\nIntuition: restrict the sample space to B and ask what part of it is also in A.\nMultiplication rule: P(A∩B) = P(A|B)·P(B).\nExample: roll two dice. Given that the sum is 8, what is the probability that the first die shows 3? There are 5 outcomes with sum 8, and only (3,5) fits, so 1/5.\nSpeaker notes: a common mistake is to confuse P(A|B) with P(B|A)."
+        },
+        {
+          "anchor": "Slide 5",
+          "title": "The law of total probability",
+          "summary": "Computing P(A) through a partition of Ω into disjoint events.",
+          "text": "The law of total probability: if B1,...,Bn partition Ω (disjoint, and their union is Ω) then\nP(A) = Σ P(A|Bi)·P(Bi).\nExample: 60% of the lab's computers come from maker X and 40% from maker Y. Failure rates: 2% for X, 5% for Y. The probability that a random computer fails: 0.6·0.02 + 0.4·0.05 = 0.032."
+        },
+        {
+          "anchor": "Slide 7",
+          "title": "Bayes' theorem",
+          "summary": "Reversing a condition: computing P(B|A) from P(A|B), with a medical-test example.",
+          "text": "Bayes' theorem: P(B|A) = P(A|B)·P(B) / P(A), where P(A) usually comes from the law of total probability.\nExample (medical test): the disease affects 1% of people. The test's sensitivity is 99% (P(+|sick)=0.99), and its false-positive rate is 5% (P(+|healthy)=0.05).\nP(sick|+) = 0.99·0.01 / (0.99·0.01 + 0.05·0.99) ≈ 0.167.\nTakeaway: even an \"accurate\" test gives a low probability when the disease is rare — the base rate fallacy."
+        },
+        {
+          "anchor": "Slide 9",
+          "title": "Independence",
+          "summary": "Independent events, and mutual versus pairwise independence.",
+          "text": "A and B are independent if P(A∩B) = P(A)·P(B). Equivalently (when P(B)>0): P(A|B) = P(A).\nIndependence ≠ disjointness! Disjoint events with positive probability are always dependent.\nMutual independence of three events also requires P(A∩B∩C) = P(A)P(B)P(C) — pairwise independence is not enough."
+        }
+      ]
+    },
+    {
+      "name": "Lecture 5 - Random variables and expectation.docx",
+      "kind": "material",
+      "sections": [
+        {
+          "anchor": "Section 1",
+          "title": "Discrete random variables",
+          "summary": "A random variable as a function from Ω to the reals; the probability mass function.",
+          "text": "A random variable X is a function X: Ω → ℝ. Its probability mass function is p_X(x) = P(X = x), and Σ p_X(x) = 1.\nExample: X = the number of heads in three coin tosses. X ~ Bin(3, 1/2): P(X=k) = C(3,k)·(1/2)^3."
+        },
+        {
+          "anchor": "Section 2",
+          "title": "Expectation and linearity",
+          "summary": "The expectation, and linearity of expectation even without independence.",
+          "text": "Expectation: E[X] = Σ x·P(X = x).\nLinearity of expectation: E[aX + bY] = aE[X] + bE[Y] — always true, even when the variables are dependent!\nExample: the expected number of fixed points of a random permutation of n elements is 1 (a sum of indicators, each with expectation 1/n).\nVariance: Var(X) = E[X²] − (E[X])²."
+        }
+      ]
+    }
+  ],
+  "concepts": [
+    { "name": "Sample space", "name_en": "", "definition": "The set of all possible outcomes of an experiment; an event is a subset of it.", "prerequisites": [], "sections": [[0, 0]] },
+    { "name": "Probability axioms", "name_en": "", "definition": "Kolmogorov's three axioms: non-negativity, P(Ω)=1, and countable additivity.", "prerequisites": ["Sample space"], "sections": [[0, 1]] },
+    { "name": "Conditional probability", "name_en": "", "definition": "P(A|B)=P(A∩B)/P(B): the probability of A given that B happened.", "prerequisites": ["Probability axioms"], "sections": [[1, 0]] },
+    { "name": "Law of total probability", "name_en": "", "definition": "P(A)=ΣP(A|Bi)P(Bi) for a partition B1..Bn of the sample space.", "prerequisites": ["Conditional probability"], "sections": [[1, 1]] },
+    { "name": "Bayes' theorem", "name_en": "", "definition": "P(B|A)=P(A|B)P(B)/P(A) — reversing the direction of the condition.", "prerequisites": ["Conditional probability", "Law of total probability"], "sections": [[1, 2]] },
+    { "name": "Independence", "name_en": "", "definition": "A and B are independent if P(A∩B)=P(A)P(B).", "prerequisites": ["Conditional probability"], "sections": [[1, 3]] },
+    { "name": "Random variable", "name_en": "", "definition": "A function from the sample space to the reals, with a probability mass function.", "prerequisites": ["Sample space"], "sections": [[2, 0]] },
+    { "name": "Expectation", "name_en": "", "definition": "E[X]=Σx·P(X=x); always linear, even for dependent variables.", "prerequisites": ["Random variable"], "sections": [[2, 1]] }
+  ]
+}

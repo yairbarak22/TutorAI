@@ -1,0 +1,13 @@
+{
+  "worked-example": {
+    "title": "Worked example: a spam filter and Bayes' theorem",
+    "sections": [
+      { "heading": "The exercise", "markdown": "30% of emails are spam. The word \"winner\" appears in 40% of spam and in 2% of regular email. An email contains the word. What is the probability that it is spam?", "citations": ["S5"] },
+      { "heading": "Hint 1", "markdown": "Let $S$=spam and $W$=the word appears. What are you asked for: $P(S\\mid W)$ or $P(W\\mid S)$?", "citations": ["S3"] },
+      { "heading": "Hint 2", "markdown": "Compute $P(W)$ with the law of total probability over the partition $\\{S, S^c\\}$.", "citations": ["S4"] },
+      { "heading": "Full solution", "markdown": "$P(W)=0.4\\cdot0.3+0.02\\cdot0.7=0.134$.\n\n$$P(S\\mid W)=\\frac{0.4\\cdot 0.3}{0.134}\\approx 0.896$$", "citations": ["S4", "S5"] },
+      { "heading": "Sanity check", "markdown": "The result is higher than 0.3 (the word raises the suspicion) and lower than 1 — it makes sense.", "citations": ["S5"] },
+      { "heading": "Common mistakes", "markdown": "Answering 0.4 — confusing $P(W\\mid S)$ with $P(S\\mid W)$.", "citations": ["S3"] }
+    ]
+  }
+}
