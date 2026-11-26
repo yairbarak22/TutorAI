@@ -54,7 +54,12 @@ async function onPath(env = process.env): Promise<{ exe: string | null; cmdOnly:
 
 function run(file: string, args: string[], timeoutMs: number, env?: NodeJS.ProcessEnv): Promise<string | null> {
   return new Promise((resolve) => {
-    execFile(file, args, { timeout: timeoutMs, windowsHide: true, env }, (err, stdout) => resolve(err ? null : String(stdout)));
+    try {
+      execFile(file, args, { timeout: timeoutMs, windowsHide: true, env }, (err, stdout) => resolve(err ? null : String(stdout)));
+    } catch {
+      // Windows throws EINVAL synchronously for a .cmd/.bat without a shell.
+      resolve(null);
+    }
   });
 }
 
@@ -88,7 +93,7 @@ export interface FindResult {
 
 export async function findClaude(opts: { home?: string; env?: NodeJS.ProcessEnv; loginShell?: boolean } = {}): Promise<FindResult> {
   const env = opts.env ?? process.env;
-  if (env.TUTORAI_CLAUDE_PATH && (await executable(env.TUTORAI_CLAUDE_PATH))) {
+  if (env.TUTORAI_CLAUDE_PATH && !/\.(cmd|bat)$/i.test(env.TUTORAI_CLAUDE_PATH) && (await executable(env.TUTORAI_CLAUDE_PATH))) {
     return { found: { path: env.TUTORAI_CLAUDE_PATH, version: await version(env.TUTORAI_CLAUDE_PATH) }, cmdOnly: false };
   }
   for (const p of candidatePaths(opts.home, env)) if (await executable(p)) return { found: { path: p, version: await version(p) }, cmdOnly: false };

@@ -35,7 +35,8 @@ const env = {
   TUTORAI_CONFIG_DIR: config,
   TUTORAI_OPENAI_AUTH_BASE: mock.base,
   TUTORAI_OPENAI_API_BASE: mock.api,
-  TUTORAI_CLAUDE_PATH: fake,
+  // Windows supports only the native claude.exe; the fake is a shell script, so leave Claude "not installed" there.
+  ...(process.platform === "win32" ? {} : { TUTORAI_CLAUDE_PATH: fake }),
   CLAUDE_CONFIG_DIR: claudeState,
   TUTORAI_LOG_STDERR: "1",
 };

@@ -5,7 +5,7 @@ import type { LLMEvent, LLMRequest } from "@tutorai/local-api";
 import { claudeEnv } from "../src/providers/claude-code/env.ts";
 import { classifyError, runClaude } from "../src/providers/claude-code/run.ts";
 import { createClaudeCode } from "../src/providers/claude-code/index.ts";
-import { candidatePaths, versionAtLeast } from "../src/providers/claude-code/find.ts";
+import { candidatePaths, findClaude, version, versionAtLeast } from "../src/providers/claude-code/find.ts";
 import { fakeClaude, tempEnv } from "./helpers.ts";
 
 const req: LLMRequest = { provider: "claude-code", tier: "fast", system: "שורה ראשונה\nשורה שנייה", context: "חומר", prompt: "מה זה?" };
@@ -134,6 +134,12 @@ describe("Claude Code helpers", () => {
     expect(classifyError("You've hit your limit · resets 5pm").kind).toBe("rate_limit");
     expect(classifyError("Invalid API key · Please run /login").kind).toBe("auth");
     expect(classifyError("weird").kind).toBe("other");
+  });
+
+  it("never throws when a command can't be started (Windows .cmd) and ignores a .cmd override", async () => {
+    const r = await findClaude({ env: { PATH: "", TUTORAI_CLAUDE_PATH: "C:\\x\\claude.cmd" }, loginShell: false, home: "/nonexistent-home" });
+    expect(r.found).toBeNull();
+    expect(await version("/definitely/not/here")).toBeNull();
   });
 
   it("looks in the native installer's folder first", () => {

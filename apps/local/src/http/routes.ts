@@ -269,7 +269,14 @@ export function buildRoutes(ctx: AppContext): Route[] {
       kind: "api",
       handler: async (_q, res, url) => {
         const fresh = url.searchParams.get("fresh") === "1";
-        const [claudeCode, chatgpt] = await Promise.all([services.claudeCode.status(fresh), services.chatgpt.status()]);
+        // One provider's problem must not hide the other's status.
+        const [claudeCode, chatgpt] = await Promise.all([
+          services.claudeCode.status(fresh).catch((e) => {
+            log("warn", `claude code status: ${(e as Error).message}`);
+            return { installed: false, versionOk: false, loggedIn: false };
+          }),
+          services.chatgpt.status().catch(() => ({ signedIn: false })),
+        ]);
         json(res, 200, { claudeCode, chatgpt });
       },
     },
