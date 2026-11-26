@@ -36,7 +36,7 @@ export function installedBinary(home = homedir()) {
 
 /** Launcher locations created by the installers. */
 export function launchers(home = homedir()): string[] {
-  if (process.platform === "darwin") return [join(home, "Applications", "TutorAI.app")];
+  if (process.platform === "darwin") return ["/Applications/TutorAI.app", join(home, "Applications", "TutorAI.app")];
   if (process.platform === "win32") {
     const appData = process.env.APPDATA || join(home, "AppData", "Roaming");
     return [

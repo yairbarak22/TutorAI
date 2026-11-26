@@ -89,7 +89,7 @@ function Step({ done, busy, title, children }: { done: boolean; busy?: boolean; 
 
 /* ---------------- Claude plan ---------------- */
 
-export function ClaudePlanCard({ onReady, active }: { onReady: () => void; active?: boolean }) {
+export function ClaudePlanCard({ onReady, active, bare }: { onReady: () => void; active?: boolean; bare?: boolean }) {
   const { c, error, refresh } = useConnections();
   const poll = usePoll();
   const [consent, setConsent] = useState(false);
@@ -145,13 +145,15 @@ export function ClaudePlanCard({ onReady, active }: { onReady: () => void; activ
   };
 
   return (
-    <div className="rounded-2xl border border-black/10 bg-white p-5">
-      <div className="flex items-center gap-2">
-        <h3 className="text-[15px] font-semibold">{t("יש לי מנוי Claude", "I have a Claude plan")}</h3>
-        <Badge>Pro / Max</Badge>
-        {active && ready && <Badge color="green">{t("פעיל", "Active")}</Badge>}
-      </div>
-      <p className="mt-1.5 text-[13px] text-muted">
+    <div className={bare ? "" : "rounded-2xl border border-black/10 bg-white p-5"}>
+      {!bare && (
+        <div className="mb-1.5 flex items-center gap-2">
+          <h3 className="text-[15px] font-semibold">{t("יש לי מנוי Claude", "I have a Claude plan")}</h3>
+          <Badge>Pro / Max</Badge>
+          {active && ready && <Badge color="green">{t("פעיל", "Active")}</Badge>}
+        </div>
+      )}
+      <p className="text-[13px] text-muted">
         {t(
           "TutorAI משתמש ב-Claude Code הרשמי של Anthropic, שמחובר לחשבון שלכם. השימוש נספר במגבלות המנוי שלכם, והשימוש שלכם ב-Claude Code כפוף ל",
           "TutorAI uses Anthropic's official Claude Code, signed in to your account. Usage counts against your plan's limits, and your use of Claude Code is subject to ",
@@ -267,7 +269,7 @@ export function ClaudePlanCard({ onReady, active }: { onReady: () => void; activ
 
 /* ---------------- ChatGPT plan ---------------- */
 
-export function ChatGptPlanCard({ onReady, active }: { onReady: () => void; active?: boolean }) {
+export function ChatGptPlanCard({ onReady, active, bare }: { onReady: () => void; active?: boolean; bare?: boolean }) {
   const { c, error, refresh } = useConnections();
   const poll = usePoll();
   const [waiting, setWaiting] = useState(false);
@@ -306,13 +308,15 @@ export function ChatGptPlanCard({ onReady, active }: { onReady: () => void; acti
   };
 
   return (
-    <div className="rounded-2xl border border-black/10 bg-white p-5">
-      <div className="flex items-center gap-2">
-        <h3 className="text-[15px] font-semibold">{t("יש לי מנוי ChatGPT", "I have a ChatGPT plan")}</h3>
-        <Badge>Plus / Pro</Badge>
-        {active && signedIn && <Badge color="green">{t("פעיל", "Active")}</Badge>}
-      </div>
-      <p className="mt-1.5 text-[13px] text-muted">
+    <div className={bare ? "" : "rounded-2xl border border-black/10 bg-white p-5"}>
+      {!bare && (
+        <div className="mb-1.5 flex items-center gap-2">
+          <h3 className="text-[15px] font-semibold">{t("יש לי מנוי ChatGPT", "I have a ChatGPT plan")}</h3>
+          <Badge>Plus / Pro</Badge>
+          {active && signedIn && <Badge color="green">{t("פעיל", "Active")}</Badge>}
+        </div>
+      )}
+      <p className="text-[13px] text-muted">
         {t(
           "התחברות דרך OpenAI. בקשות ה-AI ב-TutorAI ישתמשו במנוי ChatGPT שלכם. ב-Plus מגבלת 5 השעות משותפת לכל האפליקציות.",
           "Sign in through OpenAI. AI requests in TutorAI will use your ChatGPT plan. On Plus, the 5-hour limit is shared across all apps.",

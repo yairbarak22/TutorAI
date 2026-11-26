@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Folder } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folder, Laptop, Power } from "lucide-react";
 import type { Browse, UpdateStatus } from "@tutorai/local-api";
 import { localApi, localServer } from "../platform/local-server.ts";
 import { Alert, Button, Modal, Row, errorMessage } from "./components.tsx";
@@ -73,6 +73,87 @@ export function FolderChooser({ open, onClose, onChosen }: { open: boolean; onCl
         </div>
       )}
     </Modal>
+  );
+}
+
+const isMac = () => typeof navigator !== "undefined" && /Mac/i.test(navigator.platform || navigator.userAgent);
+const isWindows = () => typeof navigator !== "undefined" && /Win/i.test(navigator.platform || navigator.userAgent);
+
+/** Stops the server and replaces the page with a short note. */
+export async function quitNow() {
+  if (!confirm(t("לסגור את TutorAI?", "Quit TutorAI?"))) return;
+  await localApi.quit().catch(() => {});
+  const p = document.createElement("p");
+  p.style.cssText = "font:16px system-ui;padding:40px;text-align:center;line-height:1.6";
+  p.textContent = t(
+    "TutorAI נסגר. אפשר לסגור את הלשונית. כדי לחזור, פתחו את TutorAI מהסמל שלו.",
+    "TutorAI has stopped. You can close this tab. To come back, open TutorAI from its icon.",
+  );
+  document.body.replaceChildren(p);
+}
+
+/** How to come back to TutorAI later, for this computer. */
+export function reopenHint() {
+  if (isMac())
+    return t(
+      "לחצו ⌘+רווח, הקלידו TutorAI ולחצו Enter. אפשר גם מ-Launchpad או מתיקיית האפליקציות (Applications).",
+      "Press ⌘+Space, type TutorAI and press Enter. Or open it from Launchpad or the Applications folder.",
+    );
+  if (isWindows()) return t("לחצו על סמל TutorAI בשולחן העבודה או בתפריט התחל.", "Click the TutorAI icon on your Desktop or in the Start menu.");
+  return t("פתחו את TutorAI מתפריט היישומים, או הריצו tutorai בטרמינל.", "Open TutorAI from your applications menu, or run tutorai in a terminal.");
+}
+
+const TIP_KEY = "tutorai.localTipSeen";
+
+/**
+ * Sidebar: "TutorAI on this computer". Opens a short explanation of how to close and reopen it,
+ * automatically the first time TutorAI Local is used.
+ */
+export function LocalStatus() {
+  const [open, setOpen] = useState(() => {
+    try {
+      return localStorage.getItem(TIP_KEY) !== "1";
+    } catch {
+      return false;
+    }
+  });
+  if (!localServer()) return null;
+  const close = () => {
+    try {
+      localStorage.setItem(TIP_KEY, "1");
+    } catch {
+      /* fine */
+    }
+    setOpen(false);
+  };
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-start text-[12.5px] text-muted transition hover:bg-hover hover:text-ink"
+      >
+        <Laptop size={14} /> {t("TutorAI במחשב · סגירה ופתיחה", "TutorAI on this computer · close & reopen")}
+      </button>
+      <Modal open={open} onClose={close} title={t("TutorAI רץ במחשב שלכם", "TutorAI runs on your computer")}>
+        <div className="space-y-4 text-[14px] leading-relaxed text-ink-2">
+          <div>
+            <div className="font-semibold text-ink">{t("סיימתם לעבוד?", "Done for now?")}</div>
+            <p>{t("פשוט סגרו את הדפדפן. TutorAI נסגר לבד אחרי רבע שעה בלי שימוש. הכול כבר שמור.", "Just close the browser. TutorAI stops by itself after 15 minutes without use. Everything is already saved.")}</p>
+          </div>
+          <div>
+            <div className="font-semibold text-ink">{t("רוצים לחזור?", "Coming back?")}</div>
+            <p>{reopenHint()}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button onClick={close}>{t("הבנתי", "Got it")}</Button>
+            <Button variant="secondary" onClick={() => void quitNow()}>
+              <Power size={14} /> {t("לסגור את TutorAI עכשיו", "Quit TutorAI now")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
 
@@ -150,20 +231,9 @@ export function LocalComputerRows({ folderLabel }: { folderLabel: string }) {
       />
       <Row
         title={t("סגירת TutorAI", "Quit TutorAI")}
-        desc={t("עוצר את TutorAI במחשב. הוא נסגר גם לבד אחרי שעה בלי שימוש. פותחים שוב מהסמל.", "Stops TutorAI on this computer. It also stops by itself after an hour without use. Open it again from its icon.")}
+        desc={t("אפשר פשוט לסגור את הדפדפן: TutorAI נסגר לבד אחרי רבע שעה בלי שימוש. כאן סוגרים אותו מיד.", "You can just close the browser: TutorAI stops by itself after 15 minutes without use. This stops it right away.")}
         action={
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={async () => {
-              if (!confirm(t("לסגור את TutorAI?", "Quit TutorAI?"))) return;
-              await localApi.quit().catch(() => {});
-              const p = document.createElement("p");
-              p.style.cssText = "font:16px system-ui;padding:40px;text-align:center";
-              p.textContent = t("TutorAI נסגר. אפשר לסגור את הלשונית.", "TutorAI has stopped. You can close this tab.");
-              document.body.replaceChildren(p);
-            }}
-          >
+          <Button variant="secondary" size="sm" onClick={() => void quitNow()}>
             {t("סגירה", "Quit")}
           </Button>
         }

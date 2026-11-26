@@ -9,7 +9,9 @@ test("loads in Hebrew RTL with no console errors", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "TutorAI" })).toBeVisible();
   await page.getByRole("button", { name: "בואו נתחיל" }).click();
   await page.getByText("בתוך הדפדפן").click();
-  await page.getByRole("button", { name: /נסו במצב הדגמה/ }).click();
+  await page.getByRole("combobox", { name: "איזה חשבון AI יש לכם?" }).click();
+  await page.getByRole("option", { name: /רק לנסות/ }).click();
+  await page.getByRole("button", { name: "כניסה במצב הדגמה" }).click();
   await page.getByRole("button", { name: "קורס לדוגמה: הסתברות" }).click();
   await expect(page.getByRole("heading", { name: "הסתברות למדעי המחשב" })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -28,7 +30,9 @@ test.describe("English", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await page.getByRole("button", { name: "Let's get started" }).click();
     await page.getByRole("button", { name: /browser/i }).first().click();
-    await page.getByRole("button", { name: /demo/i }).click();
+    await page.getByRole("combobox", { name: "Which AI account do you have?" }).click();
+    await page.getByRole("option", { name: /Just try it/ }).click();
+    await page.getByRole("button", { name: "Start in demo mode" }).click();
     await page.getByRole("button", { name: /Sample course: Probability/ }).click();
     await expect(page.getByRole("navigation", { name: "Course sections" }).getByRole("link", { name: /Tools/ })).toBeVisible();
     await page.getByRole("navigation", { name: "Course sections" }).getByRole("link", { name: /Tools/ }).click();

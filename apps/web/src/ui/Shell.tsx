@@ -1,3 +1,4 @@
+import { LocalStatus } from "./LocalComputer.tsx";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   BookOpen,
@@ -264,6 +265,7 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
         <NavItem href={href.settings()} icon={<SettingsIcon size={16} />} active={route.name === "settings"} onClick={onNavigate}>
           {t("הגדרות", "Settings")}
         </NavItem>
+        <LocalStatus />
         <div className="flex items-center gap-2 px-2.5 pt-1 text-[12px] text-muted" title={engine.root.files.label}>
           {p.lastError ? <CloudAlert size={14} className="text-red-500" /> : <Cloud size={14} />}
           <span className="truncate">

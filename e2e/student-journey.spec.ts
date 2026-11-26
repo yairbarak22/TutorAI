@@ -14,7 +14,9 @@ async function onboard(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: "בואו נתחיל" }).click();
   await page.getByText("בתוך הדפדפן").click();
-  await page.getByRole("button", { name: /נסו במצב הדגמה/ }).click();
+  await page.getByRole("combobox", { name: "איזה חשבון AI יש לכם?" }).click();
+  await page.getByRole("option", { name: /רק לנסות/ }).click();
+  await page.getByRole("button", { name: "כניסה במצב הדגמה" }).click();
   await expect(page.getByRole("heading", { name: "הקורסים שלי" })).toBeVisible();
 }
 

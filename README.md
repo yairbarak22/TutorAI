@@ -122,7 +122,12 @@ Windows, in PowerShell:
 irm https://yairbarak22.github.io/TutorAI/install.ps1 | iex
 ```
 
-The installer downloads the program for your computer from this repository's GitHub Releases and checks its checksum. It adds a TutorAI icon and opens the app. No administrator rights are needed, and there are no security warnings to click through. After that, open TutorAI from its icon. It saves your data in `Documents/TutorAI` (in any browser), updates itself, and `tutorai uninstall` removes it (your data folder is kept).
+The installer downloads the program for your computer from this repository's GitHub Releases and checks its checksum. It adds a TutorAI icon and opens the app. No administrator rights are needed, and there are no security warnings to click through. After that:
+
+- **Open it** from its icon: on a Mac press ⌘+Space and type TutorAI (or use Launchpad / Applications); on Windows use the Desktop or Start menu icon.
+- **Done for now?** Just close the browser. TutorAI stops by itself after 15 minutes without use, and everything is already saved.
+
+It saves your data in `Documents/TutorAI` (in any browser) and updates itself. `tutorai uninstall` removes it, and your data folder is kept.
 
 ## Ask Claude about this project
 

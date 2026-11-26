@@ -84,7 +84,7 @@ Any website the student visits can try to call `127.0.0.1:4317`, and a DNS-rebin
 
 - **Launch.** The launcher icon (or the `tutorai` command) reads `~/.tutorai/run.json` (`pid`, `port`). If a server is alive, the launcher asks it for a fresh one-time code over a local-only control endpoint protected by a secret in `run.json` (mode 0600). It then opens the browser at `/open?code=…`. Otherwise it starts the server detached and does the same.
 - **Fixed port 4317.** Browser storage is per origin, *including the port*, so a changing port would lose the UI's local settings. If 4317 is busy the server tries 4318–4327 and warns. All settings that matter are also stored server-side in `~/.tutorai/settings.json`, so nothing is lost either way.
-- **Shutdown.** The page sends a heartbeat every 30 s, visible or not. The server exits after 60 min without any API request and with no running jobs. Settings → "Quit TutorAI" stops it immediately.
+- **Shutdown.** The page sends a heartbeat every 30 s, visible or not. The server exits after 15 min without any API request and with no running jobs, so closing the browser is enough. The sidebar's "TutorAI on this computer" (shown automatically the first time) explains how to reopen it and has "Quit TutorAI now".
 - **Logs.** `~/.tutorai/logs/tutorai.log`, rotated at 5 MB. Tokens, prompts and course text are never logged.
 
 ### 4.4 Web app integration
@@ -205,7 +205,7 @@ The scripts, served from GitHub Pages next to the app:
 2. **Verify the checksum** and abort on mismatch.
 3. Install to `~/.local/bin/tutorai` (Windows: `%LOCALAPPDATA%\TutorAI\tutorai.exe`), and run `codesign --sign -` on macOS.
 4. Add a **launcher**:
-   - macOS: `~/Applications/TutorAI.app`, a minimal bundle whose executable is a shell script that runs `tutorai open`. It's created locally, so it isn't quarantined. Icon from the release.
+   - macOS: `/Applications/TutorAI.app` (or `~/Applications` when `/Applications` isn't writable), a minimal bundle whose executable is a shell script that runs `tutorai open`. It's created locally, so it isn't quarantined. Icon from the release.
    - Windows: a Start Menu and Desktop shortcut (`.lnk` via `WScript.Shell`).
    - Linux: `~/.local/share/applications/tutorai.desktop`.
 5. Start TutorAI and open the browser. Done.

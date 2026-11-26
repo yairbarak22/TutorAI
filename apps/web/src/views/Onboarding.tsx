@@ -1,25 +1,20 @@
 import { useRef, useState } from "react";
-import { ChartLine, ClipboardCheck, Cpu, FolderOpen, Globe, GraduationCap, Lock, Network, Sparkles, Upload } from "lucide-react";
+import { ChartLine, ClipboardCheck, FolderOpen, Globe, GraduationCap, Lock, Network, Upload } from "lucide-react";
 import { folderSupported, importBackup, pickFolder, serverRoot, useBrowserStorage, type DataRoot } from "../platform/storage.ts";
 import { secrets } from "../platform/secrets.ts";
 import { localServer } from "../platform/local-server.ts";
-import { ChatGptPlanCard, ClaudePlanCard } from "../ui/ConnectionCards.tsx";
-import { InstallLocal } from "../ui/InstallLocal.tsx";
+import { ConnectionPicker } from "../ui/ConnectionPicker.tsx";
 import { Alert, Badge, Button, IconTile, errorMessage } from "../ui/components.tsx";
 import { switchLanguage, t, useLanguage } from "../i18n.tsx";
-import { LocalModelSetup } from "../ui/LocalModelSetup.tsx";
-import { ApiKeyForm } from "../ui/ApiKey.tsx";
 
-/** Three steps, under 3 minutes: storage → API key → start. */
+/** Three steps, under 3 minutes: welcome → storage (skipped in TutorAI Local) → connect the AI. */
 export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
   const lang = useLanguage();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [root, setRoot] = useState<DataRoot | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [localOpen, setLocalOpen] = useState(false);
   const canFolder = folderSupported();
   const local = localServer();
-  const [installOpen, setInstallOpen] = useState(false);
   const backupInput = useRef<HTMLInputElement>(null);
 
   /** TutorAI Local: the data folder is set up by the server, so skip the storage step. */
@@ -33,10 +28,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
     }
   };
 
-  const usePlan = (p: "claude-code" | "chatgpt") => {
-    secrets.setProvider(p);
-    finish(false);
-  };
+
 
   const choose = async (kind: "folder" | "browser") => {
     setError(null);
@@ -188,80 +180,29 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
           </div>
         )}
 
-        {step === 3 && local && (
-          <div className="space-y-4">
+        {step === 3 && (
+          <div className="space-y-5">
             <div className="text-center">
               <h2 className="text-[26px] font-semibold leading-tight tracking-tight">{t("איך לחבר את ה-AI?", "How do you want to connect the AI?")}</h2>
               <p className="mt-2 text-[14px] text-muted">
-                {t("הנתונים נשמרים בתיקייה", "Your data is saved in the folder")} <b dir="ltr">{root?.files.label}</b>
-              </p>
-            </div>
-            <ChatGptPlanCard onReady={() => usePlan("chatgpt")} />
-            {local.features.claudeCode && <ClaudePlanCard onReady={() => usePlan("claude-code")} />}
-            <div className="flex items-center gap-3 text-[12px] text-slate-400">
-              <span className="h-px flex-1 bg-black/[0.08]" /> {t("או", "or")} <span className="h-px flex-1 bg-black/[0.08]" />
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className={local ? "mt-4 space-y-5" : "space-y-5"}>
-            <div className="text-center">
-              <h2 className={local ? "text-[18px] font-semibold" : "text-[26px] font-semibold leading-tight tracking-tight"}>{t("מפתח API של Claude", "Claude API key")}</h2>
-              <p className="mt-2 text-[14px] text-muted">
-                {t("צרו מפתח ב-", "Create a key at ")}
-                <a className="font-medium text-ink underline underline-offset-2" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer">
-                  console.anthropic.com
-                </a>{" "}
-                {t("והדביקו אותו כאן. המפתח נשמר רק בדפדפן הזה.", "and paste it here. The key is stored only in this browser.")}
-              </p>
-            </div>
-            <ApiKeyForm large submitLabel={t("סיום והתחלה", "Finish and start")} onSaved={() => finish(false)} />
-            <div className="flex items-center gap-3 text-[12px] text-slate-400">
-              <span className="h-px flex-1 bg-black/[0.08]" /> {t("או", "or")} <span className="h-px flex-1 bg-black/[0.08]" />
-            </div>
-            <Button variant="secondary" size="lg" className="w-full" onClick={() => finish(true)}>
-              <Sparkles size={16} /> {t("אין לי מפתח עדיין: נסו במצב הדגמה", "No key yet? Try demo mode")}
-            </Button>
-            <p className="text-center text-[12px] text-muted">
-              {t("במצב הדגמה התשובות מוקלטות מראש ולא מבוססות על החומר שלכם.", "In demo mode, answers are prerecorded and not based on your material.")}
-            </p>
-            <div className="rounded-xl border border-black/10 p-4">
-              <button type="button" className="flex w-full cursor-pointer items-center gap-2 text-start text-[14px] font-medium" aria-expanded={localOpen} onClick={() => setLocalOpen(!localOpen)}>
-                <Cpu size={16} /> {t("מודל מקומי בחינם (Ollama / LM Studio)", "Free local model (Ollama / LM Studio)")}
-              </button>
-              <p className="mt-1 text-[12px] text-muted">
-                {t("מריצים מודל פתוח על המחשב שלכם: בלי מפתח ובלי עלות. איטי יותר וחלש יותר בעברית.", "Run an open model on your own computer: no key, no cost. Slower and weaker in Hebrew.")}
-              </p>
-              {localOpen && (
-                <div className="mt-4">
-                  <LocalModelSetup
-                    saveLabel={t("סיום והתחלה", "Finish and start")}
-                    onSaved={() => {
-                      if (!root) return;
-                      secrets.setProvider("local");
-                      secrets.setDemo(false);
-                      onDone(root);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            {!local && (
-              <div className="rounded-xl border border-black/10 p-4">
-                <button type="button" className="flex w-full cursor-pointer items-center gap-2 text-start text-[14px] font-medium" aria-expanded={installOpen} onClick={() => setInstallOpen(!installOpen)}>
-                  <Sparkles size={16} /> {t("יש לי מנוי Claude או ChatGPT", "I have a Claude or ChatGPT plan")}
-                </button>
-                <p className="mt-1 text-[12px] text-muted">
-                  {t("התקינו את TutorAI על המחשב בשורה אחת, והשתמשו במנוי שלכם במקום מפתח API.", "Install TutorAI on your computer with one line and use your plan instead of an API key.")}
-                </p>
-                {installOpen && (
-                  <div className="mt-4">
-                    <InstallLocal />
-                  </div>
+                {local ? (
+                  <>
+                    {t("הנתונים נשמרים בתיקייה", "Your data is saved in the folder")} <b dir="ltr">{root?.files.label}</b>
+                  </>
+                ) : (
+                  t("בחרו מה יש לכם, וזה כל מה שיופיע.", "Choose what you have, and only that is shown.")
                 )}
-              </div>
-            )}
+              </p>
+            </div>
+            <ConnectionPicker
+              mode="onboarding"
+              onChosen={(c) => {
+                if (!root) return;
+                if (c === "demo") return finish(true);
+                secrets.setProvider(c);
+                finish(false);
+              }}
+            />
             {local && root && (
               <div className="text-center text-[12.5px] text-muted">
                 {t("עוברים מהגרסה בדפדפן?", "Moving from the browser version?")}{" "}
