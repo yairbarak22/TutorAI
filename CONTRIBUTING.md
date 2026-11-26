@@ -49,11 +49,14 @@ Working on TutorAI Local (`apps/local`, the installable program)? Run `npm run l
 |---|---|
 | `apps/web/` | The static web app (React, Vite, Tailwind; Hebrew RTL and English LTR UI). `src/platform/` holds storage, the API key, and the SymPy worker |
 | `packages/sdk/` | `@tutorai/sdk`: artifact schemas, the tool contract, quality checks |
+| `apps/local/` | TutorAI Local: the installable program that serves the app on `127.0.0.1` and connects a Claude or ChatGPT plan (server, providers, updater, single-binary build) |
+| `packages/local-api/` | The HTTP contract between TutorAI Local and the web app (zod schemas) |
 | `packages/core/` | The engine: SQLite store (sql.js), parsers (PDF/PPTX/DOCX), ingestion, retrieval, model clients (Claude, local models), learner model (BKT, FSRS, mistakes notebook, daily session, concept graph), tool runtime |
 | `plugins/<pack>/<tool>/` | The tools, one folder per tool, auto-discovered |
 | `plugins/_fixtures/` | Fixture courses (probability, law) used by evals, demo mode, and E2E |
 | `e2e/` | Real-browser tests (Playwright) |
-| `docs/` | [Architecture](docs/architecture.md), [writing tools](docs/plugins.md), [roadmap](docs/roadmap.md), [maintainer guide](docs/maintainers.md) |
+| `e2e-local/` | Real-browser tests of TutorAI Local, with a fake Claude Code CLI and a mock OpenAI |
+| `docs/` | [Architecture](docs/architecture.md), [writing tools](docs/plugins.md), [roadmap](docs/roadmap.md), [maintainer guide](docs/maintainers.md), [TutorAI Local design](docs/rfc-local-server.md) |
 
 ## Writing a new tool
 
@@ -81,7 +84,7 @@ npm run check   # typecheck + unit tests + evals for every tool + browser E2E
 
 ## Non-negotiables
 
-1. **Privacy:** no server, no telemetry. The API key and course materials never leave the computer, except for the call to the model the student chose.
+1. **Privacy:** no server on the internet, no telemetry. The API key, plan sign-ins and course materials never leave the computer, except for the call to the model the student chose. TutorAI Local's server runs only on the student's own computer.
 2. **Grounding:** every claim from the course material is cited.
 3. **Pedagogy:** help students learn; don't do their work for them.
 4. **Security:** see [SECURITY.md](SECURITY.md).

@@ -422,7 +422,7 @@ Dependencies: **S1 → L0 → (L1 ∥ L2 ∥ K1) → (L3 ∥ L4) → L5 → W1�
 *Accept:* the built binary serves the app and passes `tutorai doctor` on all five targets.
 
 **R2. CI** (`.github/workflows/local.yml`).
-- On PRs touching `apps/local`, `packages/local-api`, `apps/web` or `install.*`: matrix `macos-14` (arm64), `macos-15-intel` (x64), `ubuntu-latest` (x64), `ubuntu-24.04-arm` (arm64), `windows-latest` (x64). Each runs `npm ci`, `npx playwright install --with-deps chromium webkit firefox`, the unit tests, `build.mjs`, T1 against the built binary (`TUTORAI_BIN=out/tutorai-…`), and the U3 script test.
+- On PRs touching `apps/local`, `packages/local-api`, `apps/web` or `install.*`: matrix `macos-latest` (arm64), `macos-15-intel` (x64), `ubuntu-latest` (x64), `ubuntu-24.04-arm` (arm64), `windows-latest` (x64). Each runs `npm ci`, `npx playwright install --with-deps chromium webkit firefox`, the unit tests, `build.mjs`, T1 against the built binary (`TUTORAI_BIN=out/tutorai-…`), and the U3 script test.
 - On `v*` tags: the same build, then `sha256sum` → `SHA256SUMS`, and a GitHub Release with the five binaries and `SHA256SUMS`.
 - Add the install scripts to the Pages deploy (they're already in `apps/web/public`).
 

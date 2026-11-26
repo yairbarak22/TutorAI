@@ -10,7 +10,7 @@
 
 TutorAI is an open-source study companion for university students.
 
-Upload a course's materials and it builds a map of the course's concepts, tracks what you already know, and gives you tools that help you learn instead of handing you answers. There is nothing to install and no server: it runs in your browser, and your materials stay on your computer.
+Upload a course's materials and it builds a map of the course's concepts, tracks what you already know, and gives you tools that help you learn instead of handing you answers. It runs in your browser with nothing to install and no server, and your materials stay on your computer. If you already pay for Claude or ChatGPT, a one-line install lets you use that plan instead of an API key.
 
 Use it with Claude, with a free open-source model running on your own machine, or both.
 
@@ -95,7 +95,8 @@ A general chatbot is a capable tutor with no memory of you. TutorAI is the syste
 1. Open **[the app](https://yairbarak22.github.io/TutorAI/)**. Chrome or Edge is recommended.
 2. Choose where your data lives: a folder on your computer (Chrome and Edge), or browser storage.
 3. Choose a model:
-   - **Claude:** paste an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys). It is stored only in your browser.
+   - **Your Claude or ChatGPT plan:** install TutorAI on your computer with one line ([below](#use-your-claude-or-chatgpt-plan-instead-of-an-api-key)) and connect the plan you already pay for.
+   - **Claude API key:** paste an API key from [console.anthropic.com](https://console.anthropic.com/settings/keys). It is stored only in your browser.
    - **Local model (free):** run Ollama or LM Studio on your computer. Settings has a ready prompt you can paste into Claude Code to do the whole setup for you.
    - **Demo mode:** no key needed. Answers are prerecorded, on a sample course.
 4. Create a course and drag in your files.
@@ -137,7 +138,7 @@ https://raw.githubusercontent.com/yairbarak22/TutorAI/main/AGENTS.md
 
 Then explain, briefly and in plain language:
 1. What the app does, and how it differs from studying with a regular chatbot.
-2. How to start using it (https://yairbarak22.github.io/TutorAI/), including the free options.
+2. How to start using it (https://yairbarak22.github.io/TutorAI/), including the free options and using a Claude or ChatGPT plan through TutorAI Local.
 3. How I can contribute, even if I can't code.
 
 Finally, ask me what I study and what interests me, and suggest one specific way I could help.

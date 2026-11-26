@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-14, asset: tutorai-macos-arm64 }
+          - { os: macos-latest, asset: tutorai-macos-arm64 }
           - { os: macos-15-intel, asset: tutorai-macos-x64 }
           - { os: ubuntu-latest, asset: tutorai-linux-x64 }
           - { os: ubuntu-24.04-arm, asset: tutorai-linux-arm64 }
@@ -90,7 +90,7 @@ jobs:
           ./apps/web/public/install.ps1
           & (Join-Path $env:LOCALAPPDATA 'TutorAI\tutorai.exe') doctor
       - name: Launcher icons
-        if: matrix.os == 'macos-14'
+        if: matrix.os == 'macos-latest'
         run: apps/local/scripts/icons.sh
       - uses: actions/upload-artifact@v4
         with:
