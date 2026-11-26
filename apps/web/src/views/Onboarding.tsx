@@ -1,19 +1,17 @@
 import { useState } from "react";
 import { ChartLine, ClipboardCheck, Cpu, FolderOpen, Globe, GraduationCap, Lock, Network, Sparkles, Upload } from "lucide-react";
-import { verifyApiKey } from "@ruecai/core";
 import { folderSupported, pickFolder, useBrowserStorage, type DataRoot } from "../platform/storage.ts";
 import { secrets } from "../platform/secrets.ts";
-import { Alert, Badge, Button, Field, IconTile, Spinner, errorMessage, inputClass } from "../ui/components.tsx";
+import { Alert, Badge, Button, IconTile, errorMessage } from "../ui/components.tsx";
 import { switchLanguage, t, useLanguage } from "../i18n.tsx";
 import { LocalModelSetup } from "../ui/LocalModelSetup.tsx";
+import { ApiKeyForm } from "../ui/ApiKey.tsx";
 
 /** Three steps, under 3 minutes: storage → API key → start. */
 export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
   const lang = useLanguage();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [root, setRoot] = useState<DataRoot | null>(null);
-  const [key, setKey] = useState("");
-  const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [localOpen, setLocalOpen] = useState(false);
   const canFolder = folderSupported();
@@ -29,16 +27,9 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
     }
   };
 
-  const finish = async (demo: boolean) => {
+  /** The key itself is verified and saved by ApiKeyForm. */
+  const finish = (demo: boolean) => {
     if (!root) return;
-    setError(null);
-    if (!demo) {
-      setChecking(true);
-      const ok = await verifyApiKey(key.trim());
-      setChecking(false);
-      if (ok !== true) return setError(ok);
-      secrets.setApiKey(key.trim());
-    }
     secrets.setDemo(demo);
     onDone(root);
   };
@@ -187,21 +178,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
                 {t("והדביקו אותו כאן. המפתח נשמר רק בדפדפן הזה.", "and paste it here. The key is stored only in this browser.")}
               </p>
             </div>
-            <Field label={t("מפתח API", "API key")}>
-              <input
-                type="password"
-                dir="ltr"
-                autoComplete="off"
-                placeholder="sk-ant-..."
-                className={`${inputClass} h-11`}
-                value={key}
-                onChange={(e) => setKey(e.target.value)}
-                aria-label={t("מפתח API", "API key")}
-              />
-            </Field>
-            <Button size="lg" className="w-full" disabled={!key.trim() || checking} onClick={() => finish(false)}>
-              {checking ? <Spinner label={t("בודק את המפתח…", "Checking the key…")} /> : t("סיום והתחלה", "Finish and start")}
-            </Button>
+            <ApiKeyForm large submitLabel={t("סיום והתחלה", "Finish and start")} onSaved={() => finish(false)} />
             <div className="flex items-center gap-3 text-[12px] text-slate-400">
               <span className="h-px flex-1 bg-black/[0.08]" /> {t("או", "or")} <span className="h-px flex-1 bg-black/[0.08]" />
             </div>

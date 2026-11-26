@@ -70,7 +70,7 @@ RuecAI Teacher is a **static web app with no backend**. Everything runs in the s
 - **Chrome and Edge:** the database and files are regular files in a folder the student picks, accessed through the File System Access API. Clearing browsing data deletes nothing, a backup is a folder copy, and a folder inside Google Drive or OneDrive is backed up and available on other computers (one computer at a time; the lock file warns about concurrent use).
 - **Safari and Firefox:** they don't support the API, so data is kept in IndexedDB. The app shows a reminder to back up, and Settings can export and restore a `.ruecai` file (a ZIP of the database and the source files).
 - sql.js keeps the database in memory and writes the whole file after each change (debounced, atomic replace).
-- The API key and the model settings are stored in the browser's local storage for this site, **never** in `ruecai.db`, so syncing the data folder never uploads the key.
+- The API key and the model settings are stored in the browser's local storage for this site, **never** in `ruecai.db`, so syncing the data folder never uploads the key. A student who prefers not to save the key keeps it only in session storage and pastes it once per tab.
 
 ## Models
 
@@ -177,7 +177,8 @@ The full guide, including the `ctx` API, artifact types, input fields, and retri
 
 ## Safety
 
-- The API key is stored only in this site's browser storage and sent only to `api.anthropic.com`. Local models are reached only at the address the student configured.
+- The API key is stored only in this site's browser storage (or only for the current tab, if the student chooses) and sent only to `api.anthropic.com`. Local models are reached only at the address the student configured.
+- The production page has a Content-Security-Policy that blocks the app's requests, images, fonts, media, and forms to any address except Anthropic, `localhost`, and the Pyodide runtime. It doesn't restrict scripts, because widgets run inline in a sandboxed `srcdoc` iframe that inherits the policy. See [SECURITY.md](../SECURITY.md).
 - Model-written widgets run in `<iframe sandbox="allow-scripts">` without `allow-same-origin`, under a CSP that blocks all network access, with only the bundled Viz Kit.
 - All rendered model output (Markdown, Mermaid SVG) goes through DOMPurify.
 - Course material and student input are wrapped in tags and treated as data, not instructions.

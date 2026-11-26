@@ -128,7 +128,7 @@ Claude needs web access to read the links (Claude Code, or claude.ai with web se
 
 - There is no RuecAI server and no telemetry.
 - Course files, your progress, and the database (`ruecai.db`) stay on your device. In Chrome and Edge they are regular files in the folder you chose, so you can see them, back them up, or keep them in Google Drive.
-- Model calls go straight from your browser to the model you chose, with your own key.
+- Model calls go straight from your browser to the model you chose, with your own key. You can keep the key only until you close the tab, and the page's security policy blocks the app's requests to any address other than Anthropic and your local model.
 - Code written by the model runs in a sandboxed iframe that has no network access and can't read your data.
 - Course materials belong to their lecturers. The app never shares them between students.
 

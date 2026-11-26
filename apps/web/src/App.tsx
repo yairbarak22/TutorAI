@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { FolderOpen } from "lucide-react";
 import { Engine, setEngine, useEngine } from "./engine.ts";
 import { restoreStorage, type DataRoot } from "./platform/storage.ts";
-import { Alert, Button, Spinner, errorMessage } from "./ui/components.tsx";
+import { Alert, Button, Modal, Spinner, errorMessage } from "./ui/components.tsx";
+import { ApiKeyForm } from "./ui/ApiKey.tsx";
 import { CitationProvider } from "./ui/Citations.tsx";
 import { Onboarding } from "./views/Onboarding.tsx";
 import { Home, NewCourse } from "./views/Home.tsx";
@@ -36,7 +37,7 @@ export function App() {
   useEffect(() => {
     (async () => {
       const r = await restoreStorage();
-      if (r.status === "ready" && (secrets.getApiKey() || secrets.isDemo() || secrets.getLocal())) await startWith(r.root);
+      if (r.status === "ready" && (secrets.getApiKey() || secrets.keyIsSessionOnly() || secrets.isDemo() || secrets.getLocal())) await startWith(r.root);
       else if (r.status === "needs-permission") setBoot({ stage: "permission", folderName: r.folderName, grant: r.grant });
       else setBoot({ stage: "onboarding" });
     })().catch((e) => setBoot({ stage: "error", message: errorMessage(e) }));
@@ -82,7 +83,36 @@ export function App() {
   return (
     <CitationProvider>
       <Layout />
+      <SessionKeyPrompt />
     </CitationProvider>
+  );
+}
+
+/** The student chose not to save their key: ask for it once per tab, or continue in demo mode. */
+function SessionKeyPrompt() {
+  const engine = useEngine();
+  const [open, setOpen] = useState(() => secrets.needsSessionKey());
+  return (
+    <Modal open={open} onClose={() => setOpen(false)} title={t("המפתח שלכם לא נשמר", "Your key isn't saved")}>
+      <p className="mb-4 text-sm text-muted">
+        {t(
+          "בחרתם לא לשמור את מפתח ה-API בדפדפן. הדביקו אותו כדי להמשיך, או המשיכו במצב הדגמה.",
+          "You chose not to save your API key in this browser. Paste it to continue, or continue in demo mode.",
+        )}
+      </p>
+      <ApiKeyForm
+        large
+        defaultRemember={false}
+        submitLabel={t("המשך", "Continue")}
+        onSaved={() => {
+          engine.configureLLM();
+          setOpen(false);
+        }}
+      />
+      <Button variant="ghost" className="mt-3 w-full" onClick={() => setOpen(false)}>
+        {t("המשך במצב הדגמה", "Continue in demo mode")}
+      </Button>
+    </Modal>
   );
 }
 

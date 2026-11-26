@@ -1,14 +1,41 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { widgetKit } from "./widget-kit-plugin.ts";
+
+/**
+ * Security policy for the production page (defense in depth for the API key).
+ * The browser blocks the app's data requests (fetch, XHR, beacon, WebSocket), images, fonts, media
+ * and form posts to any address except this site, Anthropic's API, a model server on this computer,
+ * and the Pyodide runtime. Scripts are not restricted: model-written widgets run inline in a
+ * sandboxed srcdoc iframe, which inherits this policy. Dev builds skip it (Vite's dev client needs more).
+ */
+export const NETWORK_POLICY = [
+  "connect-src 'self' https://api.anthropic.com http://localhost:* http://127.0.0.1:* https://cdn.jsdelivr.net/pyodide/ blob: data:",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "media-src 'self' data: blob:",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "form-action 'none'",
+  "base-uri 'self'",
+].join("; ");
+
+function networkPolicy(): Plugin {
+  return {
+    name: "ruecai-network-policy",
+    apply: "build",
+    transformIndexHtml: () => [{ tag: "meta", attrs: { "http-equiv": "Content-Security-Policy", content: NETWORK_POLICY }, injectTo: "head-prepend" }],
+  };
+}
 
 export default defineConfig({
   // Relative base: the same build works at / and /RuecAI_Tutor/.
   base: "./",
   plugins: [
     react(),
+    networkPolicy(),
     widgetKit(),
     tailwindcss(),
     VitePWA({

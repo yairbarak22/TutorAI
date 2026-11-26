@@ -2,9 +2,12 @@ import type { LocalConfig } from "@ruecai/core";
 
 /**
  * The API key stays on this device only (browser storage) — deliberately NOT in ruecai.db,
- * so syncing the data folder to Drive/OneDrive never uploads the key.
+ * so syncing the data folder to Drive/OneDrive never uploads the key. The student can also
+ * choose not to save it at all (sessionStorage, cleared when the tab closes).
  */
 const KEY = "ruecai.apiKey";
+/** "session" = the student chose not to save the key: it lives in sessionStorage and is gone when the tab closes. */
+const KEY_MODE = "ruecai.apiKeyMode";
 const DEMO = "ruecai.demo";
 const MODELS = "ruecai.models";
 const PROVIDER = "ruecai.provider";
@@ -22,9 +25,30 @@ const safe = <T>(fn: () => T, fallback: T): T => {
 };
 
 export const secrets = {
-  getApiKey: () => safe(() => localStorage.getItem(KEY), null),
-  setApiKey: (k: string) => safe(() => localStorage.setItem(KEY, k.trim()), undefined),
-  clearApiKey: () => safe(() => localStorage.removeItem(KEY), undefined),
+  getApiKey: () => safe(() => localStorage.getItem(KEY) ?? sessionStorage.getItem(KEY), null),
+  /** remember = keep it in this browser; otherwise only until this tab is closed. */
+  setApiKey: (k: string, remember = true) =>
+    safe(() => {
+      localStorage.removeItem(KEY);
+      sessionStorage.removeItem(KEY);
+      if (remember) {
+        localStorage.setItem(KEY, k.trim());
+        localStorage.removeItem(KEY_MODE);
+      } else {
+        sessionStorage.setItem(KEY, k.trim());
+        localStorage.setItem(KEY_MODE, "session");
+      }
+    }, undefined),
+  clearApiKey: () =>
+    safe(() => {
+      localStorage.removeItem(KEY);
+      sessionStorage.removeItem(KEY);
+      localStorage.removeItem(KEY_MODE);
+    }, undefined),
+  /** The student uses a key but chose not to save it. */
+  keyIsSessionOnly: () => safe(() => localStorage.getItem(KEY_MODE) === "session", false),
+  /** A session-only key is expected but this tab doesn't have it yet. */
+  needsSessionKey: () => safe(() => localStorage.getItem(KEY_MODE) === "session" && !localStorage.getItem(KEY) && !sessionStorage.getItem(KEY), false),
   isDemo: () => safe(() => localStorage.getItem(DEMO) === "1", false),
   setDemo: (on: boolean) => safe(() => (on ? localStorage.setItem(DEMO, "1") : localStorage.removeItem(DEMO)), undefined),
   getModels: (): { fast: string; smart: string } | null => safe(() => JSON.parse(localStorage.getItem(MODELS) ?? "null"), null),

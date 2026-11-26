@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
-import { DEFAULT_MODELS, verifyApiKey } from "@ruecai/core";
+import { DEFAULT_MODELS } from "@ruecai/core";
 import { useEngine } from "../engine.ts";
 import { download, forgetStorage, importBackup } from "../platform/storage.ts";
 import { secrets } from "../platform/secrets.ts";
 import { LocalModelSetup } from "../ui/LocalModelSetup.tsx";
-import { Alert, Badge, Button, Field, Row, Spinner, Tabs, errorMessage, inputClass } from "../ui/components.tsx";
+import { ApiKeyForm } from "../ui/ApiKey.tsx";
+import { Alert, Badge, Button, Field, Row, Tabs, errorMessage, inputClass } from "../ui/components.tsx";
 import { fmtTime, switchLanguage, t, useLanguage } from "../i18n.tsx";
 
 /** Rough cost estimate (USD per 1M tokens: input/output) for the defaults. */
@@ -18,9 +19,7 @@ const PRICES: Record<string, [number, number]> = {
 export function Settings() {
   const engine = useEngine();
   const lang = useLanguage();
-  const [key, setKey] = useState("");
   const [msg, setMsg] = useState<{ kind: "success" | "error"; text: string } | null>(null);
-  const [checking, setChecking] = useState(false);
   const models = secrets.getModels() ?? DEFAULT_MODELS;
   const [fast, setFast] = useState(models.fast);
   const [smart, setSmart] = useState(models.smart);
@@ -158,33 +157,34 @@ export function Settings() {
             <>
           <Row
             title={hasKey ? t("החלפת מפתח API", "Replace API key") : t("מפתח API", "API key")}
-            desc={t("המפתח נשמר רק בדפדפן הזה, לא בתיקיית הנתונים.", "The key is stored only in this browser, not in the data folder.")}
+            desc={
+              !hasKey
+                ? t("המפתח לא נשמר בתיקיית הנתונים ולא בשום שרת.", "The key is never stored in your data folder or on any server.")
+                : secrets.keyIsSessionOnly()
+                  ? t("המפתח שמור רק עד שתסגרו את הלשונית.", "The key is kept only until you close the tab.")
+                  : t("המפתח שמור בדפדפן הזה בלבד.", "The key is saved in this browser only.")
+            }
             wide
           >
-            <div className="mt-3 flex flex-wrap gap-2">
-              <input type="password" dir="ltr" className={`${inputClass} max-w-sm flex-1`} placeholder="sk-ant-..." value={key} onChange={(e) => setKey(e.target.value)} aria-label={t("מפתח API", "API key")} />
-              <Button
-                disabled={!key.trim() || checking}
-                onClick={async () => {
-                  setChecking(true);
-                  const ok = await verifyApiKey(key.trim());
-                  setChecking(false);
-                  if (ok !== true) return setMsg({ kind: "error", text: ok });
-                  secrets.setApiKey(key.trim());
+            <div className="mt-3">
+              <ApiKeyForm
+                submitLabel={t("שמירת מפתח", "Save key")}
+                defaultRemember={!secrets.keyIsSessionOnly()}
+                onSaved={() => {
                   secrets.setDemo(false);
-                  setKey("");
                   engine.configureLLM();
                   setMsg({ kind: "success", text: t("המפתח נשמר. מצב הדגמה כובה.", "Key saved. Demo mode turned off.") });
                 }}
-              >
-                {checking ? <Spinner label={t("בודק…", "Checking…")} /> : t("שמירת מפתח", "Save key")}
-              </Button>
+              />
               {hasKey && (
                 <Button
                   variant="ghost"
+                  size="sm"
+                  className="mt-2"
                   onClick={() => {
                     secrets.clearApiKey();
                     engine.configureLLM();
+                    setMsg({ kind: "success", text: t("המפתח נמחק מהדפדפן.", "The key was deleted from this browser.") });
                   }}
                 >
                   {t("מחיקת המפתח", "Delete key")}
