@@ -17,7 +17,14 @@ New-Item -ItemType Directory -Force -Path $Tmp | Out-Null
 
 try {
   Write-Host "Downloading TutorAI (windows, $Arch)..."
-  Invoke-WebRequest -UseBasicParsing -Uri "$Base/$Asset" -OutFile (Join-Path $Tmp 'tutorai.exe')
+  try {
+    Invoke-WebRequest -UseBasicParsing -Uri "$Base/$Asset" -OutFile (Join-Path $Tmp 'tutorai.exe')
+  } catch {
+    if ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 404) {
+      throw "no TutorAI release for $Asset was found yet. Use the browser version for now: https://yairbarak22.github.io/TutorAI/"
+    }
+    throw
+  }
   Invoke-WebRequest -UseBasicParsing -Uri "$Base/SHA256SUMS" -OutFile (Join-Path $Tmp 'SHA256SUMS')
 
   $Line = Get-Content (Join-Path $Tmp 'SHA256SUMS') | ForEach-Object { $_.TrimEnd("`r") } | Where-Object { $_ -match "\s\*?$([regex]::Escape($Asset))$" } | Select-Object -First 1
