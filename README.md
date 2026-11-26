@@ -3,6 +3,7 @@
 [![Open the app](https://img.shields.io/badge/Open%20the%20app-yairbarak22.github.io-2563EB?labelColor=black&style=for-the-badge)](https://yairbarak22.github.io/TutorAI/)
 [![CI](https://img.shields.io/github/actions/workflow/status/yairbarak22/TutorAI/ci.yml?branch=main&label=CI&labelColor=black&style=for-the-badge)](https://github.com/yairbarak22/TutorAI/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-2563EB?labelColor=black&style=for-the-badge)](LICENSE)
+[![Star on GitHub](https://img.shields.io/github/stars/yairbarak22/TutorAI?label=%E2%AD%90%20Star&labelColor=black&color=2563EB&style=for-the-badge)](https://github.com/yairbarak22/TutorAI)
 [![Languages](https://img.shields.io/badge/Hebrew%20%7C%20English-RTL%20%2B%20LTR-2563EB?labelColor=black&style=for-the-badge)](#)
 
 ![The concept map of a course: concepts in stages from foundations to advanced, colored by mastery, with one concept's prerequisite chain in focus](docs/screenshots/concept-map.png)

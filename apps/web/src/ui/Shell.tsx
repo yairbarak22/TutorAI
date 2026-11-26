@@ -7,7 +7,6 @@ import {
   ChevronsUpDown,
   Cloud,
   CloudAlert,
-  Code,
   FileText,
   FolderOpen,
   GraduationCap,
@@ -24,6 +23,7 @@ import {
   Search,
   Settings as SettingsIcon,
   Sparkles,
+  Star,
   X,
   Zap,
 } from "lucide-react";
@@ -421,8 +421,14 @@ export function Shell({ children, crumbs, onNewCourse }: { children: ReactNode; 
           <a href="https://github.com/yairbarak22/TutorAI/blob/main/docs/plugins.md" target="_blank" rel="noreferrer" className={topBtn}>
             {t("מדריך", "Guide")}
           </a>
-          <a href="https://github.com/yairbarak22/TutorAI" target="_blank" rel="noreferrer" className={topBtn}>
-            <Code size={13} /> GitHub
+          <a
+            href="https://github.com/yairbarak22/TutorAI"
+            target="_blank"
+            rel="noreferrer"
+            className={topBtn}
+            title={t("אהבתם? תנו לנו כוכב ב-GitHub, זה עוזר לסטודנטים אחרים למצוא את הפרויקט", "Like it? Star us on GitHub. It helps other students find the project")}
+          >
+            <Star size={13} className="fill-amber-400 text-amber-500" /> {t("כוכב ב-GitHub", "Star on GitHub")}
           </a>
         </header>
 
