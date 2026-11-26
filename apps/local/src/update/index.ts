@@ -26,6 +26,11 @@ export function newer(a: string, b: string) {
   return false;
 }
 
+/** The release version inside the signed SHA256SUMS ("version: X.Y.Z"), so a signature can't be replayed for another version. */
+export function signedVersion(text: string): string | null {
+  return text.match(/^version:\s*v?(\d+\.\d+\.\d+)\s*$/m)?.[1] ?? null;
+}
+
 export function parseSums(text: string): Map<string, string> {
   const m = new Map<string, string>();
   for (const line of text.split("\n")) {
@@ -104,6 +109,9 @@ export class Updater {
     const sigAsset = rel.assets?.find((a) => a.name === "SHA256SUMS.sig");
     const sigRes = sigAsset ? await this.fetchFn(sigAsset.browser_download_url) : null;
     if (!sigRes?.ok || !verifySums(sumsText, await sigRes.text(), publicKey)) throw new Error("release signature is missing or invalid; update skipped");
+    // The signed version must be this release's and newer than ours (no rollback to an old signed build).
+    const signed = signedVersion(sumsText);
+    if (!signed || signed !== this.latest || !newer(signed, this.o.current)) throw new Error("signed release version doesn't match; update skipped");
     const expected = parseSums(sumsText).get(want);
     if (!expected) throw new Error("no checksum for this platform");
     const res = await this.fetchFn(bin.browser_download_url);
