@@ -11,7 +11,7 @@ export function baseSystemPrompt(lang: Lang): string {
     lang === "en"
       ? "Write everything the student will read in clear, natural English. If the course material is in another language, you may add the original term in parentheses the first time you use it."
       : `Write everything the student will read in clear, standard ${L}. Use ${L} for professional terms; the first time, also give the English term in parentheses if it appears that way in the material.`;
-  return `You are TutorAI, a study assistant for students at Reichman University.
+  return `You are TutorAI, a study assistant for university students.
 
 Goal: help the student learn and truly understand, not do the work for them.
 

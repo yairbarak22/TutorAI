@@ -317,8 +317,8 @@ export function Settings() {
       {tab === "about" && (
         <div>
           <Row title="TutorAI" desc={t(
-              "פרויקט קוד פתוח (Apache-2.0) של סטודנטים באוניברסיטת רייכמן. אין שרת ואין איסוף נתונים: הקבצים נשמרים אצלכם, והבקשות ל-AI נשלחות ישירות ל-Anthropic.",
-              "An open-source project (Apache-2.0) by students at Reichman University. No server and no data collection: your files stay with you, and AI requests go directly to Anthropic.",
+              "פרויקט קוד פתוח (Apache-2.0) שנבנה יחד עם סטודנטים. אין שרת ואין איסוף נתונים: הקבצים נשמרים אצלכם, והבקשות ל-AI נשלחות ישירות ל-Anthropic.",
+              "An open-source project (Apache-2.0), built together with students. No server and no data collection: your files stay with you, and AI requests go directly to Anthropic.",
             )} />
           <Row
             title={t("יושרה אקדמית", "Academic integrity")}

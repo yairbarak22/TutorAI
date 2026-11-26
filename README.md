@@ -7,7 +7,7 @@
 
 ![The concept map of a course: concepts in stages from foundations to advanced, colored by mastery, with one concept's prerequisite chain in focus](docs/screenshots/concept-map.png)
 
-TutorAI is an open-source study companion for Reichman University students.
+TutorAI is an open-source study companion for university students.
 
 Upload a course's materials and it builds a map of the course's concepts, tracks what you already know, and gives you tools that help you learn instead of handing you answers. There is nothing to install and no server: it runs in your browser, and your materials stay on your computer.
 
@@ -106,7 +106,7 @@ You can install the site as an app from the browser menu.
 Paste this into Claude to get a plain-language tour: what the app does, how to start, and how you can contribute.
 
 ```text
-Help me get to know TutorAI, an open-source study companion for Reichman University students.
+Help me get to know TutorAI, an open-source study companion for university students.
 First read these files from GitHub:
 https://raw.githubusercontent.com/yairbarak22/TutorAI/main/README.md
 https://raw.githubusercontent.com/yairbarak22/TutorAI/main/CONTRIBUTING.md

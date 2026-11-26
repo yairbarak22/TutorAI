@@ -2,7 +2,7 @@
   "name": "tutorai",
   "private": true,
   "version": "0.1.0",
-  "description": "TutorAI — local-first AI study companion (Reichman University students)",
+  "description": "TutorAI — local-first AI study companion for university students",
   "license": "Apache-2.0",
   "type": "module",
   "workspaces": [

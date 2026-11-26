@@ -80,7 +80,7 @@ export function Onboarding({ onDone }: { onDone: (root: DataRoot) => void }) {
             <div className="text-center">
               <h2 className="text-[26px] font-semibold leading-tight tracking-tight">{t("ללמוד חכם יותר, מהחומר שלכם", "Study smarter, from your own material")}</h2>
               <p className="mt-2 text-[14px] text-muted">
-                {t("עוזר לימודים מבוסס AI לסטודנטים של רייכמן. קוד פתוח, והחומרים נשארים אצלכם.", "An AI study companion for Reichman students. Open source, and your material stays with you.")}
+                {t("עוזר לימודים מבוסס AI לסטודנטים. קוד פתוח, והחומרים נשארים אצלכם.", "An AI study companion for students. Open source, and your material stays with you.")}
               </p>
             </div>
             <ul className="space-y-2">
