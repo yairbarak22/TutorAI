@@ -24,7 +24,7 @@ export interface UsageEvent {
 export class LLMError extends Error {
   constructor(
     message: string,
-    public readonly kind: "auth" | "rate_limit" | "refusal" | "invalid_output" | "network" | "other",
+    public readonly kind: "auth" | "rate_limit" | "budget_limit" | "refusal" | "invalid_output" | "network" | "other",
   ) {
     super(message);
   }
@@ -153,13 +153,45 @@ export class AnthropicLLM implements LLMApi {
   }
 }
 
-function toLLMError(e: unknown): LLMError {
+function isBudgetExhaustedError(e: InstanceType<typeof Anthropic.APIError>): boolean {
+  if (e instanceof Anthropic.PaymentRequiredError || e.status === 402) return true;
+  return /(credit|balance|billing|budget|spend|quota)/i.test(e.message);
+}
+
+export function toLLMError(e: unknown): LLMError {
   if (e instanceof LLMError) return e;
   if (e instanceof Anthropic.AuthenticationError) return new LLMError(t("מפתח ה-API לא תקין. בדקו אותו בהגדרות.", "The API key is invalid. Check it in Settings."), "auth");
   if (e instanceof Anthropic.PermissionDeniedError) return new LLMError(t("למפתח אין הרשאה למודל הזה.", "This key has no access to this model."), "auth");
-  if (e instanceof Anthropic.RateLimitError) return new LLMError(t("הגעתם למגבלת הבקשות או התקציב של ה-API. נסו שוב בעוד דקה.", "You hit the API rate or spending limit. Try again in a minute."), "rate_limit");
+  if (e instanceof Anthropic.RateLimitError) {
+    return isBudgetExhaustedError(e)
+      ? new LLMError(
+          t(
+            "נגמרה יתרת האשראי או התקציב של מפתח ה-API. בדקו ב-console.anthropic.com או עברו למצב הדגמה.",
+            "Your API key hit its spending limit or ran out of credit. Check console.anthropic.com or switch to demo mode.",
+          ),
+          "budget_limit",
+        )
+      : new LLMError(
+          t(
+            "הגעתם למגבלת הבקשות או התקציב של ה-API (429). נסו שוב בעוד דקה, בדקו ב-console.anthropic.com או עברו למצב הדגמה.",
+            "You hit the API rate or spending limit (429). Try again in a minute, check console.anthropic.com, or switch to demo mode.",
+          ),
+          "rate_limit",
+        );
+  }
   if (e instanceof Anthropic.APIConnectionError) return new LLMError(t("אין חיבור לשרת של Anthropic. בדקו את האינטרנט.", "Can't reach Anthropic's servers. Check your internet connection."), "network");
-  if (e instanceof Anthropic.APIError) return new LLMError(`${t("שגיאת API", "API error")} (${e.status}): ${e.message}`, "other");
+  if (e instanceof Anthropic.APIError) {
+    if (isBudgetExhaustedError(e)) {
+      return new LLMError(
+        t(
+          "נגמרה יתרת האשראי או התקציב של מפתח ה-API. בדקו ב-console.anthropic.com או עברו למצב הדגמה.",
+          "Your API key hit its spending limit or ran out of credit. Check console.anthropic.com or switch to demo mode.",
+        ),
+        "budget_limit",
+      );
+    }
+    return new LLMError(`${t("שגיאת API", "API error")} (${e.status}): ${e.message}`, "other");
+  }
   return new LLMError(e instanceof Error ? e.message : String(e), "other");
 }
 

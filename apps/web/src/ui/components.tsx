@@ -1,6 +1,8 @@
 import { useEffect, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { t } from "../i18n.tsx";
+import { tryEngine } from "../engine.ts";
+import { secrets } from "../platform/secrets.ts";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 const VARIANTS: Record<Variant, string> = {
@@ -100,6 +102,35 @@ export function Badge({ children, color = "slate" }: { children: ReactNode; colo
   return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${c}`}>{children}</span>;
 }
 
+function alertText(children: ReactNode): string | null {
+  if (typeof children === "string") return children;
+  if (Array.isArray(children) && children.every((c) => typeof c === "string" || c == null || c === false)) {
+    return children.filter((c): c is string => typeof c === "string").join("");
+  }
+  return null;
+}
+
+function renderWithConsoleLink(text: string): ReactNode {
+  const host = "console.anthropic.com";
+  const parts = text.split(host);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) => (
+    <span key={i}>
+      {i > 0 && (
+        <a
+          href="https://console.anthropic.com/"
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium underline underline-offset-2"
+        >
+          {host}
+        </a>
+      )}
+      {part}
+    </span>
+  ));
+}
+
 export function Alert({ kind = "info", children }: { kind?: "info" | "warn" | "error" | "success"; children: ReactNode }) {
   const c = {
     info: "bg-sidebar border-black/[0.08] text-ink-2",
@@ -107,9 +138,31 @@ export function Alert({ kind = "info", children }: { kind?: "info" | "warn" | "e
     error: "bg-red-50/70 border-red-200/70 text-red-800",
     success: "bg-emerald-50/70 border-emerald-200/70 text-emerald-800",
   }[kind];
+  const raw = kind === "error" ? alertText(children) : null;
+  const hasConsoleHint = raw !== null && raw.includes("console.anthropic.com");
+  const engine = hasConsoleHint ? tryEngine() : null;
+
   return (
     <div role={kind === "error" ? "alert" : "status"} className={`rounded-xl border px-4 py-3 text-sm ${c}`}>
-      {children}
+      {hasConsoleHint ? (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>{renderWithConsoleLink(raw)}</span>
+          {engine && !engine.demo && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                secrets.setDemo(true);
+                engine.configureLLM();
+              }}
+            >
+              {t("מעבר למצב הדגמה", "Switch to demo mode")}
+            </Button>
+          )}
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
 }
