@@ -5,3 +5,11 @@
 /.github/             @yairbarak22
 # Discipline packs: add pack owners here as faculties join, e.g.
 # /plugins/law/       @law-pack-owner
+# Security-sensitive parts of TutorAI Local (localhost security, file access, tokens, updates, installers).
+/apps/local/src/http/security.ts                 @yairbarak22
+/apps/local/src/fs/                              @yairbarak22
+/apps/local/src/providers/chatgpt/tokens.ts      @yairbarak22
+/apps/local/src/providers/claude-code/env.ts     @yairbarak22
+/apps/local/src/update/                          @yairbarak22
+/apps/web/public/install.sh                      @yairbarak22
+/apps/web/public/install.ps1                     @yairbarak22

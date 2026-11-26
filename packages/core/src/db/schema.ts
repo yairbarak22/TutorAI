@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -20,9 +20,11 @@ CREATE TABLE IF NOT EXISTS sources (
   path TEXT NOT NULL,                               -- relative to the data folder
   hash TEXT NOT NULL,
   size INTEGER NOT NULL DEFAULT 0,
-  status TEXT NOT NULL DEFAULT 'pending',           -- pending | parsing | analyzing | ready | error
+  status TEXT NOT NULL DEFAULT 'pending',           -- pending | parsing | analyzing | waiting | ready | error
   progress REAL NOT NULL DEFAULT 0,
   error TEXT,
+  analyzed_batches INTEGER NOT NULL DEFAULT 0,      -- analysis batches finished (resume point)
+  batch_chars INTEGER,                              -- batch size those batches were cut with
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

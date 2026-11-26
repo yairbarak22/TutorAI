@@ -5,7 +5,7 @@ TutorAI is a **static web app with no backend**. Everything runs in the student'
 ## Principles
 
 1. **Local-first.** Materials, outputs, and the learner model stay with the student. The project runs no server that holds data.
-2. **Zero installation.** Open a link and work. The site can also be installed as an app (PWA).
+2. **Zero installation.** Open a link and work. The site can also be installed as an app (PWA). An optional one-line install, TutorAI Local, adds what a web page can't do: using the student's Claude or ChatGPT plan.
 3. **One language.** TypeScript end to end, so contributors need to know one world.
 4. **Small core, many plugins.** Most tools are declarative (YAML + prompt), so non-programmers can contribute.
 5. **Structured output.** Every tool returns an object defined by a Zod schema. The UI knows how to render it and the tests know how to check it.
@@ -82,8 +82,26 @@ All model calls go through one interface, `LLMApi` (`packages/sdk/src/tool.ts`):
 | **Local** (free) | `LocalLLM` (`packages/core/src/llm/local.ts`) | Ollama's native API, or any OpenAI-compatible server (LM Studio). The server must allow the site's origin (`OLLAMA_ORIGINS`); Settings shows how, and offers a ready prompt for Claude to do the setup |
 | **Hybrid** | `TieredLLM` | Fast tier on the local model, smart tier on Claude |
 | **Demo** | `MockLLM` | Replays the recorded golden outputs; no key needed |
+| **Claude plan / ChatGPT plan** (TutorAI Local) | `ServerLLM` (`apps/web/src/platform/server-llm.ts`) | Through the local server: the official Claude Code CLI, or Sign in with ChatGPT + the Responses API. Structured output is validated with the tool's Zod schema, with one repair retry |
 
 A backend can report its limits per tier (`limitsFor`: how much material fits, whether it reads images). Small local models get a smaller retrieval budget and smaller ingestion batches, and scanned-page OCR is skipped when the model can't read images.
+
+## TutorAI Local (`apps/local`)
+
+An optional single program (a Node 22 single executable with the built web app embedded) that students install with one line (`install.sh` / `install.ps1`, served from the site). It serves the same web app at `http://127.0.0.1:4317` in the student's own browser, and adds:
+
+```
+browser (same app) ──fetch, same origin──► tutorai (127.0.0.1 only)
+                                             ├─ /api/llm ─┬─ Claude plan: spawns the official `claude -p` (student's own sign-in)
+                                             │            └─ ChatGPT plan: Sign in with ChatGPT → Responses API
+                                             ├─ /api/fs   data folder (~/Documents/TutorAI), any browser
+                                             ├─ /api/local-proxy  Ollama / LM Studio without CORS setup
+                                             └─ self-update from GitHub Releases (SHA-256 verified)
+```
+
+- The web app detects the server (`/api/hello`, only when served from `127.0.0.1`) and switches to `ServerFileStore` and, for the plan providers, `ServerLLM` (`apps/web/src/platform/`). The HTTP contract is `packages/local-api`.
+- **Plan limits:** a plan's usage limit pauses ingestion (status `waiting`). Ingestion resumes from the last finished analysis batch after the reset, without parsing the file again.
+- **Security:** see [SECURITY.md](../SECURITY.md#tutorai-local-appslocal). **Design and decisions:** [rfc-local-server.md](rfc-local-server.md). **Build plan:** [impl-local-server.md](impl-local-server.md).
 
 ## Data model
 

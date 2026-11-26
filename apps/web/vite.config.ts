@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { widgetKit } from "./widget-kit-plugin.ts";
+import { SW_DENYLIST } from "./src/platform/sw-denylist.ts";
 
 /**
  * Security policy for the production page (defense in depth for the API key).
@@ -56,6 +57,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,wasm,mjs}"],
+        // TutorAI Local serves these itself (one-time sign-in link, ChatGPT callback, API).
+        navigateFallbackDenylist: SW_DENYLIST,
         maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
       },
     }),

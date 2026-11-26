@@ -11,7 +11,8 @@ import { Crumbs, Shell, sectionLabel } from "./ui/Shell.tsx";
 import { CourseView } from "./views/Course.tsx";
 import { Settings } from "./views/Settings.tsx";
 import { href, useRoute } from "./router.ts";
-import { secrets } from "./platform/secrets.ts";
+import { isPlanProvider, secrets } from "./platform/secrets.ts";
+import { detectLocalServer, localApi, localNeedsOpen } from "./platform/local-server.ts";
 import { t, useLanguage } from "./i18n.tsx";
 
 type Boot =
@@ -19,7 +20,8 @@ type Boot =
   | { stage: "onboarding" }
   | { stage: "permission"; folderName: string; grant: () => Promise<DataRoot | null> }
   | { stage: "ready" }
-  | { stage: "error"; message: string };
+  | { stage: "error"; message: string }
+  | { stage: "open-from-icon" };
 
 export function App() {
   useLanguage(); // the whole tree re-renders in the new language when it changes
@@ -36,8 +38,14 @@ export function App() {
 
   useEffect(() => {
     (async () => {
+      // Served by TutorAI Local? Then take the saved provider choice from the server first.
+      const local = await detectLocalServer();
+      if (localNeedsOpen()) return setBoot({ stage: "open-from-icon" });
+      if (local) secrets.hydrate(await localApi.settings());
       const r = await restoreStorage();
-      if (r.status === "ready" && (secrets.getApiKey() || secrets.keyIsSessionOnly() || secrets.isDemo() || secrets.getLocal())) await startWith(r.root);
+      const configured =
+        secrets.getApiKey() || secrets.keyIsSessionOnly() || secrets.isDemo() || secrets.getLocal() || (local && isPlanProvider(secrets.getProvider()));
+      if (r.status === "ready" && configured) await startWith(r.root);
       else if (r.status === "needs-permission") setBoot({ stage: "permission", folderName: r.folderName, grant: r.grant });
       else setBoot({ stage: "onboarding" });
     })().catch((e) => setBoot({ stage: "error", message: errorMessage(e) }));
@@ -56,6 +64,13 @@ export function App() {
       </div>
     );
   if (boot.stage === "onboarding") return <Onboarding onDone={startWith} />;
+  if (boot.stage === "open-from-icon")
+    return (
+      <div className="mx-auto mt-[15vh] max-w-md space-y-3 p-6 text-center">
+        <h1 className="text-2xl font-semibold">TutorAI</h1>
+        <p className="text-slate-600">{t("פתחו את TutorAI מהסמל שלו (או הריצו tutorai בטרמינל). כך הוא נפתח בצורה מאובטחת.", "Open TutorAI from its icon (or run tutorai in Terminal). That opens it securely.")}</p>
+      </div>
+    );
   if (boot.stage === "permission")
     return (
       <div className="mx-auto mt-[15vh] max-w-md space-y-4 p-6 text-center">

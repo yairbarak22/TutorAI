@@ -1,6 +1,7 @@
 import JSZip from "jszip";
 import type { FileStore } from "@tutorai/core";
 import { t } from "@tutorai/sdk";
+import { localApi, localServer } from "./local-server.ts";
 
 /**
  * Where the student's data lives.
@@ -182,6 +183,31 @@ class BrowserFileStore implements FileStore {
   }
 }
 
+/* ------------------------------ TutorAI Local (server-side folder) ------------------------------ */
+
+/** Files in the data folder the local server manages (works in every browser). */
+export class ServerFileStore implements FileStore {
+  kind = "folder" as const;
+  constructor(public label: string) {}
+  write(path: string, data: Uint8Array | Blob) {
+    return localApi.writeFile(path, data);
+  }
+  read(path: string) {
+    return localApi.readFile(path);
+  }
+  exists(path: string) {
+    return localApi.fileExists(path);
+  }
+  remove(path: string) {
+    return localApi.removeFile(path);
+  }
+}
+
+export async function serverRoot(): Promise<DataRoot> {
+  const f = await localApi.folder();
+  return { mode: "folder", files: new ServerFileStore(f.label) };
+}
+
 /* ------------------------------ data root ------------------------------ */
 
 export type StorageMode = "folder" | "browser";
@@ -220,6 +246,8 @@ export type RestoreResult =
 
 /** Reopens the previous storage choice. Folder access may need one click to re-grant. */
 export async function restoreStorage(): Promise<RestoreResult> {
+  // Served by TutorAI Local: the server's data folder, no picker and no permission prompt.
+  if (localServer()) return { status: "ready", root: await serverRoot() };
   let mode: StorageMode | undefined;
   try {
     mode = await kv.get<StorageMode>("storageMode");

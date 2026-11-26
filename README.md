@@ -102,6 +102,27 @@ A general chatbot is a capable tutor with no memory of you. TutorAI is the syste
 
 You can install the site as an app from the browser menu.
 
+### Use your Claude or ChatGPT plan instead of an API key
+
+Install **TutorAI Local** on your computer with one line. It opens TutorAI in your usual browser and lets you connect:
+
+- **A Claude plan (Pro / Max)** through Anthropic's official Claude Code, which you sign in to yourself. TutorAI never sees your sign-in, and usage counts against your plan. Your use of Claude Code is subject to [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance).
+- **A ChatGPT plan (Plus / Pro)** with **Continue with ChatGPT** (OpenAI's sign-in for open-source apps).
+
+macOS or Linux, in Terminal:
+
+```bash
+curl -fsSL https://yairbarak22.github.io/TutorAI/install.sh | sh
+```
+
+Windows, in PowerShell:
+
+```powershell
+irm https://yairbarak22.github.io/TutorAI/install.ps1 | iex
+```
+
+The installer downloads the program for your computer from this repository's GitHub Releases and checks its checksum. It adds a TutorAI icon and opens the app. No administrator rights are needed, and there are no security warnings to click through. After that, open TutorAI from its icon. It saves your data in `Documents/TutorAI` (in any browser), updates itself, and `tutorai uninstall` removes it (your data folder is kept).
+
 ## Ask Claude about this project
 
 Paste this into Claude to get a plain-language tour: what the app does, how to start, and how you can contribute.
@@ -136,6 +157,8 @@ Claude needs web access to read the links (Claude Code, or claude.ai with web se
 See [SECURITY.md](SECURITY.md) for the security model.
 
 ## Development
+
+TutorAI Local (the program from the install line above) lives in `apps/local`. To run it from source, use `npm run local:dev`. To build the single binary, use `npm run local:build`. Its end-to-end tests run with `npm run e2e:local`. Design: [docs/rfc-local-server.md](docs/rfc-local-server.md).
 
 Requires [Node.js 22](https://nodejs.org) and git.
 

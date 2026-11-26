@@ -4,6 +4,7 @@ import { t } from "@tutorai/sdk";
 import { sectionKey, type Store } from "../db/store.ts";
 import type { FileStore } from "../files.ts";
 import { BASE_SYSTEM_PROMPT } from "../llm/prompts.ts";
+import { LLMError } from "../llm/anthropic.ts";
 import { formatSections } from "../retrieve.ts";
 import { detectKind, parseDocx, parsePdf, parsePptx, parseText, renderPdfPagePng, type PdfDeps, type RawUnit } from "./parsers.ts";
 
@@ -18,6 +19,12 @@ export interface IngestDeps {
 }
 
 const ANALYSIS_BATCH_CHARS = 60_000;
+
+/** Analysis batch size for this model (small local models get smaller batches). */
+const batchCharsFor = (llm: LLMApi) => Math.min(ANALYSIS_BATCH_CHARS, llm.limitsFor?.("fast")?.contextChars ?? Infinity);
+
+/** A subscription plan's usage limit: the source waits and resumes later instead of failing. */
+const isPlanLimit = (e: unknown): e is LLMError => e instanceof LLMError && e.kind === "rate_limit";
 
 export const SourceAnalysis = z.object({
   sections: z.array(z.object({ id: z.string(), title: z.string(), summary: z.string() })),
@@ -43,6 +50,22 @@ export async function ingestSource(deps: IngestDeps, sourceId: number): Promise<
   const report = (pct: number, msg: string) => deps.onProgress?.(sourceId, pct, msg);
 
   try {
+    // Resume: an earlier run already parsed this source and finished some analysis batches with the
+    // same batch size, so skip parsing (and OCR) and continue from the next batch.
+    const resumable =
+      source.analyzed_batches > 0 && source.batch_chars === batchCharsFor(llm) && store.sectionsOfSource(sourceId).length > 0;
+    if (resumable) {
+      store.setSourceStatus(sourceId, "analyzing", source.progress);
+      report(source.progress, t("ממשיך לנתח נושאים ומושגים…", "Resuming topic and concept analysis…"));
+      await analyzeSource(deps, sourceId, (p) => {
+        store.setSourceStatus(sourceId, "analyzing", 0.35 + 0.6 * p);
+        report(0.35 + 0.6 * p, t("מנתח נושאים ומושגים…", "Analyzing topics and concepts…"));
+      });
+      store.setSourceStatus(sourceId, "ready", 1);
+      report(1, t("מוכן", "Done"));
+      return;
+    }
+    store.setAnalysisCursor(sourceId, 0, null);
     store.setSourceStatus(sourceId, "parsing", 0.05);
     report(0.05, t("קורא את הקובץ…", "Reading the file…"));
     const bytes = await files.read(source.path);
@@ -66,8 +89,9 @@ export async function ingestSource(deps: IngestDeps, sourceId: number): Promise<
                 "Transcribe all the content of this page as text, in its original language. Formulas in LaTeX ($...$). Briefly describe diagrams in square brackets. Return only the content.",
             });
             if (text.trim()) u.text = text.trim();
-          } catch {
-            /* keep whatever text we have */
+          } catch (e) {
+            if (isPlanLimit(e)) throw e; // don't keep spending calls; wait for the reset
+            /* otherwise keep whatever text we have */
           }
         }
       }
@@ -96,6 +120,12 @@ export async function ingestSource(deps: IngestDeps, sourceId: number): Promise<
     report(1, t("מוכן", "Done"));
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
+    if (isPlanLimit(e)) {
+      const at = store.source(sourceId)?.progress ?? 0;
+      store.setSourceStatus(sourceId, "waiting", at, msg);
+      report(at, msg);
+      throw e;
+    }
     store.setSourceStatus(sourceId, "error", 0, msg);
     report(0, msg);
     throw e;
@@ -109,7 +139,8 @@ async function analyzeSource(deps: IngestDeps, sourceId: number, onPart: (p: num
   const names = new Map([[source.id, source.name]]);
 
   // Smaller batches for small local models, so a batch plus the instructions fits their context.
-  const batchChars = Math.min(ANALYSIS_BATCH_CHARS, llm.limitsFor?.("fast")?.contextChars ?? Infinity);
+  const batchChars = batchCharsFor(llm);
+  const start = source.batch_chars === batchChars ? source.analyzed_batches : 0;
   const batches: (typeof sections)[] = [];
   let cur: typeof sections = [];
   let size = 0;
@@ -125,6 +156,7 @@ async function analyzeSource(deps: IngestDeps, sourceId: number, onPart: (p: num
   if (cur.length) batches.push(cur);
 
   for (const [i, batch] of batches.entries()) {
+    if (i < start) continue;
     const existing = store.concepts(source.course_id).map((c) => c.name);
     const isExam = source.kind === "sample_exam";
     const result = await llm.object(SourceAnalysis, {
@@ -153,6 +185,7 @@ async function analyzeSource(deps: IngestDeps, sourceId: number, onPart: (p: num
       store.updateSectionMeta(Number(s.id.slice(1)), s.title, s.summary);
     }
     mergeConcepts(store, source.course_id, result.concepts.map((c) => ({ ...c, citations: c.citations.filter((x) => valid.has(x)) })));
+    store.setAnalysisCursor(sourceId, i + 1, batchChars);
     onPart((i + 1) / batches.length);
   }
 }

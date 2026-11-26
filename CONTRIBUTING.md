@@ -41,6 +41,8 @@ npm run dev
 
 Open http://localhost:5173, choose in-browser storage, then try demo mode with the sample course. You can work without an API key: demo mode replays the recorded golden outputs.
 
+Working on TutorAI Local (`apps/local`, the installable program)? Run `npm run local:dev`, then `npx tsx apps/local/src/main.ts open` to open it. Tests: `npx vitest run apps/local` and `npm run e2e:local`.
+
 ## Repo layout
 
 | Path | What |

@@ -19,9 +19,12 @@ export interface Source {
   path: string;
   hash: string;
   size: number;
-  status: "pending" | "parsing" | "analyzing" | "ready" | "error";
+  /** "waiting": paused by a plan's usage limit; resumes from analyzed_batches. */
+  status: "pending" | "parsing" | "analyzing" | "waiting" | "ready" | "error";
   progress: number;
   error: string | null;
+  analyzed_batches: number;
+  batch_chars: number | null;
   created_at: string;
 }
 export interface Section {
@@ -131,6 +134,12 @@ export class Store {
       const cols = this.all<{ name: string }>("PRAGMA table_info(sections)").map((c) => c.name);
       if (!cols.includes("t_start")) this.db.run("ALTER TABLE sections ADD COLUMN t_start REAL");
     }
+    if (from < 3) {
+      // v3: resumable analysis (sources.analyzed_batches, sources.batch_chars).
+      const cols = this.all<{ name: string }>("PRAGMA table_info(sources)").map((c) => c.name);
+      if (!cols.includes("analyzed_batches")) this.db.run("ALTER TABLE sources ADD COLUMN analyzed_batches INTEGER NOT NULL DEFAULT 0");
+      if (!cols.includes("batch_chars")) this.db.run("ALTER TABLE sources ADD COLUMN batch_chars INTEGER");
+    }
     this.db.run("INSERT INTO meta(key,value) VALUES('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", [String(SCHEMA_VERSION)]);
   }
 
@@ -238,6 +247,9 @@ export class Store {
   }
   setSourceStatus(id: number, status: Source["status"], progress: number, error: string | null = null) {
     this.run("UPDATE sources SET status=?, progress=?, error=? WHERE id=?", [status, progress, error, id]);
+  }
+  setAnalysisCursor(id: number, analyzedBatches: number, batchChars: number | null) {
+    this.run("UPDATE sources SET analyzed_batches=?, batch_chars=? WHERE id=?", [analyzedBatches, batchChars, id]);
   }
   setSourceKind(id: number, kind: Source["kind"]) {
     this.run("UPDATE sources SET kind=? WHERE id=?", [kind, id]);

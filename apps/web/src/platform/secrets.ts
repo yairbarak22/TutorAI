@@ -1,4 +1,6 @@
 import type { LocalConfig } from "@tutorai/core";
+import type { Settings } from "@tutorai/local-api";
+import { localApi, localServer } from "./local-server.ts";
 
 /**
  * The API key stays on this device only (browser storage) — deliberately NOT in tutorai.db,
@@ -12,9 +14,14 @@ const DEMO = "tutorai.demo";
 const MODELS = "tutorai.models";
 const PROVIDER = "tutorai.provider";
 const LOCAL = "tutorai.local";
+const HYBRID_SMART = "tutorai.hybridSmart";
 
-/** Which backend answers: Claude, a model on this computer, or local for fast work + Claude for the rest. */
-export type Provider = "claude" | "local" | "hybrid";
+/**
+ * Which backend answers: Claude (API key), a model on this computer, local for fast work + Claude
+ * for the rest, or (in TutorAI Local) the student's Claude plan / ChatGPT plan.
+ */
+export type Provider = "claude" | "local" | "hybrid" | "claude-code" | "chatgpt";
+export const isPlanProvider = (p: Provider): p is "claude-code" | "chatgpt" => p === "claude-code" || p === "chatgpt";
 
 const safe = <T>(fn: () => T, fallback: T): T => {
   try {
@@ -54,7 +61,24 @@ export const secrets = {
   getModels: (): { fast: string; smart: string } | null => safe(() => JSON.parse(localStorage.getItem(MODELS) ?? "null"), null),
   setModels: (m: { fast: string; smart: string }) => safe(() => localStorage.setItem(MODELS, JSON.stringify(m)), undefined),
   getProvider: (): Provider => safe(() => (localStorage.getItem(PROVIDER) as Provider | null) ?? "claude", "claude"),
-  setProvider: (p: Provider) => safe(() => localStorage.setItem(PROVIDER, p), undefined),
+  setProvider: (p: Provider) => {
+    safe(() => localStorage.setItem(PROVIDER, p), undefined);
+    // TutorAI Local keeps it server-side too, so it survives a port change.
+    if (localServer()) void localApi.saveSettings({ provider: p }).catch(() => {});
+  },
+  /** In hybrid mode: which backend serves the smart tier (the API key, or a plan in TutorAI Local). */
+  getHybridSmart: (): "claude" | "claude-code" | "chatgpt" =>
+    safe(() => (localStorage.getItem(HYBRID_SMART) as "claude" | "claude-code" | "chatgpt" | null) ?? "claude", "claude"),
+  setHybridSmart: (p: "claude" | "claude-code" | "chatgpt") => {
+    safe(() => localStorage.setItem(HYBRID_SMART, p), undefined);
+    if (localServer()) void localApi.saveSettings({ hybridSmart: p }).catch(() => {});
+  },
+  /** TutorAI Local: take the provider choices saved on the server (they outlive browser storage). */
+  hydrate: (s: Settings) =>
+    safe(() => {
+      if (s.provider) localStorage.setItem(PROVIDER, s.provider);
+      if (s.hybridSmart) localStorage.setItem(HYBRID_SMART, s.hybridSmart);
+    }, undefined),
   getLocal: (): LocalConfig | null => safe(() => JSON.parse(localStorage.getItem(LOCAL) ?? "null"), null),
   setLocal: (c: LocalConfig) => safe(() => localStorage.setItem(LOCAL, JSON.stringify(c)), undefined),
 };

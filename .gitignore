@@ -10,3 +10,5 @@ playwright-report
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/contribute/
+
+e2e-local/.state.json

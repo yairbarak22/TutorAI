@@ -15,5 +15,5 @@
     "noEmit": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["packages/*/src", "plugins", "apps/web/src", "scripts", "e2e"]
+  "include": ["packages/*/src", "plugins", "apps/web/src", "apps/local/src", "apps/local/test", "scripts", "e2e", "e2e-local", "playwright.local.config.ts"]
 }

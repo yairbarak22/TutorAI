@@ -25,6 +25,8 @@ export class LLMError extends Error {
   constructor(
     message: string,
     public readonly kind: "auth" | "rate_limit" | "refusal" | "invalid_output" | "network" | "other",
+    /** For rate_limit from a subscription plan: when the limit resets (ISO time), if known. */
+    public readonly resetAt?: string,
   ) {
     super(message);
   }

@@ -24,12 +24,17 @@
     "e2e": "playwright test",
     "check": "npm run typecheck && npm run test && npm run e2e",
     "fixtures": "node scripts/make-fixtures.mjs",
-    "screenshots": "node scripts/readme-screenshots.mjs"
+    "screenshots": "node scripts/readme-screenshots.mjs",
+    "local:dev": "npm run build && tsx apps/local/src/main.ts serve --dev",
+    "local:build": "npm run build -w @tutorai/local",
+    "e2e:local": "playwright test -c playwright.local.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
     "@types/node": "^22.20.7",
+    "tsx": "^4.23.15",
     "typescript": "5.9",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "zod": "^4.6.7"
   }
 }

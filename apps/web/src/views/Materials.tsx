@@ -18,6 +18,7 @@ const status = (): Record<Source["status"], { label: string; color: "slate" | "g
   pending: { label: t("בתור", "Queued"), color: "slate" },
   parsing: { label: t("קורא", "Reading"), color: "blue" },
   analyzing: { label: t("מנתח", "Analyzing"), color: "blue" },
+  waiting: { label: t("ממתין לאיפוס המנוי", "Waiting for plan reset"), color: "amber" },
   ready: { label: t("מוכן", "Ready"), color: "green" },
   error: { label: t("שגיאה", "Error"), color: "red" },
 });
@@ -39,8 +40,38 @@ export function Materials({ courseId }: { courseId: number }) {
 
   const ready = sources.filter((s) => s.status === "ready").length;
 
+  const onPlan = engine.provider === "claude-code" || engine.provider === "chatgpt";
+  const [planNoticeSeen, setPlanNoticeSeen] = useState(() => {
+    try {
+      return localStorage.getItem("tutorai.planNoticeSeen") === "1";
+    } catch {
+      return true;
+    }
+  });
   return (
     <div className="space-y-5">
+      {onPlan && !planNoticeSeen && (
+        <Alert kind="info">
+          {t(
+            "ניתוח החומרים משתמש במנוי שלכם ונספר במגבלות שלו. בקורס גדול ייתכן שתגיעו למגבלה; אם זה קורה, הניתוח ממשיך אוטומטית מאותה נקודה אחרי האיפוס.",
+            "Analyzing your material uses your plan and counts against its limits. A large course may reach the limit; if it does, analysis continues automatically from the same point after the reset.",
+          )}{" "}
+          <button
+            type="button"
+            className="cursor-pointer underline"
+            onClick={() => {
+              try {
+                localStorage.setItem("tutorai.planNoticeSeen", "1");
+              } catch {
+                /* fine */
+              }
+              setPlanNoticeSeen(true);
+            }}
+          >
+            {t("הבנתי", "Got it")}
+          </button>
+        </Alert>
+      )}
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -151,6 +182,12 @@ function SourceRow({ s }: { s: Source }) {
           <Badge color={st.color}>{st.label}</Badge>
           {s.kind === "sample_exam" && <Badge color="amber">{t("מבחן לדוגמה", "Sample exam")}</Badge>}
         </div>
+        {s.status === "waiting" && (
+          <p className="mt-1.5 text-[12.5px] text-muted">
+            {engine.waitingMessage(s.id) ??
+              t("הגעתם למגבלת השימוש של המנוי. הניתוח ימשיך מאותה נקודה אחרי האיפוס.", "You reached your plan's usage limit. Analysis continues from the same point after the reset.")}
+          </p>
+        )}
         {(s.status === "parsing" || s.status === "analyzing" || s.status === "pending") && (
           <div className="mt-2">
             {live ? (
