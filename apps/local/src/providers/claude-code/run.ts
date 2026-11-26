@@ -143,13 +143,18 @@ export async function runClaude(req: LLMRequest, emit: (e: LLMEvent) => void, op
   const onAbort = () => child && killTree(child);
   opts.signal.addEventListener("abort", onAbort, { once: true });
   try {
-    child = spawn(opts.claudePath, buildArgs(req, opts.model), {
+    try {
+      child = spawn(opts.claudePath, buildArgs(req, opts.model), {
       cwd,
       env: claudeEnv(opts.claudePath, opts.env),
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
-      shell: false,
-    });
+        shell: false,
+      });
+    } catch (e) {
+      emit({ type: "error", kind: "not_installed", message: `Claude Code couldn't be started (${(e as Error).message}).` });
+      return;
+    }
     activeChildren.add(child);
     child.once("close", () => activeChildren.delete(child!));
     const state: ParseState = { text: "", result: null };

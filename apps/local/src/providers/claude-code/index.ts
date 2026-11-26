@@ -45,9 +45,13 @@ export function createClaudeCode(opts: ClaudeCodeOptions = {}): ClaudeCodeServic
 
   const exec = (path: string, args: string[], timeoutMs = 20_000) =>
     new Promise<{ ok: boolean; stdout: string }>((resolve) => {
-      execFile(path, args, { timeout: timeoutMs, windowsHide: true, env: claudeEnv(path, opts.env) }, (err, stdout) =>
-        resolve({ ok: !err, stdout: String(stdout ?? "") }),
-      );
+      try {
+        execFile(path, args, { timeout: timeoutMs, windowsHide: true, env: claudeEnv(path, opts.env) }, (err, stdout) =>
+          resolve({ ok: !err, stdout: String(stdout ?? "") }),
+        );
+      } catch {
+        resolve({ ok: false, stdout: "" }); // e.g. EINVAL for a .cmd on Windows
+      }
     });
 
   const authStatus = async (path: string) => {
@@ -135,12 +139,16 @@ export function createClaudeCode(opts: ClaudeCodeOptions = {}): ClaudeCodeServic
       if (!found) return { started: false, manualCommand };
       if (loginProc && loginProc.exitCode === null) return { started: true, manualCommand };
       // The CLI opens Anthropic's own sign-in page; TutorAI never sees the credentials.
-      loginProc = spawn(found.path, ["auth", "login", "--claudeai"], {
-        stdio: "ignore",
-        windowsHide: true,
-        env: claudeEnv(found.path, opts.env),
-        detached: process.platform !== "win32",
-      });
+      try {
+        loginProc = spawn(found.path, ["auth", "login", "--claudeai"], {
+          stdio: "ignore",
+          windowsHide: true,
+          env: claudeEnv(found.path, opts.env),
+          detached: process.platform !== "win32",
+        });
+      } catch {
+        return { started: false, manualCommand };
+      }
       loginProc.on("error", () => (loginProc = null));
       loginProc.on("close", () => {
         loginProc = null;

@@ -61,13 +61,16 @@ const servedLocally = () => {
 export async function detectLocalServer(): Promise<Hello | null> {
   if (!servedLocally()) return null;
   try {
-    const r = await fetch("/api/hello", { credentials: "same-origin", headers: { [CSRF_HEADER]: token ?? "" }, signal: AbortSignal.timeout(1500) });
-    if (r.status === 401 || r.status === 403) needsOpen = true;
+    const r = await fetch("/api/hello", { credentials: "same-origin", headers: { [CSRF_HEADER]: token ?? "" }, signal: AbortSignal.timeout(8000) });
+    // Served from 127.0.0.1 by TutorAI Local but not usable (no session, or the server stopped while a
+    // cached copy of the page opened): ask to open TutorAI from its icon.
+    if (!r.ok) needsOpen = true;
     if (!r.ok) return null;
     const p = Hello.safeParse(await r.json());
     hello = p.success ? p.data : null;
   } catch {
     hello = null;
+    needsOpen = true;
   }
   if (hello) startHeartbeat();
   return hello;
