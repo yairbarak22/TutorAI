@@ -21,16 +21,17 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173, choose in-browser storage, then try demo mode with the sample course. You can work without an API key.
+Open http://localhost:5173, choose in-browser storage, then try demo mode with the sample course. You can work without an API key: demo mode replays the recorded golden outputs.
 
 ## Repo layout
 
 | Path | What |
 |---|---|
-| `apps/web/` | The static web app (React, Vite, Tailwind; Hebrew RTL and English LTR UI) |
+| `apps/web/` | The static web app (React, Vite, Tailwind; Hebrew RTL and English LTR UI). `src/platform/` holds storage, the API key, and the SymPy worker |
 | `packages/sdk/` | `@ruecai/sdk`: artifact schemas, the tool contract, quality checks |
-| `packages/core/` | The engine: SQLite store (sql.js), parsers (PDF/PPTX/DOCX), retrieval, Claude client, learner model (BKT + FSRS), tool runtime |
+| `packages/core/` | The engine: SQLite store (sql.js), parsers (PDF/PPTX/DOCX), ingestion, retrieval, Claude client, learner model (BKT, FSRS, mistakes notebook, daily session, concept graph), tool runtime |
 | `plugins/<pack>/<tool>/` | The tools, one folder per tool, auto-discovered |
+| `plugins/_fixtures/` | Fixture courses (probability, law) used by evals, demo mode, and E2E |
 | `e2e/` | Real-browser tests (Playwright) |
 | `docs/` | Architecture, roadmap, guides |
 

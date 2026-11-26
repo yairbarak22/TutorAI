@@ -21,7 +21,12 @@ If a secret named `ANTHROPIC_API_KEY` is set, every push to `main` runs every to
 
 - **New tool:** make sure it has passing `evals/`, a clear English prompt (`prompt.md`) and Hebrew translations in the manifest's `i18n.he` block, no external `fetch`, and that the tool doesn't solve assignments for the student.
 - **Core/SDK:** only after an agreed RFC. A breaking SDK change bumps the version.
-- **Security:** any change to `Visuals.tsx` (iframe/CSP), `Markdown.tsx` (sanitizing), `secrets.ts`, or the workflows requires review by a core maintainer.
+- **Security:** any change to `Visuals.tsx` (iframe/CSP), `Markdown.tsx` (sanitizing), `secrets.ts`, `sympy.ts` / `sympy.worker.ts` (expression whitelist), or the workflows requires review by a core maintainer.
+- **Pedagogy:** a tool must guide, not solve graded work. Prefer hints and questions over full answers, and keep the shared system prompt (`packages/core/src/llm/prompts.ts`) as the single place for these rules.
+
+## Pack owners
+
+When a faculty joins, add its owner to `.github/CODEOWNERS` (for example `/plugins/law/ @owner`). Pack owners review new tools in their field for accuracy and level; core maintainers still review anything outside `plugins/`.
 
 ## Releases
 

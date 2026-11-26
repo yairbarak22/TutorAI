@@ -9,7 +9,7 @@ There are two kinds:
 | What you write | `plugin.yaml` + `prompt.md` | `plugin.yaml` + `index.ts` |
 | Good for | Most tools: summaries, questions, case analysis, exercises | Multi-step logic, calculations, conversation |
 | Need to code? | **No** | Basic TypeScript |
-| Examples | `core/summary`, `law/case-brief`, `math/worked-example` | `core/tutor`, `core/exam-from-samples`, `core/study-plan`, `core/explainer` |
+| Examples | `core/summary`, `core/quiz`, `core/flashcards`, `core/diagram`, `law/case-brief`, `math/worked-example` | `core/tutor`, `core/check-solution`, `core/exam-from-samples`, `core/study-plan`, `core/explainer` |
 
 ---
 
@@ -124,13 +124,14 @@ The UI already knows how to display all of them. The full schemas are in `packag
 | `diagram` | Mermaid + explanation | A diagram |
 | `exam_simulation` | Questions with `points`, `rubric`, `model_answer` | An exam with a timer and rubric-based grading |
 | `study_plan` | Days and tasks | A study plan |
+| `solution_check` | The student's steps with a status per step, SymPy-checkable claims, the first error, graded hints | Step-by-step feedback with verified math |
 | `interactive_widget` | A self-contained HTML document | A sandboxed iframe (no network, no data access) with the bundled Viz Kit: three.js 3D scenes, 2D plots, controls, KaTeX formulas |
 | `concept_map` | Concepts and prerequisites | (Reserved for future use) |
 | `chat` | Reserved for the tutor | A chat screen |
 
 ## Input fields (`inputs[].type`)
 
-`text` · `textarea` · `number` · `select` (with `options`) · `concept` (pick from the course concepts) · `source` (pick a file, or "all materials")
+`text` · `textarea` · `number` · `select` (with `options`) · `concept` (pick from the course concepts) · `source` (pick a file, or "all materials") · `image` (a photo, for example of a handwritten solution; passed to the model with vision)
 
 ## `retrieval.mode`
 
@@ -180,6 +181,7 @@ export default defineTool<"quiz">({
 | `ctx.baseSystemPrompt` | The shared rules (answer language, citations, pedagogy, academic integrity) |
 | `ctx.today` | The date (injectable in tests) |
 | `ctx.chat` | Only for `output: chat` tools: `{ history, message, onDelta }` |
+| `ctx.math?.verify(claims)` | Real symbolic math (SymPy in a worker) for `{ lhs, rhs }` claims, when the platform provides it. Returns `ok: true / false / null` per claim. See `core/check-solution` |
 
 After `run`, the core validates the output against the schema, removes citations that don't exist in the context, saves the artifact to `ruecai.db`, and creates flashcards if needed.
 
