@@ -15,17 +15,23 @@ $Exe = Join-Path $Dir 'tutorai.exe'
 $Tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("tutorai-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Force -Path $Tmp | Out-Null
 
+# Downloads a URL to a file; a file:// base (local test releases) is copied instead.
+function Get-TutorAIFile([string]$Url, [string]$OutFile) {
+  if ($Url -like 'file:*') { Copy-Item -Force ([uri]$Url).LocalPath $OutFile }
+  else { Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $OutFile }
+}
+
 try {
   Write-Host "Downloading TutorAI (windows, $Arch)..."
   try {
-    Invoke-WebRequest -UseBasicParsing -Uri "$Base/$Asset" -OutFile (Join-Path $Tmp 'tutorai.exe')
+    Get-TutorAIFile "$Base/$Asset" (Join-Path $Tmp 'tutorai.exe')
   } catch {
     if ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 404) {
       throw "no TutorAI release for $Asset was found yet. Use the browser version for now: https://yairbarak22.github.io/TutorAI/"
     }
     throw
   }
-  Invoke-WebRequest -UseBasicParsing -Uri "$Base/SHA256SUMS" -OutFile (Join-Path $Tmp 'SHA256SUMS')
+  Get-TutorAIFile "$Base/SHA256SUMS" (Join-Path $Tmp 'SHA256SUMS')
 
   $Line = Get-Content (Join-Path $Tmp 'SHA256SUMS') | ForEach-Object { $_.TrimEnd("`r") } | Where-Object { $_ -match "\s\*?$([regex]::Escape($Asset))$" } | Select-Object -First 1
   if (-not $Line) { throw "no checksum for $Asset" }
@@ -41,7 +47,7 @@ try {
     Rename-Item -Force $Exe "tutorai.exe.old"
   }
   Move-Item -Force (Join-Path $Tmp 'tutorai.exe') $Exe
-  try { Invoke-WebRequest -UseBasicParsing -Uri "$Base/icon.ico" -OutFile (Join-Path $Dir 'icon.ico') } catch {}
+  try { Get-TutorAIFile "$Base/icon.ico" (Join-Path $Dir 'icon.ico') } catch {}
 
   # Shortcuts in the Start Menu and on the Desktop.
   $Shell = New-Object -ComObject WScript.Shell
