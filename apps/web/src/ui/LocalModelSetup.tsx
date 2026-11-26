@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Copy, PlugZap } from "lucide-react";
+import { Check, Copy, PlugZap, Sparkles } from "lucide-react";
 import { DEFAULT_LOCAL, listLocalModels, type LocalConfig, type LocalFlavor } from "@ruecai/core";
 import { secrets } from "../platform/secrets.ts";
 import { Alert, Button, Field, Spinner, errorMessage, inputClass } from "./components.tsx";
@@ -106,7 +106,78 @@ export function LocalModelSetup({ onSaved, saveLabel }: { onSaved: (cfg: LocalCo
         </>
       )}
 
+      {cfg.flavor === "ollama" && <ClaudeSetupPrompt />}
       <SetupGuide flavor={cfg.flavor} />
+    </div>
+  );
+}
+
+/** The setup instructions as a prompt for Claude (Claude Code / Claude with computer access) to carry out. */
+export function setupPrompt(origin: string): string {
+  return t(
+    `עזור לי להריץ מודל AI מקומי עם Ollama במחשב הזה, כדי שאתר הלימודים ${origin} יוכל להשתמש בו. בצע את השלבים בעצמך ובדוק כל שלב:
+
+1. בדוק איזו מערכת הפעלה יש וכמה זיכרון (RAM) יש במחשב.
+2. אם Ollama לא מותקן, התקן אותו (https://ollama.com/download) וודא שהוא רץ.
+3. התקן מודל לפי הזיכרון (אם כבר מותקן מודל מתאים, אל תוריד שוב):
+   - מחשב עם עד 8GB זיכרון: qwen3:4b
+   - מחשב עם 16GB זיכרון: qwen3:8b
+   - מחשב עם 32GB זיכרון ומעלה: qwen3:14b
+4. אפשר לאתר לפנות ל-Ollama: הגדר את משתנה הסביבה OLLAMA_ORIGINS כך שיכלול את ${origin}. אם כבר יש בו ערכים, הוסף עם פסיק ואל תמחק אותם. ההגדרה צריכה להישמר גם אחרי הפעלה מחדש של המחשב (ב-macOS: LaunchAgent שמריץ launchctl setenv בכניסה; ב-Windows: setx; ב-Linux: override ל-systemd של ollama).
+5. הפעל מחדש את Ollama כדי שיקרא את ההגדרה (ב-macOS: לסגור את האפליקציה לגמרי ולפתוח שוב).
+6. בדוק שזה עובד: curl -i -H "Origin: ${origin}" http://localhost:11434/api/tags צריך להחזיר 200 עם Access-Control-Allow-Origin: ${origin}.
+
+בסוף כתוב לי בקצרה מה עשית ואיזה מודל לבחור באתר.`,
+    `Help me run a local AI model with Ollama on this computer, so the study site ${origin} can use it. Do the steps yourself and check each one:
+
+1. Check the operating system and how much memory (RAM) the computer has.
+2. If Ollama isn't installed, install it (https://ollama.com/download) and make sure it's running.
+3. Install a model that fits the memory (if a suitable one is already installed, don't download again):
+   - up to 8GB: qwen3:4b
+   - 16GB: qwen3:8b
+   - 32GB or more: qwen3:14b
+4. Allow the site to reach Ollama: set the OLLAMA_ORIGINS environment variable so it includes ${origin}. If it already has values, append with a comma and keep them. The setting must survive a restart (macOS: a LaunchAgent that runs launchctl setenv at login; Windows: setx; Linux: a systemd override for ollama).
+5. Restart Ollama so it reads the setting (macOS: quit the app completely and reopen it).
+6. Verify: curl -i -H "Origin: ${origin}" http://localhost:11434/api/tags should return 200 with Access-Control-Allow-Origin: ${origin}.
+
+Finally, tell me briefly what you did and which model to pick on the site.`,
+  );
+}
+
+function ClaudeSetupPrompt() {
+  const [copied, setCopied] = useState(false);
+  const text = setupPrompt(typeof location !== "undefined" ? location.origin : "");
+  return (
+    <div className="rounded-xl border border-black/[0.08] bg-white p-4" data-testid="claude-setup-prompt">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-[14px] font-medium text-ink">
+            <Sparkles size={15} /> {t("הכי פשוט: תנו ל-Claude להתקין", "Easiest: let Claude set it up")}
+          </div>
+          <p className="mt-1 text-[12.5px] leading-5 text-muted">
+            {t(
+              "העתיקו את ההנחיה והדביקו ב-Claude Code או באפליקציית Claude עם גישה למחשב. היא מתקינה את Ollama ומודל שמתאים למחשב, ומאשרת לאתר הזה לגשת אליו.",
+              "Copy the prompt and paste it into Claude Code or the Claude app with computer access. It installs Ollama and a model that fits your computer, and allows this site to reach it.",
+            )}
+          </p>
+        </div>
+        <Button
+          size="sm"
+          onClick={() => {
+            void navigator.clipboard?.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          }}
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? t("הועתק", "Copied") : t("העתקת ההנחיה", "Copy prompt")}
+        </Button>
+      </div>
+      <details className="mt-2">
+        <summary className="cursor-pointer text-[12.5px] text-muted hover:text-ink">{t("מה כתוב בהנחיה?", "What does the prompt say?")}</summary>
+        <pre dir="auto" className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg bg-black/[0.03] p-3 font-sans text-[12.5px] leading-5 text-ink-2">
+          {text}
+        </pre>
+      </details>
     </div>
   );
 }
@@ -115,7 +186,7 @@ function SetupGuide({ flavor }: { flavor: LocalFlavor }) {
   const origin = typeof location !== "undefined" ? location.origin : "";
   return (
     <details className="rounded-xl border border-black/[0.08] bg-black/[0.015] px-4 py-3 text-[13px] leading-6 text-ink-2">
-      <summary className="cursor-pointer font-medium text-ink">{t("איך מתקינים? (פעם אחת, כ-10 דקות)", "How to set it up (once, ~10 minutes)")}</summary>
+      <summary className="cursor-pointer font-medium text-ink">{t("התקנה ידנית (פעם אחת, כ-10 דקות)", "Manual setup (once, ~10 minutes)")}</summary>
       {flavor === "ollama" ? (
         <ol className="mt-3 list-decimal space-y-3 ps-5">
           <li>
