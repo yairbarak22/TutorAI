@@ -9,7 +9,7 @@ import probability from "./_fixtures/probability.json";
 import law from "./_fixtures/law.json";
 
 const manifests = import.meta.glob<string>("./*/*/plugin.yaml", { query: "?raw", import: "default", eager: true });
-const prompts = import.meta.glob<string>(["./*/*/prompt.md", "./*/*/prompt.he.md"], { query: "?raw", import: "default", eager: true });
+const prompts = import.meta.glob<string>("./*/*/prompt.md", { query: "?raw", import: "default", eager: true });
 const codes = import.meta.glob<CodeTool>("./*/*/index.ts", { import: "default", eager: true });
 const goldens = import.meta.glob<Record<string, unknown>>("./*/*/evals/golden.json", { import: "default", eager: true });
 const evalSpecs = import.meta.glob<string>("./*/*/evals/eval.yaml", { query: "?raw", import: "default", eager: true });
@@ -23,7 +23,7 @@ export const tools: LoadedTool[] = Object.entries(manifests)
       return loadPlugin({
         dir,
         manifestYaml,
-        prompt: prompts[`./${dir}/prompt.md`] ?? prompts[`./${dir}/prompt.he.md`],
+        prompt: prompts[`./${dir}/prompt.md`],
         code: codes[`./${dir}/index.ts`],
         golden: goldens[`./${dir}/evals/golden.json`],
         evalYaml: evalSpecs[`./${dir}/evals/eval.yaml`],

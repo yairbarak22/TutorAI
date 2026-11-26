@@ -50,12 +50,12 @@ A general chatbot is a brilliant tutor with no memory of you. RuecAI is the syst
 ## How it works
 
 - **Local-first.** Everything runs in your browser. Your data lives in a folder you choose (`ruecai.db` plus your files) in Chrome/Edge, or in browser storage in Safari/Firefox. There is no RuecAI server and no telemetry.
-- **AI.** Anthropic's Claude, called directly from the browser with **your own API key**, stored only in your browser. Defaults: `claude-haiku-5-5` for fast work and `claude-sonnet-5-5` for explanations and exams; you can change both in Settings. No key yet? Try **demo mode** with a sample course.
+- **AI, your choice.** Anthropic's Claude, called directly from the browser with **your own API key** (stored only in your browser); or a **free open-source model running on your own computer** (Ollama or LM Studio); or a hybrid of the two. No key yet? Try **demo mode** with a sample course.
 - **Grounded.** Material is split into sections with page/slide anchors. Tools receive the relevant sections, and every output is validated against a schema and checked for valid citations.
 - **Bilingual.** The interface is in Hebrew (RTL) or English (LTR); AI-generated content follows your choice.
 - **Open to contributions.** Every tool is a folder in [`plugins/`](plugins). A new tool can be written **without code** (a YAML file and a prompt), and none is merged without passing automated quality checks (evals).
 
-More detail: [Architecture](docs/02-architecture.md).
+More detail: [Architecture](docs/architecture.md).
 
 ## Contributing 🙌
 
@@ -72,12 +72,8 @@ npm run dev        # http://localhost:5173
 npm run check      # typecheck + unit tests + plugin evals + browser E2E
 ```
 
-## Status
-
-Working today: everything listed above. Next: a **student pilot** with 10–20 students in a probability course and a law course. See the [roadmap](docs/03-roadmap.md).
-
 ## Docs
 
-[Architecture](docs/02-architecture.md) · [Roadmap](docs/03-roadmap.md) · [Writing tools](docs/plugins.md) · [Distribution and installation](docs/04-distribution.md) · [Landscape research](docs/01-landscape-research.md) · [For maintainers](docs/maintainers.md) · [Security](SECURITY.md) · [Code of conduct](CODE_OF_CONDUCT.md)
+[Architecture](docs/architecture.md) · [Writing tools](docs/plugins.md) · [Roadmap](docs/roadmap.md) · [For maintainers](docs/maintainers.md) · [Security](SECURITY.md) · [Code of conduct](CODE_OF_CONDUCT.md)
 
 Licensed under [Apache-2.0](LICENSE). Course materials belong to their lecturers; RuecAI never shares them between students.

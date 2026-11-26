@@ -8,7 +8,7 @@ export const DEFAULT_BUDGET_CHARS = 160_000;
 /**
  * Builds the material context for a request.
  *
- * Strategy (see docs/02-architecture.md → Retrieval):
+ * Strategy (see docs/architecture.md → Retrieval):
  *  1. Candidate sections = picked sources, or sample exams (mode "samples"),
  *     or all regular material.
  *  2. If a concept / query is given, rank candidates with BM25 (+ concept's known sections).

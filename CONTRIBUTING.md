@@ -29,11 +29,11 @@ Open http://localhost:5173, choose in-browser storage, then try demo mode with t
 |---|---|
 | `apps/web/` | The static web app (React, Vite, Tailwind; Hebrew RTL and English LTR UI). `src/platform/` holds storage, the API key, and the SymPy worker |
 | `packages/sdk/` | `@ruecai/sdk`: artifact schemas, the tool contract, quality checks |
-| `packages/core/` | The engine: SQLite store (sql.js), parsers (PDF/PPTX/DOCX), ingestion, retrieval, Claude client, learner model (BKT, FSRS, mistakes notebook, daily session, concept graph), tool runtime |
+| `packages/core/` | The engine: SQLite store (sql.js), parsers (PDF/PPTX/DOCX), ingestion, retrieval, model clients (Claude, local models), learner model (BKT, FSRS, mistakes notebook, daily session, concept graph), tool runtime |
 | `plugins/<pack>/<tool>/` | The tools, one folder per tool, auto-discovered |
 | `plugins/_fixtures/` | Fixture courses (probability, law) used by evals, demo mode, and E2E |
 | `e2e/` | Real-browser tests (Playwright) |
-| `docs/` | Architecture, roadmap, guides |
+| `docs/` | [Architecture](docs/architecture.md), [writing tools](docs/plugins.md), [roadmap](docs/roadmap.md), [maintainer guide](docs/maintainers.md) |
 
 ## Writing a new tool
 
@@ -56,11 +56,11 @@ npm run check   # typecheck + unit tests + evals for every tool + browser E2E
 - Changes to `packages/` (core/SDK) start with an issue labelled `rfc`, so we agree on the direction before writing code.
 - A small, focused PR beats a huge one.
 - UI text is available in Hebrew and English: add both when you add UI strings. Code, comments, and plugin prompts are in English.
-- PRs are checked by CI only (typecheck, unit tests, recorded plugin evals, Playwright E2E). There are no per-PR preview deployments; to try a PR locally, check it out and run `npm run dev`.
+- PRs are checked by CI (typecheck, unit tests, recorded plugin evals, Playwright E2E). To try a PR, check it out locally and run `npm run dev`.
 
 ## Non-negotiables
 
-1. **Privacy:** no server, no telemetry. The API key and course materials never leave the computer (except for the call to Anthropic).
+1. **Privacy:** no server, no telemetry. The API key and course materials never leave the computer, except for the call to the model the student chose.
 2. **Grounding:** every claim from the course material is cited.
 3. **Pedagogy:** help students learn; don't do their work for them.
 4. **Security:** see [SECURITY.md](SECURITY.md).

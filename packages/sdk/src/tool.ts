@@ -192,7 +192,7 @@ export function defineTool<T extends ArtifactType | "chat">(tool: CodeTool<T>): 
 
 export interface LoadedTool {
   manifest: ToolManifest;
-  /** Declarative tools: the prompt template (prompt.he.md). */
+  /** Declarative tools: the prompt template (prompt.md). */
   prompt?: string;
   /** Code tools: the implementation. */
   code?: CodeTool;

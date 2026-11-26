@@ -75,8 +75,6 @@ A variable that doesn't exist fails the tests, so a typo is caught immediately.
 
 You don't need to write the citation, language, or pedagogy rules in the prompt. The core adds them to every tool (`BASE_SYSTEM_PROMPT` in `packages/core/src/llm/prompts.ts`). The course material is also sent automatically, according to `retrieval`.
 
-> The loader still accepts the older file name `prompt.he.md`, but new tools should use `prompt.md`.
-
 ### 3. Quality checks: `evals/eval.yaml`
 
 ```yaml

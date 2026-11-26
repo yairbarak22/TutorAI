@@ -9,7 +9,7 @@
 
 ## Checking a PR
 
-There are no per-PR preview links: Cloudflare was dropped. Every PR goes through CI (typecheck, unit tests, recorded plugin evals, and Playwright E2E). To try a PR locally: `gh pr checkout <number> && npm i && npm run dev`.
+Every PR goes through CI (typecheck, unit tests, recorded plugin evals, and Playwright E2E). To try a PR locally: `gh pr checkout <number> && npm i && npm run dev`.
 
 **Security:** never deploy a PR build to the real site's origin, because a malicious PR could read API keys that students saved in their browser.
 
@@ -21,7 +21,7 @@ If a secret named `ANTHROPIC_API_KEY` is set, every push to `main` runs every to
 
 - **New tool:** make sure it has passing `evals/`, a clear English prompt (`prompt.md`) and Hebrew translations in the manifest's `i18n.he` block, no external `fetch`, and that the tool doesn't solve assignments for the student.
 - **Core/SDK:** only after an agreed RFC. A breaking SDK change bumps the version.
-- **Security:** any change to `Visuals.tsx` (iframe/CSP), `Markdown.tsx` (sanitizing), `secrets.ts`, `sympy.ts` / `sympy.worker.ts` (expression whitelist), or the workflows requires review by a core maintainer.
+- **Security:** any change to `Visuals.tsx` (iframe/CSP), `Markdown.tsx` (sanitizing), `secrets.ts`, the model clients (`packages/core/src/llm/`), `sympy.ts` / `sympy.worker.ts` (expression whitelist), or the workflows requires review by a core maintainer.
 - **Pedagogy:** a tool must guide, not solve graded work. Prefer hints and questions over full answers, and keep the shared system prompt (`packages/core/src/llm/prompts.ts`) as the single place for these rules.
 
 ## Pack owners
