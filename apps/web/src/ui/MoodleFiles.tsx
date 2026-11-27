@@ -178,9 +178,10 @@ export function MoodleStrip({ courseId }: { courseId: number }) {
       {outcome && (
         <Alert kind={outcome.failed ? "warn" : "success"}>
           {t(
-            `יובאו ${outcome.imported} קבצים${outcome.duplicates ? `, ${outcome.duplicates} כבר היו בקורס` : ""}${outcome.failed ? `, ${outcome.failed} נכשלו` : ""}. הניתוח שלהם מתחיל ברשימה למטה.`,
-            `Imported ${outcome.imported} ${outcome.imported === 1 ? "file" : "files"}${outcome.duplicates ? `, ${outcome.duplicates} already in the course` : ""}${outcome.failed ? `, ${outcome.failed} failed` : ""}. Their analysis starts in the list below.`,
+            `${outcome.imported === 0 ? "לא יובאו קבצים" : outcome.imported === 1 ? "יובא קובץ אחד" : `יובאו ${outcome.imported} קבצים`}${outcome.duplicates ? `, ${outcome.duplicates} כבר היו בקורס` : ""}${outcome.failed ? `, ${outcome.failed} נכשלו` : ""}.`,
+            `${outcome.imported === 0 ? "No files were imported" : `Imported ${outcome.imported} ${outcome.imported === 1 ? "file" : "files"}`}${outcome.duplicates ? `, ${outcome.duplicates} already in the course` : ""}${outcome.failed ? `, ${outcome.failed} failed` : ""}.`,
           )}
+          {outcome.imported > 0 && ` ${t(outcome.imported === 1 ? "הניתוח שלו מתחיל ברשימה למטה." : "הניתוח שלהם מתחיל ברשימה למטה.", outcome.imported === 1 ? "Its analysis starts in the list below." : "Their analysis starts in the list below.")}`}
         </Alert>
       )}
 
@@ -242,9 +243,18 @@ export function MoodleStrip({ courseId }: { courseId: number }) {
             <p className="text-xs text-muted">{t("ניתוח הקבצים משתמש במודל שחיברתם (מפתח או מנוי), כמו בהעלאה ידנית.", "Analyzing the files uses the model you connected (key or plan), as with a manual upload.")}</p>
           )}
           <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={() => void runImport()} disabled={!chosen.length || importing || !connected}>
-              {importing ? <Spinner label={t("מייבא…", "Importing…")} /> : t(chosen.length === 1 ? `ייבוא קובץ אחד (${mb(total)})` : `ייבוא ${chosen.length} קבצים (${mb(total)})`, `Import ${chosen.length} ${chosen.length === 1 ? "file" : "files"} (${mb(total)})`)}
-            </Button>
+            {/* Shown only while there is something to tick; with nothing ticked it says so instead of "0 files". */}
+            {(importing || visible.some(selectable)) && (
+              <Button onClick={() => void runImport()} disabled={!chosen.length || importing || !connected}>
+                {importing ? (
+                  <Spinner label={t("מייבא…", "Importing…")} />
+                ) : chosen.length === 0 ? (
+                  t("בחרו קבצים לייבוא", "Choose files to import")
+                ) : (
+                  t(chosen.length === 1 ? `ייבוא קובץ אחד (${mb(total)})` : `ייבוא ${chosen.length} קבצים (${mb(total)})`, `Import ${chosen.length} ${chosen.length === 1 ? "file" : "files"} (${mb(total)})`)
+                )}
+              </Button>
+            )}
             {fresh.length > 0 && (
               <Button variant="ghost" size="sm" disabled={importing} onClick={() => (dismissNew(engine.store, courseId), setSelected(new Set()))}>
                 {t("אל תציגו את אלה שוב", "Don't show these again")}
