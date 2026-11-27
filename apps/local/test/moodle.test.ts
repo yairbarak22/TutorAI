@@ -625,7 +625,7 @@ describe("the rules around it", () => {
       for (const name of readdirSync(dir)) {
         const p = join(dir, name);
         if (statSync(p).isDirectory()) walk(p);
-        else if (name.endsWith(".ts") && readFileSync(p, "utf8").includes("moodleTransport")) users.push(p.slice(src.length + 1));
+        else if (name.endsWith(".ts") && readFileSync(p, "utf8").includes("moodleTransport")) users.push(p.slice(src.length + 1).replaceAll("\\", "/"));
       }
     };
     walk(src);
