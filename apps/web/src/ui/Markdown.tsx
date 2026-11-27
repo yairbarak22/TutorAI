@@ -54,7 +54,7 @@ function isolateLatin(html: string): string {
     const frag = document.createDocumentFragment();
     let last = 0;
     for (const m of t.data.matchAll(LATIN_RUN)) {
-      const run = m[0].replace(/\s+$/, "");
+      const run = trimUnmatchedClosers(m[0].replace(/\s+$/, ""));
       if (m.index! > last) frag.append(t.data.slice(last, m.index));
       const bdi = document.createElement("bdi");
       bdi.dir = "ltr";
@@ -66,6 +66,22 @@ function isolateLatin(html: string): string {
     t.replaceWith(frag);
   }
   return tpl.innerHTML;
+}
+
+const PAIRS: Record<string, string> = { ")": "(", "]": "[", "}": "{" };
+
+/**
+ * A run starts at a letter, so in "(certificate)" it would grab "certificate)" without its "(".
+ * Isolating that half-pair as LTR leaves the brackets mirrored ("certificate))"). Drop trailing
+ * closers that have no opener inside the run; they then sit in the Hebrew text with their partner.
+ */
+function trimUnmatchedClosers(run: string): string {
+  for (;;) {
+    const close = run.at(-1)!;
+    const open = PAIRS[close];
+    if (!open || run.split(open).length > run.split(close).length - 1) return run;
+    run = run.slice(0, -1).replace(/\s+$/, "");
+  }
 }
 
 function safeKatex(tex: string, display: boolean) {
