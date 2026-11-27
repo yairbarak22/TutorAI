@@ -5,6 +5,7 @@ import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Button, Card, Empty } from "../ui/components.tsx";
 import { CitationChips } from "../ui/Citations.tsx";
+import { Select } from "../ui/Select.tsx";
 import { t } from "../i18n.tsx";
 import { isRTL } from "@tutorai/sdk";
 
@@ -56,12 +57,13 @@ export function Concepts({ courseId }: { courseId: number }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [lectures, setLectures] = useState<Set<number>>(new Set());
+  /** The file whose concepts are shown; null = all materials. */
+  const [lecture, setLecture] = useState<number | null>(null);
   const [weakOnly, setWeakOnly] = useState(false);
 
-  // Visible set: lecture filter, then "needs work" (weak concepts plus what they rest on).
+  // Visible set: file filter, then "needs work" (weak concepts plus what they rest on).
   const visible = useMemo(() => {
-    let v = items.filter((c) => lectures.size === 0 || (c.sourceId !== null && lectures.has(c.sourceId))).map((c) => c.name);
+    let v = items.filter((c) => lecture === null || c.sourceId === lecture).map((c) => c.name);
     if (weakOnly) {
       const keep = new Set<string>();
       for (const n of v)
@@ -72,7 +74,7 @@ export function Concepts({ courseId }: { courseId: number }) {
       v = v.filter((n) => keep.has(n));
     }
     return new Set(v);
-  }, [key, lectures, weakOnly, JSON.stringify(items.map((c) => c.level))]);
+  }, [key, lecture, weakOnly, JSON.stringify(items.map((c) => c.level))]);
 
   const focus = hovered ?? selected;
   const related = useMemo(() => {
@@ -133,6 +135,24 @@ export function Concepts({ courseId }: { courseId: number }) {
             className="h-9 w-full rounded-xl border border-black/10 bg-white ps-9 pe-3 text-sm placeholder:text-slate-400 focus:border-black/30 focus:outline-none focus:ring-4 focus:ring-black/[0.05]"
           />
         </div>
+        {lectureIds.length > 1 && (
+          <div className="w-full sm:w-72">
+            <Select
+              size="sm"
+              aria-label={t("סינון לפי קובץ", "Filter by file")}
+              value={lecture === null ? "all" : String(lecture)}
+              onChange={(v) => setLecture(v === "all" ? null : Number(v))}
+              options={[
+                { value: "all", label: t("כל החומרים", "All materials"), hint: conceptCount(items.length) },
+                ...lectureIds.map((id) => ({
+                  value: String(id),
+                  label: sourceName.get(id) ?? String(id),
+                  hint: conceptCount(items.filter((c) => c.sourceId === id).length),
+                })),
+              ]}
+            />
+          </div>
+        )}
         <Toggle on={weakOnly} onClick={() => setWeakOnly(!weakOnly)} disabled={weakCount === 0}>
           {t(`מה לחזק (${weakCount})`, `Needs work (${weakCount})`)}
         </Toggle>
@@ -145,28 +165,6 @@ export function Concepts({ courseId }: { courseId: number }) {
           ))}
         </div>
       </div>
-      {lectureIds.length > 1 && (
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("סינון לפי קובץ", "Filter by file")}>
-          <Toggle on={lectures.size === 0} onClick={() => setLectures(new Set())}>
-            {t("כל החומרים", "All materials")}
-          </Toggle>
-          {lectureIds.map((id) => (
-            <Toggle
-              key={id}
-              on={lectures.has(id)}
-              onClick={() => {
-                const next = new Set(lectures);
-                if (next.has(id)) next.delete(id);
-                else next.add(id);
-                setLectures(next);
-              }}
-            >
-              <span className="max-w-[16rem] truncate">{sourceName.get(id)}</span>
-            </Toggle>
-          ))}
-        </div>
-      )}
-
       {sel && (
         <ConceptPanel
           c={sel}
@@ -238,6 +236,8 @@ function Toggle({ on, onClick, disabled, children }: { on: boolean; onClick: () 
     </button>
   );
 }
+
+const conceptCount = (n: number) => (n === 1 ? t("מושג אחד", "1 concept") : t(`${n} מושגים`, `${n} concepts`));
 
 const stageName = (i: number) => (i === 0 ? t("יסודות", "Foundations") : t(`שלב ${i + 1}`, `Stage ${i + 1}`));
 
