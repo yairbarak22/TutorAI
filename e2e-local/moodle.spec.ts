@@ -103,7 +103,7 @@ test("connects by signing in on Moodle's page, imports a course's files, and not
 
   // In the data folder under the usual names, and known to the saved database.
   const sources = join(state().data, "courses", "1", "sources");
-  expect(readdirSync(sources).sort().map((n) => n.replace(/^[a-f0-9]{10}-/, ""))).toEqual(["lecture-graphs.pdf", "summary-variance.docx"]);
+  expect(readdirSync(sources).map((n) => n.replace(/^[a-f0-9]{10}-/, "")).sort()).toEqual(["lecture-graphs.pdf", "summary-variance.docx"]);
   await expect.poll(() => existsSync(join(state().data, "tutorai.db")) && readFileSync(join(state().data, "tutorai.db")).includes(Buffer.from("lecture-graphs.pdf")), { timeout: 10_000 }).toBe(true);
   expect(readFileSync(join(state().data, "tutorai.db")).includes(Buffer.from("0123456789abcdef0123456789abcdef"))).toBe(false);
 
