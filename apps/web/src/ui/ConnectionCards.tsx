@@ -3,6 +3,7 @@ import { Check, Copy, ExternalLink, Loader2 } from "lucide-react";
 import type { Connections, Settings } from "@tutorai/local-api";
 import { localApi, localServer } from "../platform/local-server.ts";
 import { Alert, Badge, Button, Modal, errorMessage } from "./components.tsx";
+import { ModelPicker } from "./ModelPicker.tsx";
 import { t } from "../i18n.tsx";
 
 /**
@@ -244,7 +245,12 @@ export function ClaudePlanCard({ onReady, active, bare }: { onReady: () => void;
           </Step>
           <Step done={false} title={ready ? t("מוכן", "Ready") : t("מוכן לשימוש", "Ready to use")}>
             {ready && (
-              <div className="mt-1.5 flex flex-wrap gap-2">
+              <div className="mt-2">
+                <ModelPicker kind="claude-code" />
+              </div>
+            )}
+            {ready && (
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Button size="sm" onClick={onReady}>
                   {active ? t("בשימוש", "In use") : t("שימוש במנוי Claude", "Use my Claude plan")}
                 </Button>
@@ -325,6 +331,11 @@ export function ChatGptPlanCard({ onReady, active, bare }: { onReady: () => void
       {(error || problem) && (
         <div className="mt-3">
           <Alert kind="error">{error ?? problem}</Alert>
+        </div>
+      )}
+      {signedIn && !!c?.chatgpt.models?.length && (
+        <div className="mt-4">
+          <ModelPicker kind="chatgpt" available={c.chatgpt.models} />
         </div>
       )}
       <div className="mt-4 flex flex-wrap items-center gap-2">
