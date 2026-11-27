@@ -450,6 +450,7 @@ export const setEngine = (e: Engine) => {
   // Dev-only handle for debugging and seeding test data from the console.
   if (import.meta.env.DEV) (window as unknown as { __tutorai?: Engine }).__tutorai = e;
 };
+export const tryEngine = (): Engine | null => current;
 export function useEngine(): Engine {
   const e = current!;
   useSyncExternalStore(e.subscribe, () => e.version);
