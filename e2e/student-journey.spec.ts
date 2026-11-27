@@ -53,6 +53,15 @@ test("concept map, tools, quiz → mastery, flashcards → review, tutor with ci
 
   await tab(page, /מפת מושגים/).click();
   await expect(page.getByTestId("concept-card")).toHaveCount(8);
+  // The file filter is a dropdown that starts on all materials.
+  const fileFilter = page.getByRole("combobox", { name: "סינון לפי קובץ" });
+  await expect(fileFilter).toHaveText(/כל החומרים/);
+  await fileFilter.click();
+  await page.getByRole("option", { name: /הרצאה 1/ }).click();
+  await expect(page.getByTestId("concept-card")).toHaveCount(2);
+  await fileFilter.click();
+  await page.getByRole("option", { name: /כל החומרים/ }).click();
+  await expect(page.getByTestId("concept-card")).toHaveCount(8);
   await page.getByTestId("concept-card").filter({ hasText: "בייס" }).first().click();
   await expect(page.getByTestId("concept-panel")).toContainText("כדאי ללמוד קודם");
 
