@@ -34,13 +34,20 @@ trap 'rm -rf "$TMP"' EXIT INT TERM
 say "Downloading TutorAI ($OS, $ARCH)…"
 fetch() {
   case "$1" in file://*) curl -fsSL -o "$2" "$1" || fail "could not read $1"; return ;; esac # local test releases
-  code="$(curl -sSL --retry 3 -w '%{http_code}' -o "$2" "$1" || echo 000)"
-  case "$code" in
-    200) ;;
-    404) fail "no TutorAI release for $ASSET was found yet. Use the browser version for now: https://yairbarak22.github.io/TutorAI/" ;;
-    000) fail "couldn't reach GitHub. Check your internet connection and try again." ;;
-    *) fail "download failed (HTTP $code): $1" ;;
-  esac
+  # Retry dropped connections too (unstable Wi-Fi), where this curl supports it (7.71+).
+  retry="--retry 5 --retry-delay 2"
+  curl --help all 2>/dev/null | grep -q -- --retry-all-errors && retry="$retry --retry-all-errors"
+  rc=0
+  # shellcheck disable=SC2086
+  code="$(curl -sSL $retry --connect-timeout 20 -w '%{http_code}' -o "$2" "$1")" || rc=$?
+  if [ "$code" = 404 ]; then fail "no TutorAI release for $ASSET was found yet. Use the browser version for now: https://yairbarak22.github.io/TutorAI/"; fi
+  if [ "$rc" -ne 0 ] || [ "$code" != 200 ]; then
+    case "$code" in
+      000|"") fail "couldn't reach GitHub. Check your internet connection and run the install line again." ;;
+      200) fail "the download was interrupted. Check your internet connection and run the install line again." ;;
+      *) fail "download failed (HTTP $code). Try again in a few minutes." ;;
+    esac
+  fi
 }
 fetch "$BASE/$ASSET" "$TMP/tutorai"
 fetch "$BASE/SHA256SUMS" "$TMP/SHA256SUMS"
