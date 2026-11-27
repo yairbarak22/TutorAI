@@ -16,6 +16,10 @@ export const paths = (home = homedir()) => {
     sessionKey: join(dir, "session.key"),
     run: join(dir, "run.json"),
     chatgpt: join(dir, "chatgpt"),
+    /** Moodle connections (one owner-only file per site), the sign-in handler's inbox and its marker. */
+    moodle: join(dir, "moodle"),
+    moodleInbox: join(dir, "moodle", "inbox"),
+    moodleHandler: join(dir, "moodle", "handler.json"),
     logs: join(dir, "logs"),
     updates: join(dir, "updates"),
   };
@@ -32,6 +36,11 @@ export function installedBinary(home = homedir()) {
   return process.platform === "win32"
     ? join(process.env.LOCALAPPDATA || join(home, "AppData", "Local"), "TutorAI", "tutorai.exe")
     : join(home, ".local", "bin", "tutorai");
+}
+
+/** macOS: the temporary app that receives the Moodle sign-in link (docs/rfc-moodle.md §6.3). */
+export function moodleHandlerApp(home = homedir()) {
+  return join(home, "Applications", "TutorAI Moodle Sign-in.app");
 }
 
 /** Launcher locations created by the installers. */

@@ -1,5 +1,5 @@
-import { randomBytes } from "node:crypto";
-import { mkdir, readdir, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
+import { createHash, randomBytes } from "node:crypto";
+import { mkdir, open, readdir, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { renameWithRetry } from "../config.ts";
@@ -14,6 +14,10 @@ const LOCK_FILE = ".tutorai-lock";
  */
 
 export class PathError extends Error {}
+/** A streamed file went over its size limit. */
+export class TooLargeError extends Error {}
+
+const PART_NAME = /^incoming-[a-f0-9]{12}\.part$/;
 
 /** Rejects absolute paths, "..", NUL and drive letters. Returns the joined absolute path. */
 export function lexicalInside(root: string, rel: string): string {
@@ -94,6 +98,82 @@ export class DataFolder {
   async remove(rel: string) {
     const abs = await this.resolve(rel);
     await rm(abs, { force: true });
+  }
+
+  /**
+   * Streams a download into the folder `dirRel` as `incoming-<random>.part`, hashing as it goes,
+   * so a large file is never held in memory and never appears under its final name half-written.
+   * The caller checks the result and then calls `commitPart` or `discardPart`.
+   */
+  async importStream(
+    dirRel: string,
+    source: AsyncIterable<Uint8Array>,
+    opts: { maxBytes: number; onProgress?: (received: number) => void },
+  ): Promise<{ part: string; hash: string; size: number; head: Buffer }> {
+    const part = `${dirRel.replace(/[\\/]+$/, "")}/incoming-${randomBytes(6).toString("hex")}.part`;
+    const abs = await this.resolve(part);
+    await mkdir(dirname(abs), { recursive: true });
+    await realInside(this.root, dirname(abs));
+    const hash = createHash("sha256");
+    const head: Buffer[] = [];
+    let headLength = 0;
+    let size = 0;
+    const handle = await open(abs, "wx");
+    try {
+      for await (const chunk of source) {
+        size += chunk.length;
+        if (size > opts.maxBytes) throw new TooLargeError("too large");
+        hash.update(chunk);
+        if (headLength < 64) {
+          const slice = Buffer.from(chunk.subarray(0, 64 - headLength));
+          head.push(slice);
+          headLength += slice.length;
+        }
+        await handle.write(chunk);
+        opts.onProgress?.(size);
+      }
+    } catch (e) {
+      await handle.close().catch(() => {});
+      await rm(abs, { force: true });
+      throw e;
+    }
+    await handle.close();
+    return { part, hash: hash.digest("hex"), size, head: Buffer.concat(head) };
+  }
+
+  private async partPath(part: string) {
+    const abs = await this.resolve(part);
+    if (!PART_NAME.test(basename(abs))) throw new PathError("bad path");
+    return abs;
+  }
+
+  /** Gives a finished part its final name, in the same folder. */
+  async commitPart(part: string, finalRel: string) {
+    const from = await this.partPath(part);
+    const to = await this.resolve(finalRel);
+    if (dirname(from) !== dirname(to)) throw new PathError("bad path");
+    await renameWithRetry(from, to);
+  }
+
+  async discardPart(part: string) {
+    await rm(await this.partPath(part), { force: true });
+  }
+
+  /** Removes parts an interrupted download left behind. */
+  async sweepParts(dirRel: string, olderThanMs: number, now = Date.now()) {
+    const abs = await this.resolve(dirRel);
+    let names: string[] = [];
+    try {
+      names = await readdir(abs);
+    } catch {
+      return;
+    }
+    for (const name of names) {
+      if (!PART_NAME.test(name)) continue;
+      const file = join(abs, name);
+      const info = await stat(file).catch(() => null);
+      if (info && now - info.mtimeMs > olderThanMs) await rm(file, { force: true });
+    }
   }
 
   get label() {

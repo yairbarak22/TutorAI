@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -145,5 +145,37 @@ CREATE TABLE IF NOT EXISTS usage (
   output_tokens INTEGER NOT NULL,
   cache_read_tokens INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- v4: a TutorAI course linked to a Moodle course (docs/rfc-moodle.md §7.3). No secrets here.
+CREATE TABLE IF NOT EXISTS moodle_links (
+  course_id INTEGER PRIMARY KEY REFERENCES courses(id) ON DELETE CASCADE,
+  site TEXT NOT NULL,                               -- site key (the Moodle site's address)
+  remote_course_id INTEGER NOT NULL,
+  remote_name TEXT NOT NULL,
+  last_sync TEXT,                                   -- ISO time of the last successful refresh
+  last_error TEXT,                                  -- error kind of the last failed refresh
+  UNIQUE (site, remote_course_id)
+);
+
+-- Every file Moodle listed for a linked course, and what happened to it.
+CREATE TABLE IF NOT EXISTS moodle_files (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  remote_key TEXT NOT NULL,                         -- "<cmid>:<filepath><filename>"
+  cmid INTEGER NOT NULL,
+  modname TEXT NOT NULL,
+  section TEXT NOT NULL DEFAULT '',
+  activity TEXT NOT NULL DEFAULT '',
+  filename TEXT NOT NULL,
+  size INTEGER NOT NULL DEFAULT 0,
+  remote_modified INTEGER NOT NULL DEFAULT 0,
+  state TEXT NOT NULL DEFAULT 'new',                -- new | imported | skipped | unsupported | too_large | failed
+  present INTEGER NOT NULL DEFAULT 1,               -- listed by Moodle at the last refresh
+  changed INTEGER NOT NULL DEFAULT 0,               -- imported, and Moodle's copy changed since
+  source_id INTEGER REFERENCES sources(id) ON DELETE SET NULL,
+  error TEXT,                                       -- error kind, when state is failed
+  first_seen TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (course_id, remote_key)
 );
 `;

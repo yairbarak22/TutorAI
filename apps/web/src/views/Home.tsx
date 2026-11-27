@@ -5,6 +5,7 @@ import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Badge, Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
 import { ChevronForward, t } from "../i18n.tsx";
+import { MoodleHomeButton } from "../ui/Moodle.tsx";
 
 export function daysUntil(date: string | null): number | null {
   if (!date) return null;
@@ -112,9 +113,12 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
           <h2 className="flex items-center gap-1 text-[16px] font-semibold tracking-tight">
             {t("הקורסים שלי", "My courses")} <ChevronForward size={16} className="text-muted" />
           </h2>
-          <Button size="sm" variant="secondary" onClick={onNewCourse}>
-            <Plus size={14} /> {t("קורס חדש", "New course")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <MoodleHomeButton />
+            <Button size="sm" variant="secondary" onClick={onNewCourse}>
+              <Plus size={14} /> {t("קורס חדש", "New course")}
+            </Button>
+          </div>
         </div>
         {courses.length === 0 ? (
           <Card>

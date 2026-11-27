@@ -13,3 +13,8 @@
 /apps/local/src/update/                          @yairbarak22
 /apps/web/public/install.sh                      @yairbarak22
 /apps/web/public/install.ps1                     @yairbarak22
+# Moodle connection: sign-in, token custody, and the only code that contacts a Moodle site.
+/apps/local/src/moodle/                          @yairbarak22
+/apps/local/src/net.ts                           @yairbarak22
+/packages/moodle/src/link.ts                     @yairbarak22
+/packages/moodle/src/public-config.ts            @yairbarak22

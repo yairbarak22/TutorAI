@@ -10,6 +10,9 @@ export function redact(text: string): string {
     .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
     .replace(/eyJ[\w-]+\.[\w-]+\.[\w-]+/g, "[jwt]")
     .replace(/("?(?:access_token|refresh_token|id_token|code_verifier|client_secret|code)"?\s*[:=]\s*"?)[^"&\s,}]+/gi, "$1[redacted]")
+    // Moodle: tokens and passwords in form bodies, JSON answers, file addresses and the sign-in link.
+    .replace(/moodlemobile:\/\/token=[^\s"'&]+/gi, "moodlemobile://token=[redacted]")
+    .replace(/("?(?:wstoken|privatetoken|token|password)"?\s*[:=]\s*"?)[^"&\s,}]+/gi, "$1[redacted]")
     .replace(/sk-ant-[\w-]+/g, "[key]")
     .replace(/sk-[\w-]{16,}/g, "[key]");
 }

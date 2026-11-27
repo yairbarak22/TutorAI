@@ -106,6 +106,40 @@ export interface SessionLog {
   seconds: number;
 }
 
+export type MoodleFileState = "new" | "imported" | "skipped" | "unsupported" | "too_large" | "failed";
+export interface MoodleLink {
+  course_id: number;
+  site: string;
+  remote_course_id: number;
+  remote_name: string;
+  last_sync: string | null;
+  last_error: string | null;
+}
+export interface MoodleFileRow {
+  id: number;
+  course_id: number;
+  remote_key: string;
+  cmid: number;
+  modname: string;
+  section: string;
+  activity: string;
+  filename: string;
+  size: number;
+  remote_modified: number;
+  state: MoodleFileState;
+  /** Listed by Moodle at the last refresh. */
+  present: boolean;
+  /** Imported, and Moodle's copy changed since. */
+  changed: boolean;
+  source_id: number | null;
+  error: string | null;
+}
+/** What a refresh changes (the shape `planSync` in @tutorai/moodle returns). */
+export interface MoodleFileChanges {
+  inserts: Pick<MoodleFileRow, "remote_key" | "cmid" | "modname" | "section" | "activity" | "filename" | "size" | "remote_modified" | "state">[];
+  updates: ({ id: number } & Partial<Pick<MoodleFileRow, "size" | "remote_modified" | "state" | "present" | "changed" | "section" | "activity">>)[];
+}
+
 export const sectionKey = (id: number) => `S${id}`;
 export const sectionIdFromKey = (key: string) => Number(key.replace(/^S/, ""));
 
@@ -256,6 +290,72 @@ export class Store {
   }
   deleteSource(id: number) {
     this.run("DELETE FROM sources WHERE id=?", [id]);
+  }
+
+  /* -------- Moodle links (no secrets: the token stays with TutorAI Local) -------- */
+  moodleLink(courseId: number): MoodleLink | undefined {
+    return this.get<MoodleLink>("SELECT * FROM moodle_links WHERE course_id=?", [courseId]);
+  }
+  moodleLinks(): MoodleLink[] {
+    return this.all<MoodleLink>("SELECT * FROM moodle_links ORDER BY course_id");
+  }
+  moodleLinkFor(site: string, remoteCourseId: number): MoodleLink | undefined {
+    return this.get<MoodleLink>("SELECT * FROM moodle_links WHERE site=? AND remote_course_id=?", [site, remoteCourseId]);
+  }
+  linkMoodle(courseId: number, site: string, remoteCourseId: number, remoteName: string) {
+    this.run(
+      "INSERT INTO moodle_links(course_id, site, remote_course_id, remote_name) VALUES(?,?,?,?) ON CONFLICT(course_id) DO UPDATE SET site=excluded.site, remote_course_id=excluded.remote_course_id, remote_name=excluded.remote_name, last_sync=NULL, last_error=NULL",
+      [courseId, site, remoteCourseId, remoteName],
+    );
+  }
+  /** Removes the link and the file list. Imported sources stay. */
+  unlinkMoodle(courseId: number) {
+    this.transaction(() => {
+      this.db.run("DELETE FROM moodle_files WHERE course_id=?", [courseId]);
+      this.db.run("DELETE FROM moodle_links WHERE course_id=?", [courseId]);
+    });
+  }
+  setMoodleSync(courseId: number, at: string | null, errorKind: string | null) {
+    if (errorKind) this.run("UPDATE moodle_links SET last_error=? WHERE course_id=?", [errorKind, courseId]);
+    else this.run("UPDATE moodle_links SET last_sync=?, last_error=NULL WHERE course_id=?", [at, courseId]);
+  }
+  moodleFiles(courseId: number): MoodleFileRow[] {
+    return this.all<Row>("SELECT * FROM moodle_files WHERE course_id=? ORDER BY id", [courseId]).map((r) => ({ ...(r as unknown as MoodleFileRow), present: !!r.present, changed: !!r.changed }));
+  }
+  /** Applies a refresh in one transaction. */
+  applyMoodleChanges(courseId: number, changes: MoodleFileChanges) {
+    if (!changes.inserts.length && !changes.updates.length) return;
+    this.transaction(() => {
+      for (const f of changes.inserts)
+        this.db.run("INSERT INTO moodle_files(course_id, remote_key, cmid, modname, section, activity, filename, size, remote_modified, state) VALUES(?,?,?,?,?,?,?,?,?,?)", [
+          courseId,
+          f.remote_key,
+          f.cmid,
+          f.modname,
+          f.section,
+          f.activity,
+          f.filename,
+          f.size,
+          f.remote_modified,
+          f.state,
+        ]);
+      for (const u of changes.updates) this.patchMoodleFile(u.id, u);
+    });
+  }
+  setMoodleFile(id: number, patch: Partial<Pick<MoodleFileRow, "state" | "changed" | "source_id" | "error">>) {
+    this.patchMoodleFile(id, patch);
+    this.changed();
+  }
+  private patchMoodleFile(id: number, patch: Partial<Omit<MoodleFileRow, "id" | "course_id">>) {
+    const sets: string[] = [];
+    const values: SqlValue[] = [];
+    for (const [k, v] of Object.entries(patch)) {
+      if (k === "id" || v === undefined) continue;
+      if (!["size", "remote_modified", "state", "present", "changed", "section", "activity", "source_id", "error"].includes(k)) continue;
+      sets.push(`${k}=?`);
+      values.push(typeof v === "boolean" ? (v ? 1 : 0) : (v as SqlValue));
+    }
+    if (sets.length) this.db.run(`UPDATE moodle_files SET ${sets.join(", ")} WHERE id=?`, [...values, id]);
   }
 
   /* -------- sections -------- */

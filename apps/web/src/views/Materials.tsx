@@ -5,6 +5,7 @@ import { href } from "../router.ts";
 import { Alert, Badge, Button, Card, Empty, Spinner } from "../ui/components.tsx";
 import { Select } from "../ui/Select.tsx";
 import { LongTask } from "../ui/LongTask.tsx";
+import { MoodleStrip } from "../ui/MoodleFiles.tsx";
 import { expectedSeconds } from "../platform/timing.ts";
 import { t } from "../i18n.tsx";
 
@@ -72,6 +73,7 @@ export function Materials({ courseId }: { courseId: number }) {
           </button>
         </Alert>
       )}
+      <MoodleStrip courseId={courseId} />
       <div
         onDragOver={(e) => {
           e.preventDefault();

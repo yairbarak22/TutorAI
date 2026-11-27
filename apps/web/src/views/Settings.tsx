@@ -8,6 +8,7 @@ import { localServer } from "../platform/local-server.ts";
 import { PLAN_MODEL_PREFIX } from "@tutorai/local-api";
 import { ConnectionPicker, type Choice } from "../ui/ConnectionPicker.tsx";
 import { LocalComputerRows } from "../ui/LocalComputer.tsx";
+import { MoodleSettingsRows } from "../ui/Moodle.tsx";
 import { ApiKeyForm } from "../ui/ApiKey.tsx";
 import { Alert, Badge, Button, Field, Row, Tabs, errorMessage, inputClass } from "../ui/components.tsx";
 import { fmtTime, switchLanguage, t, useLanguage } from "../i18n.tsx";
@@ -232,6 +233,7 @@ export function Settings() {
             </div>
           )}
           {local && <LocalComputerRows folderLabel={engine.root.files.label} />}
+          {local && <MoodleSettingsRows />}
           {!local && <Row
             title={t("מיקום השמירה", "Storage location")}
             desc={

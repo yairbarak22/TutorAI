@@ -4,6 +4,7 @@ on:
     paths:
       - "apps/local/**"
       - "packages/local-api/**"
+      - "packages/moodle/**"
       - "apps/web/**"
       - "packages/core/**"
       - "e2e-local/**"

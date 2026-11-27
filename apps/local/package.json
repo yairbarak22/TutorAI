@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tutorai/local-api": "0.1.0",
+    "@tutorai/moodle": "0.1.0",
     "jose": "^6.0.0",
     "zod": "^4.1.0"
   },

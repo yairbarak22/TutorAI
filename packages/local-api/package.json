@@ -1,2 +1,2 @@
 { "name": "@tutorai/local-api", "version": "0.1.0", "type": "module", "license": "Apache-2.0", "private": true,
-  "exports": { ".": "./src/index.ts" }, "dependencies": { "zod": "^4.1.0" } }
+  "exports": { ".": "./src/index.ts" }, "dependencies": { "@tutorai/moodle": "0.1.0", "zod": "^4.1.0" } }

@@ -11,6 +11,7 @@ import { Security } from "./http/security.ts";
 import { createHttpServer, listen } from "./http/server.ts";
 import { StaticFiles } from "./http/static.ts";
 import { log } from "./log.ts";
+import { createMoodle, type MoodleService } from "./moodle/index.ts";
 import { installNetPolicy } from "./net.ts";
 import { paths } from "./paths.ts";
 import { createChatgpt } from "./providers/chatgpt/index.ts";
@@ -45,13 +46,24 @@ export interface ServeOptions {
   port?: number;
   strictPort?: boolean;
   services?: Services;
+  moodle?: MoodleService;
 }
 
 export interface Running {
   server: Server;
   port: number;
   security: Security;
+  moodle: MoodleService;
   close(): Promise<void>;
+}
+
+/**
+ * How the Moodle sign-in handler starts this program: the binary, or node with its flags and the
+ * script in a source checkout (the handler runs it from the folder the server was started in).
+ */
+export function handlerCommand(): string[] {
+  const cmd = selfCommand();
+  return [cmd.file, ...cmd.args];
 }
 
 const pidAlive = (pid: number) => {
@@ -92,6 +104,9 @@ export async function serve(opts: ServeOptions = {}): Promise<Running> {
 
   const security = new Security(await sessionKey(), opts.port ?? DEFAULT_PORT);
   const services: Services = opts.services ?? { claudeCode: createClaudeCode(), chatgpt: createChatgpt(), settings: loadSettings };
+  const moodle = opts.moodle ?? createMoodle({ version: VERSION, handlerCommand: handlerCommand() });
+  /** Runs first on every way out: the Moodle sign-in handler must not outlive the server. */
+  const beforeExit = () => moodle.cleanup(true).catch((e) => log("warn", `moodle cleanup: ${(e as Error).message}`));
   let busy = 0;
   let lastActivity = Date.now();
   let server!: Server;
@@ -106,6 +121,7 @@ export async function serve(opts: ServeOptions = {}): Promise<Running> {
 
   const shutdown = async (code = 0) => {
     log("info", "shutting down");
+    await beforeExit();
     updater.stop();
     clearInterval(watchdog);
     await closeServer();
@@ -116,6 +132,7 @@ export async function serve(opts: ServeOptions = {}): Promise<Running> {
   };
 
   const relaunch = async (binary: string) => {
+    await beforeExit();
     // Free the port and the lock first; the new process waits for the port (--strict-port).
     await closeServer();
     await unlock();
@@ -133,11 +150,14 @@ export async function serve(opts: ServeOptions = {}): Promise<Running> {
     version: VERSION,
     security,
     services,
+    moodle,
     semaphore: new Semaphore(2),
     updater,
     busy: { inc: () => busy++, dec: () => busy-- },
     quit: () => void shutdown(0),
   };
+  // A sign-in handler left by a run that crashed mid sign-in: removed before anything can start one.
+  await moodle.cleanup().catch((e) => log("warn", `moodle cleanup: ${(e as Error).message}`));
   server = createHttpServer({ security, routes: buildRoutes(ctx), statics: new StaticFiles(), onActivity: () => (lastActivity = Date.now()) });
   const port = await listen(server, opts.port ?? DEFAULT_PORT, { strict: opts.strictPort });
   security.port = port;
@@ -161,7 +181,9 @@ export async function serve(opts: ServeOptions = {}): Promise<Running> {
     server,
     port,
     security,
+    moodle,
     close: async () => {
+      await beforeExit();
       updater.stop();
       clearInterval(watchdog);
       await closeServer();
@@ -174,12 +196,14 @@ export async function serve(opts: ServeOptions = {}): Promise<Running> {
 
 /* ---------------- launcher side ---------------- */
 
-async function control(run: RunInfo, path: string, timeoutMs = 2000): Promise<Response | null> {
+/** A request from the launcher (or the Moodle sign-in handler) to the running server on this computer. */
+export async function control(run: RunInfo, path: string, timeoutMs = 2000, body?: unknown): Promise<Response | null> {
   if (!pidAlive(run.pid)) return null;
   try {
     return await fetch(`http://127.0.0.1:${run.port}${path}`, {
       method: "POST",
-      headers: { authorization: `Bearer ${run.controlSecret}` },
+      headers: { authorization: `Bearer ${run.controlSecret}`, ...(body === undefined ? {} : { "content-type": "application/json" }) },
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch {

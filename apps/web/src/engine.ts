@@ -42,6 +42,8 @@ import { DB_FILE, LEGACY_DB_FILE, Persistence, exportBackup, type DataRoot } fro
 import { isPlanProvider, secrets } from "./platform/secrets.ts";
 import { localApi, localServer } from "./platform/local-server.ts";
 import { ServerLLM } from "./platform/server-llm.ts";
+import { moodleApi } from "./platform/moodle.ts";
+import { importFiles, type ImportOutcome, type SyncDeps } from "./moodle/sync.ts";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -196,6 +198,42 @@ export class Engine {
       this.enqueue(id);
     }
     return problems;
+  }
+
+  /** What the Moodle sync needs from the app: the database, the server's lists and downloads, the ingestion queue. */
+  get moodleSync(): SyncDeps {
+    return {
+      store: this.store,
+      contents: (site, course, lang, fresh) => moodleApi.contents(site, course, lang, fresh),
+      download: (req) => moodleApi.download(req),
+      enqueue: (id) => this.enqueue(id),
+      flush: async () => {
+        await this.persistence.flush();
+        return this.persistence.lastError;
+      },
+      lang: () => (getLanguage() === "en" ? "en" : "he"),
+      removeFile: (path) => this.root.files.remove(path),
+    };
+  }
+
+  /** Courses with a Moodle import running, and how far each file has got (0 to 1). Survives a tab switch. */
+  moodleImports = new Map<number, Map<number, number>>();
+
+  /** Imports the chosen Moodle files into a course. One import per course at a time. */
+  async importFromMoodle(courseId: number, rowIds: number[], kinds: Map<number, Source["kind"]>): Promise<ImportOutcome | null> {
+    if (this.moodleImports.has(courseId)) return null;
+    const progress = new Map<number, number>();
+    this.moodleImports.set(courseId, progress);
+    this.bump();
+    try {
+      return await importFiles(this.moodleSync, courseId, rowIds, kinds, (rowId, received, total) => {
+        progress.set(rowId, total ? received / total : 0);
+        this.bump();
+      });
+    } finally {
+      this.moodleImports.delete(courseId);
+      this.bump();
+    }
   }
 
   enqueue(sourceId: number) {

@@ -18,7 +18,7 @@ Every step ends with something a real student uses through the link.
 - **More discipline packs** (computer science, economics, psychology), each with an owner from its faculty
 - **A tool gallery** in the app, filtered by course
 - **Pedagogy evals:** LLM-judge checks such as "does not give away the answer" and "fits the course level"
-- **Moodle integration** for importing course materials
+- **Moodle connection beyond Reichman:** the import of course materials works at Reichman (TutorAI Local, single sign-on). Next: verify more institutions, the password sign-in some of them need, one-click sign-in on Windows, deadlines and text pages ([rfc-moodle.md](rfc-moodle.md), [impl-moodle.md](impl-moodle.md))
 
 ## Only if the pilot shows a need
 

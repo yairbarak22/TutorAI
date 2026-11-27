@@ -46,6 +46,8 @@ export class HttpError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** A stable code the page translates (the server never sends sentences for the student). */
+    public kind?: string,
   ) {
     super(message);
   }
@@ -116,7 +118,8 @@ export function createHttpServer(opts: ServerOptions): Server {
     } catch (e) {
       const status = e instanceof HttpError ? e.status : e instanceof ZodError ? 400 : 500;
       if (status === 500) log("error", `request failed: ${req.method} ${req.url?.split("?")[0]}: ${e instanceof Error ? e.message : String(e)}`);
-      if (!res.headersSent) json(res, status, { error: status === 500 ? "Internal error" : e instanceof ZodError ? "Invalid request" : (e as Error).message });
+      const kind = e instanceof HttpError ? e.kind : undefined;
+      if (!res.headersSent) json(res, status, { error: status === 500 ? "Internal error" : e instanceof ZodError ? "Invalid request" : (e as Error).message, ...(kind ? { kind } : {}) });
       else res.end();
     }
   });

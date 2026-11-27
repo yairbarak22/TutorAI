@@ -15,6 +15,8 @@ TutorAI is a local-first study app: a static TypeScript web app with **no backen
 - Core or SDK changes (`packages/`) start with an RFC issue. Keep the core small.
 - **TutorAI Local** (the optional program that serves the app on `127.0.0.1` and connects a Claude or ChatGPT plan) is `apps/local`, with its HTTP contract in `packages/local-api`. Read [docs/rfc-local-server.md](docs/rfc-local-server.md) first. It must keep the localhost security rules in SECURITY.md, must never read Claude credentials, and must never put ChatGPT tokens in the browser. "No backend" means no TutorAI server on the internet; this server runs only on the student's computer.
 
+- **Moodle connection** (import course files from the student's own Moodle) is `packages/moodle` (pure logic and the list of institutions), `apps/local/src/moodle` (sign-in, token, every request to Moodle) and `apps/web/src/moodle` + `apps/web/src/ui/Moodle*.tsx`. Read [docs/rfc-moodle.md](docs/rfc-moodle.md) first. The token never reaches the browser or `tutorai.db`; only `apps/local/src/moodle/http.ts` may contact a Moodle site; TutorAI only reads from Moodle.
+
 ## Commands
 
 ```bash
@@ -30,7 +32,7 @@ Helper scripts for agents, if any, are listed in `scripts/agent/README.md`.
 ## Rules
 
 - **Language:** everything on GitHub (code, comments, prompts, docs, issues, commit messages) is in English. The UI is bilingual: add every UI string as `t("עברית", "English")`; plugin manifests are English with Hebrew under `i18n.he`.
-- **Privacy:** no server, no telemetry, no new external network calls. The API key never goes into `tutorai.db` or logs.
+- **Privacy:** no server, no telemetry, no new external network calls. The API key never goes into `tutorai.db` or logs. (The one outside service besides the model is the student's own Moodle, contacted only by TutorAI Local after the student connects it.)
 - **Grounding:** outputs that use course material carry citations to section ids from `ctx.retrieve()`.
 - **Pedagogy:** tools guide rather than solve. The shared rules live in `packages/core/src/llm/prompts.ts`; don't duplicate them in prompts.
 - **Structured output:** tools return data matching a Zod schema from `packages/sdk/src/artifacts.ts`.
