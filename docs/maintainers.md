@@ -15,6 +15,14 @@ TutorAI Local (`apps/local`) ships as GitHub Release binaries that `install.sh` 
 2. **Release:** bump `version` in `apps/local/package.json`, then push a tag such as `v0.2.0`. `.github/workflows/local.yml` builds and tests on macOS (arm64, x64), Linux (x64, arm64) and Windows (x64), then publishes the binaries, icons, `SHA256SUMS` and `SHA256SUMS.sig`.
 3. **Check:** run the install line on a clean machine. Installed copies pick up the update within a day.
 
+## Merge policy (set on GitHub)
+
+Only the maintainer merges into `main`:
+- **Branch protection on `main`:** PRs only; 1 approving review from a code owner (`CODEOWNERS`: `* @yairbarak22`); stale approvals are dismissed on new pushes; the CI checks "Typecheck · unit tests · plugin evals" and "End-to-end (real browser)" must pass; no force-push or deletion. Admins can bypass, which is how the maintainer merges their own PRs (GitHub doesn't allow approving your own PR).
+- **Actions:** workflows from fork PRs of any outside contributor need approval to run.
+- **Ruleset "Release tags":** only admins can create, move or delete `v*` tags, which publish TutorAI Local releases.
+- Don't add collaborators with write access: anyone with write access could merge.
+
 ## Checking a PR
 
 Every PR goes through CI (typecheck, unit tests, recorded plugin evals, and Playwright E2E). To try a PR locally: `gh pr checkout <number> && npm i && npm run dev`.
