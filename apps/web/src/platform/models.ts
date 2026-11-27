@@ -58,3 +58,15 @@ export const RECOMMENDED_MODELS = DEFAULT_MODELS;
 
 /** USD per 1M tokens for the usage estimate; undefined for models we don't know. */
 export const priceOf = (model: string) => CLAUDE_MODELS.find((m) => m.id === model)?.price;
+
+/**
+ * A ChatGPT account's models aren't known in advance, so the description comes from the name.
+ * Worded for a plan: usage counts against its limits.
+ */
+export function chatgptHint(slug: string): string {
+  if (/nano/i.test(slug)) return t("הכי מהיר · כמעט לא מנצל את המנוי", "Fastest · barely uses your plan");
+  if (/(mini|lite|fast)/i.test(slug)) return t("מהיר · מנצל מעט מהמנוי", "Quick · uses little of your plan");
+  if (/pro/i.test(slug)) return t("הכי חכם · איטי, מנצל את המנוי הכי מהר", "Smartest · slow, uses up your plan fastest");
+  if (/codex/i.test(slug)) return t("מותאם במיוחד לקוד", "Tuned for code");
+  return t("חכם · מאוזן", "Smart · balanced");
+}

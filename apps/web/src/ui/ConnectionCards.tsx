@@ -333,6 +333,11 @@ export function ChatGptPlanCard({ onReady, active, bare }: { onReady: () => void
           <Alert kind="error">{error ?? problem}</Alert>
         </div>
       )}
+      {signedIn && !!c?.chatgpt.models?.length && (
+        <div className="mt-4">
+          <ModelPicker kind="chatgpt" available={c.chatgpt.models} />
+        </div>
+      )}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {!c ? (
           <span className="text-[13px] text-muted">{t("בודק…", "Checking…")}</span>
