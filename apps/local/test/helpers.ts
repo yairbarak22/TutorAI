@@ -14,6 +14,8 @@ export function tempEnv() {
   mkdirSync(config, { recursive: true });
   mkdirSync(data, { recursive: true });
   process.env.TUTORAI_CONFIG_DIR = config;
+  // Unit tests never register a real URL handler on the developer's computer.
+  process.env.TUTORAI_MOODLE_HANDLER ??= "off";
   writeFileSync(join(config, "settings.json"), JSON.stringify({ dataDir: data }));
   resetSettingsCache();
   return { root, config, data };

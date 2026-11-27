@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import { z } from "zod";
 import { checkGrounding, cleanCitations, hebrewRatio, renderTemplate, extractInlineCitations } from "@tutorai/sdk";
 import { Store, sectionKey } from "./db/store.ts";
+import { SCHEMA_VERSION } from "./db/schema.ts";
 import { parseDocx, parsePptx, parseText, detectKind, safeMimeFor } from "./ingest/parsers.ts";
 import { ingestSource, mergeConcepts } from "./ingest/pipeline.ts";
 import { MemoryFileStore, sha256Hex } from "./files.ts";
@@ -373,7 +374,7 @@ describe("mistakes notebook & daily session", () => {
     const store = Store.open(SQL, db.export());
     const cols = store.all<{ name: string }>("PRAGMA table_info(sections)").map((c) => c.name);
     expect(cols).toContain("t_start");
-    expect(store.get<{ value: string }>("SELECT value FROM meta WHERE key='schema_version'")?.value).toBe("3");
+    expect(store.get<{ value: string }>("SELECT value FROM meta WHERE key='schema_version'")?.value).toBe(String(SCHEMA_VERSION));
   });
 
   it("migrates a v2 database (adds the analysis resume columns)", () => {

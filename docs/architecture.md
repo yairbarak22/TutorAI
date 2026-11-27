@@ -96,12 +96,36 @@ browser (same app) ──fetch, same origin──► tutorai (127.0.0.1 only)
                                              │            └─ ChatGPT plan: Sign in with ChatGPT → Responses API
                                              ├─ /api/fs   data folder (~/Documents/TutorAI), any browser
                                              ├─ /api/local-proxy  Ollama / LM Studio without CORS setup
+                                             ├─ /api/moodle  the student's own Moodle: sign-in, course list, file import
                                              └─ self-update from GitHub Releases (SHA-256 verified)
 ```
 
 - The web app detects the server (`/api/hello`, only when served from `127.0.0.1`) and switches to `ServerFileStore` and, for the plan providers, `ServerLLM` (`apps/web/src/platform/`). The HTTP contract is `packages/local-api`.
 - **Plan limits:** a plan's usage limit pauses ingestion (status `waiting`). Ingestion resumes from the last finished analysis batch after the reset, without parsing the file again.
 - **Security:** see [SECURITY.md](../SECURITY.md#tutorai-local-appslocal). **Design and decisions:** [rfc-local-server.md](rfc-local-server.md). **Build plan:** [impl-local-server.md](impl-local-server.md).
+
+### Moodle connection
+
+A student connects their institution's Moodle once (about once a semester) by signing in on the institution's own page. TutorAI Local then lists their courses and imports the files they pick into the normal ingestion pipeline, and tells them when new files appear. v1 supports Reichman University.
+
+```
+page: ui/Moodle*.tsx · moodle/sync.ts ── planSync (packages/moodle) ── tutorai.db (moodle_links, moodle_files)
+        │ /api/moodle/*  (lists and "import this file"; never a token, never an address)
+        ▼
+tutorai: moodle/sites.ts    registry + the site's validated public configuration
+         moodle/index.ts    pending sign-in (one-time passport), accepting the link, courses, contents, download
+         moodle/tokens.ts   ~/.tutorai/moodle/<site>.json (0600)
+         moodle/http.ts     the only code that contacts Moodle: host + path + state, pacing, no foreign redirects
+         moodle/handler/    macOS: a temporary app for moodlemobile:// links, only while a sign-in is waiting
+        │ HTTPS, the student's own token
+        ▼
+the institution's Moodle (mobile web service: site info, enrolled courses, course contents, files)
+```
+
+- It uses Moodle's mobile web service, the API of the official Moodle app, and only reads.
+- The token stays in `~/.tutorai`; `tutorai.db` holds only which course is linked to which Moodle course and the list of files Moodle showed.
+- Listing is automatic (when a linked course's Materials tab opens, at most every six hours). Downloading and analyzing happen only when the student confirms.
+- **Design:** [rfc-moodle.md](rfc-moodle.md). **Build plan and status:** [impl-moodle.md](impl-moodle.md). **For students:** [moodle.md](moodle.md).
 
 ## Data model
 
@@ -113,6 +137,7 @@ Course ─┬─< Source (pdf | pptx | docx | text; "sample exam" flag)
         ├─< Concept (name, English name, definition, prerequisites → Concept)   ← knowledge graph
         ├─< Artifact (tool id, type, JSON, citations, created_at)
         ├─< Chat (tutor conversations)
+        ├── MoodleLink (site, Moodle course) ─< MoodleFile (what Moodle listed: new | imported | skipped | …)
         └── exam date
 
 Learner ─┬─< Attempt (question, answer, correct, concept, at)
@@ -207,7 +232,7 @@ The full guide, including the `ctx` API, artifact types, input fields, and retri
 ## Privacy and academic integrity
 
 - Lecture materials belong to their lecturers. They are never shared between students, and the system can't share them: there is no server.
-- No telemetry. The only external services are the model the student chose and jsDelivr (the Pyodide runtime, downloaded the first time SymPy is used; no student data is sent there).
+- No telemetry. The only external services are the model the student chose, the student's own Moodle when they connect it (TutorAI Local only), and jsDelivr (the Pyodide runtime, downloaded the first time SymPy is used; no student data is sent there).
 - Tools guide rather than solve: the tutor is Socratic by default, and "Check my solution" never reveals the full solution.
 
 ## Repo structure

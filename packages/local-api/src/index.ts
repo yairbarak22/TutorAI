@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MoodleErrorKind, RemoteCourse, RemoteFile } from "@tutorai/moodle";
 
 /**
  * The HTTP contract between TutorAI Local (apps/local) and the web app (apps/web).
@@ -53,7 +54,9 @@ export const Hello = z.object({
   platform: z.string(),
   arch: z.string(),
   dataDir: z.string(),
-  features: z.object({ claudeCode: z.boolean(), chatgpt: z.boolean() }),
+  features: z.object({ claudeCode: z.boolean(), chatgpt: z.boolean(), moodle: z.boolean().default(false) }),
+  /** Tests only: the server accepts a mock Moodle on 127.0.0.1 (docs/impl-moodle.md §3.4). */
+  testMode: z.boolean().default(false),
 });
 export type Hello = z.infer<typeof Hello>;
 
@@ -88,6 +91,8 @@ export const Settings = z.object({
   chatgptWelcomeShown: z.boolean(),
   /** The smart tier in hybrid mode when it is a plan provider. */
   hybridSmart: z.enum(["claude", "claude-code", "chatgpt"]).optional(),
+  /** Overrides the built-in default for the Moodle connection. Stored only when someone sets it. */
+  moodleEnabled: z.boolean().optional(),
 });
 export type Settings = z.infer<typeof Settings>;
 export const SettingsPatch = Settings.partial();
@@ -131,3 +136,118 @@ export type LocalProxyRequest = z.infer<typeof LocalProxyRequest>;
 
 /** Usage events from a plan carry this model prefix, so the Usage view shows "included in your plan". */
 export const PLAN_MODEL_PREFIX = "plan:";
+
+/* ---------------- Moodle connection (docs/rfc-moodle.md §8) ---------------- */
+
+export { MoodleErrorKind, RemoteCourse, RemoteFile };
+
+export const MoodleInstitutions = z.object({
+  institutions: z.array(
+    z.object({
+      id: z.string(),
+      name: z.object({ he: z.string(), en: z.string() }),
+      status: z.enum(["verified", "config-checked", "mobile-off", "unreachable"]),
+    }),
+  ),
+});
+export type MoodleInstitutions = z.infer<typeof MoodleInstitutions>;
+
+export const MoodleCandidate = z.object({
+  /** Server-issued key (the validated wwwroot). */
+  site: z.string(),
+  host: z.string(),
+  siteName: z.string().max(80),
+  institutionId: z.string(),
+  login: z.enum(["sso", "unavailable"]),
+  reason: z.enum(["disabled", "mobile_off", "maintenance", "password_only"]).optional(),
+});
+export type MoodleCandidate = z.infer<typeof MoodleCandidate>;
+
+export const MoodleResolveRequest = z.object({ institutionId: z.string().max(40) });
+export const MoodleResolve = z.object({
+  candidates: z.array(MoodleCandidate),
+  /** Why there are no candidates. */
+  problem: z.enum(["offline", "timeout", "not_moodle", "refused"]).optional(),
+});
+export type MoodleResolve = z.infer<typeof MoodleResolve>;
+
+export const MoodleConnection = z.object({
+  site: z.string(),
+  host: z.string(),
+  siteName: z.string(),
+  institutionId: z.string().optional(),
+  fullName: z.string(),
+  connectedAt: z.string(),
+  expired: z.boolean(),
+});
+export type MoodleConnection = z.infer<typeof MoodleConnection>;
+
+export const MoodlePending = z.object({
+  id: z.string(),
+  site: z.string(),
+  /** "auto": TutorAI opens by itself after sign-in. "manual": the student pastes the link. */
+  mode: z.enum(["auto", "manual"]),
+  state: z.enum(["waiting", "verifying", "failed"]),
+  error: MoodleErrorKind.optional(),
+  expiresAt: z.string(),
+});
+export type MoodlePending = z.infer<typeof MoodlePending>;
+
+export const MoodleStatus = z.object({ connections: z.array(MoodleConnection), pending: MoodlePending.nullable() });
+export type MoodleStatus = z.infer<typeof MoodleStatus>;
+
+export const MoodleStartRequest = z.object({ site: z.string().max(300) });
+export const MoodleStart = z.object({
+  pendingId: z.string(),
+  /** Both sides also check it with isSafeLaunchUrl before using it. */
+  launchUrl: z.string().max(700),
+  mode: z.enum(["auto", "manual"]),
+  expiresAt: z.string(),
+});
+export type MoodleStart = z.infer<typeof MoodleStart>;
+
+export const MoodlePasteRequest = z.object({ pendingId: z.string().max(64), text: z.string().max(4096) });
+export const MoodlePasteResult = z.discriminatedUnion("ok", [
+  z.object({ ok: z.literal(true) }),
+  z.object({
+    ok: z.literal(false),
+    kind: z.enum(["not_a_link", "wrong_site", "expired"]),
+    hint: z.enum(["page_address", "signin_address", "other_moodle_page", "not_a_link"]).optional(),
+  }),
+]);
+export type MoodlePasteResult = z.infer<typeof MoodlePasteResult>;
+
+export const MoodleCancelRequest = z.object({ pendingId: z.string().max(64) });
+export const MoodleDisconnectRequest = z.object({ site: z.string().max(300) });
+/** The control route the sign-in handler calls. */
+export const MoodleLinkRequest = z.object({ link: z.string().max(1100) });
+
+export const MoodleLang = z.enum(["he", "en"]);
+export const MoodleCourses = z.object({ courses: z.array(RemoteCourse) });
+export const MoodleContents = z.object({
+  files: z.array(RemoteFile),
+  other: z.object({ textPages: z.number(), links: z.number(), external: z.number(), notImportable: z.record(z.string(), z.number()) }),
+});
+export type MoodleContents = z.infer<typeof MoodleContents>;
+
+export const MoodleDownloadRequest = z.object({
+  site: z.string().max(300),
+  remoteCourseId: z.number().int().positive(),
+  key: z.string().max(600),
+  /** The TutorAI course the file goes into. */
+  courseId: z.number().int().positive(),
+  /** Hashes of the sources already in that course, so a duplicate is never written. */
+  knownHashes: z.array(z.string().regex(/^[a-f0-9]{64}$/)).max(5000),
+});
+export type MoodleDownloadRequest = z.infer<typeof MoodleDownloadRequest>;
+
+export const MoodleDownloadEvent = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("progress"), received: z.number(), total: z.number().nullable() }),
+  z.object({ type: z.literal("done"), path: z.string(), hash: z.string(), size: z.number(), name: z.string() }),
+  z.object({ type: z.literal("duplicate"), hash: z.string() }),
+  z.object({ type: z.literal("error"), kind: MoodleErrorKind }),
+]);
+export type MoodleDownloadEvent = z.infer<typeof MoodleDownloadEvent>;
+
+/** Request bodies on Moodle routes are small; the server refuses anything larger. */
+export const MOODLE_BODY_LIMIT = 256 * 1024;

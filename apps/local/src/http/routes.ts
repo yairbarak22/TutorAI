@@ -3,13 +3,25 @@ import {
   CSRF_HEADER,
   LLMRequest,
   LocalProxyRequest,
+  MOODLE_BODY_LIMIT,
+  MoodleCancelRequest,
+  MoodleDisconnectRequest,
+  MoodleDownloadRequest,
+  MoodleLang,
+  MoodleLinkRequest,
+  MoodlePasteRequest,
+  MoodleResolveRequest,
+  MoodleStartRequest,
   SettingsPatch,
   type Hello,
   type InstallEvent,
   type LLMEvent,
+  type MoodleDownloadEvent,
   type UpdateStatus,
 } from "@tutorai/local-api";
+import { MoodleError } from "@tutorai/moodle";
 import { z } from "zod";
+import type { MoodleService } from "../moodle/index.ts";
 import { loadSettings, resetSettingsCache, saveSettings, writePrivate } from "../config.ts";
 import { paths } from "../paths.ts";
 import { rm } from "node:fs/promises";
@@ -28,6 +40,7 @@ export interface AppContext {
   version: string;
   security: Security;
   services: Services;
+  moodle: MoodleService;
   semaphore: Semaphore;
   updater: Updater;
   /** Counts work that must keep the server alive (model calls, installs). */
@@ -71,8 +84,20 @@ const page = (title: string, body: string) => `<!doctype html><html lang="he" di
 
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
+/** Moodle failures leave as a status and a kind; the page turns the kind into words. */
+const moodleError = (e: unknown): never => {
+  if (e instanceof MoodleError) throw new HttpError(e.kind === "not_listed" ? 400 : 502, e.message, e.kind);
+  throw e;
+};
+
 export function buildRoutes(ctx: AppContext): Route[] {
-  const { security, services } = ctx;
+  const { security, services, moodle } = ctx;
+  const moodleOn = async () => {
+    if (!(await moodle.enabled())) throw new HttpError(403, "The Moodle connection is turned off", "unavailable");
+  };
+  const moodleBody = (req: IncomingMessage) => readJson(req, MOODLE_BODY_LIMIT);
+  const siteParam = (url: URL) => z.string().min(1).max(300).parse(url.searchParams.get("site"));
+  const langParam = (url: URL) => MoodleLang.parse(url.searchParams.get("lang") ?? "he");
   return [
     /* ---------- session ---------- */
     {
@@ -119,6 +144,7 @@ export function buildRoutes(ctx: AppContext): Route[] {
               await writePrivate(paths().settings, JSON.stringify({ dataDir }));
               resetSettingsCache();
               await rm(paths().chatgpt, { recursive: true, force: true });
+              await moodle.reset();
               send(res, 204);
             },
           },
@@ -138,7 +164,8 @@ export function buildRoutes(ctx: AppContext): Route[] {
           platform: process.platform,
           arch: process.arch,
           dataDir: s.dataDir,
-          features: { claudeCode: s.claudeCodeEnabled, chatgpt: true },
+          features: { claudeCode: s.claudeCodeEnabled, chatgpt: true, moodle: await moodle.enabled() },
+          testMode: moodle.testMode(),
         };
         json(res, 200, hello);
       },
@@ -332,6 +359,134 @@ export function buildRoutes(ctx: AppContext): Route[] {
       },
     },
     { method: "POST", path: "/api/connections/chatgpt/logout", kind: "api", handler: async (_q, res) => json(res, 200, await services.chatgpt.logout()) },
+
+    /* ---------- Moodle (docs/rfc-moodle.md §8) ---------- */
+    {
+      method: "GET",
+      path: "/api/moodle/institutions",
+      kind: "api",
+      handler: async (_q, res) => {
+        await moodleOn();
+        json(res, 200, moodle.institutions());
+      },
+    },
+    {
+      method: "POST",
+      path: "/api/moodle/resolve",
+      kind: "api",
+      handler: async (req, res) => {
+        await moodleOn();
+        const { institutionId } = MoodleResolveRequest.parse(await moodleBody(req));
+        json(res, 200, await moodle.resolve(institutionId));
+      },
+    },
+    {
+      method: "GET",
+      path: "/api/moodle/status",
+      kind: "api",
+      handler: async (_q, res) => {
+        await moodleOn();
+        json(res, 200, await moodle.status());
+      },
+    },
+    {
+      method: "POST",
+      path: "/api/moodle/connect/start",
+      kind: "api",
+      handler: async (req, res) => {
+        await moodleOn();
+        const { site } = MoodleStartRequest.parse(await moodleBody(req));
+        json(res, 200, await moodle.start(site).catch(moodleError));
+      },
+    },
+    {
+      method: "POST",
+      path: "/api/moodle/connect/paste",
+      kind: "api",
+      handler: async (req, res) => {
+        await moodleOn();
+        const { pendingId, text } = MoodlePasteRequest.parse(await moodleBody(req));
+        json(res, 200, await moodle.paste(pendingId, text));
+      },
+    },
+    {
+      method: "POST",
+      path: "/api/moodle/connect/cancel",
+      kind: "api",
+      handler: async (req, res) => {
+        await moodleOn();
+        await moodle.cancel(MoodleCancelRequest.parse(await moodleBody(req)).pendingId);
+        send(res, 204);
+      },
+    },
+    {
+      method: "POST",
+      path: "/api/moodle/disconnect",
+      kind: "api",
+      handler: async (req, res) => {
+        await moodleOn();
+        await moodle.disconnect(MoodleDisconnectRequest.parse(await moodleBody(req)).site);
+        send(res, 204);
+      },
+    },
+    {
+      method: "GET",
+      path: "/api/moodle/courses",
+      kind: "api",
+      handler: async (_q, res, url) => {
+        await moodleOn();
+        json(res, 200, { courses: await moodle.courses(siteParam(url), langParam(url)).catch(moodleError) });
+      },
+    },
+    {
+      method: "GET",
+      path: "/api/moodle/contents",
+      kind: "api",
+      handler: async (_q, res, url) => {
+        await moodleOn();
+        const course = z.coerce.number().int().positive().parse(url.searchParams.get("course"));
+        json(res, 200, await moodle.contents(siteParam(url), course, langParam(url), url.searchParams.get("fresh") === "1").catch(moodleError));
+      },
+    },
+    {
+      method: "POST",
+      path: "/api/moodle/download",
+      kind: "api",
+      handler: async (req, res) => {
+        await moodleOn();
+        const request = MoodleDownloadRequest.parse(await moodleBody(req));
+        const ctrl = abortOnClose(req, res);
+        const write = ndjson(res);
+        let done = false;
+        const emit = (e: MoodleDownloadEvent) => {
+          if (done) return;
+          if (e.type !== "progress") done = true;
+          write(e);
+        };
+        ctx.busy.inc();
+        try {
+          await moodle.download(request, emit, ctrl.signal);
+          if (!done) emit({ type: "error", kind: "other" });
+        } catch (e) {
+          log("error", `moodle download route: ${e instanceof Error ? e.name : "error"}`);
+          emit({ type: "error", kind: "other" });
+        } finally {
+          ctx.busy.dec();
+          res.end();
+        }
+      },
+    },
+    {
+      // The sign-in handler on this computer hands the link over. It learns nothing from the answer.
+      method: "POST",
+      path: "/control/moodle-link",
+      kind: "control",
+      handler: async (req, res) => {
+        const parsed = MoodleLinkRequest.safeParse(await readJson(req, MOODLE_BODY_LIMIT).catch(() => null));
+        if (parsed.success && (await moodle.enabled())) await moodle.link(parsed.data.link);
+        send(res, 204);
+      },
+    },
 
     /* ---------- settings ---------- */
     { method: "GET", path: "/api/settings", kind: "api", handler: async (_q, res) => json(res, 200, await loadSettings()) },

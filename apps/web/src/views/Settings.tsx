@@ -9,6 +9,7 @@ import { ConnectionPicker, type Choice } from "../ui/ConnectionPicker.tsx";
 import { ModelPicker } from "../ui/ModelPicker.tsx";
 import { priceOf } from "../platform/models.ts";
 import { LocalComputerRows } from "../ui/LocalComputer.tsx";
+import { MoodleSettingsRows } from "../ui/Moodle.tsx";
 import { ApiKeyForm } from "../ui/ApiKey.tsx";
 import { Alert, Badge, Button, Row, Tabs, errorMessage } from "../ui/components.tsx";
 import { fmtTime, switchLanguage, t, useLanguage } from "../i18n.tsx";
@@ -213,6 +214,7 @@ export function Settings() {
             </div>
           )}
           {local && <LocalComputerRows folderLabel={engine.root.files.label} />}
+          {local && <MoodleSettingsRows />}
           {!local && <Row
             title={t("מיקום השמירה", "Storage location")}
             desc={

@@ -73,6 +73,26 @@ test("the network policy blocks requests to any address except Anthropic and loc
   expect(allowed).toEqual([]);
 });
 
+test("on the website, Import from Moodle explains that it needs TutorAI on the computer, and contacts nothing", async ({ page }) => {
+  const moodleRequests: string[] = [];
+  page.on("request", (r) => /moodle/i.test(new URL(r.url()).pathname) && !/\.(js|css|map)$/.test(r.url()) && moodleRequests.push(r.url()));
+  await page.goto("/");
+  await page.getByRole("button", { name: "בואו נתחיל" }).click();
+  await page.getByText("בתוך הדפדפן").click();
+  await page.getByRole("combobox", { name: "איזה חשבון AI יש לכם?" }).click();
+  await page.getByRole("option", { name: /רק לנסות/ }).click();
+  await page.getByRole("button", { name: "כניסה במצב הדגמה" }).click();
+  await page.getByRole("button", { name: "ייבוא מ-Moodle" }).click();
+  const dialog = page.getByRole("dialog", { name: "ייבוא מ-Moodle" });
+  await expect(dialog.getByText(/זה עובד ב-TutorAI שמותקן במחשב ולא באתר/)).toBeVisible();
+  await expect(dialog.getByText("install.sh").or(dialog.getByText("install.ps1")).first()).toBeVisible();
+  // A linked course's strip is for TutorAI Local only.
+  await dialog.getByRole("button", { name: "סגירה" }).click();
+  await page.getByRole("button", { name: "קורס לדוגמה: הסתברות" }).click();
+  await expect(page.getByTestId("moodle-strip")).toHaveCount(0);
+  expect(moodleRequests).toEqual([]);
+});
+
 test("onboarding with an API key: model dropdowns start on the recommended models and save the choice", async ({ page }) => {
   await page.route("https://api.anthropic.com/**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: '{"id":"claude-haiku-5-5","type":"model"}' }));
   await page.goto("/");

@@ -82,34 +82,39 @@ export class LocalApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** A stable code from the server (e.g. a Moodle error kind) that the page turns into words. */
+    public kind?: string,
   ) {
     super(message);
   }
 }
 
-async function call(path: string, init: RequestInit = {}): Promise<Response> {
+export async function call(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
   headers.set(CSRF_HEADER, token ?? "");
   const r = await fetch(path, { ...init, headers, credentials: "same-origin" });
   if (!r.ok && r.status !== 404) {
     let msg = `${r.status}`;
+    let kind: string | undefined;
     try {
-      msg = ((await r.clone().json()) as { error?: string }).error ?? msg;
+      const body = (await r.clone().json()) as { error?: string; kind?: string };
+      msg = body.error ?? msg;
+      kind = body.kind;
     } catch {
       /* not json */
     }
-    throw new LocalApiError(r.status, msg);
+    throw new LocalApiError(r.status, msg, kind);
   }
   return r;
 }
 
-async function getJson<S extends z.ZodType>(schema: S, path: string, init?: RequestInit): Promise<z.infer<S>> {
+export async function getJson<S extends z.ZodType>(schema: S, path: string, init?: RequestInit): Promise<z.infer<S>> {
   const r = await call(path, init);
   if (r.status === 404) throw new LocalApiError(404, "Not found");
   return schema.parse(await r.json());
 }
 
-const jsonInit = (method: string, body: unknown): RequestInit => ({ method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+export const jsonInit = (method: string, body: unknown): RequestInit => ({ method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
 /** Reads a newline-delimited JSON stream. */
 export async function* ndjson<S extends z.ZodType>(schema: S, r: Response): AsyncGenerator<z.infer<S>> {
