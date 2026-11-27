@@ -6,6 +6,7 @@ import { ApiKeyForm } from "./ApiKey.tsx";
 import { ChatGptPlanCard, ClaudePlanCard } from "./ConnectionCards.tsx";
 import { InstallLocal } from "./InstallLocal.tsx";
 import { LocalModelSetup } from "./LocalModelSetup.tsx";
+import { ModelPicker } from "./ModelPicker.tsx";
 import { Select, type SelectOption } from "./Select.tsx";
 import { Badge, Button } from "./components.tsx";
 import { t } from "../i18n.tsx";
@@ -84,7 +85,15 @@ export function ConnectionPicker({
             <span className="text-[12.5px] text-muted">{t("להחלפה או מחיקה: למטה.", "To replace or delete it: below.")}</span>
           </div>
         ) : (
-          <ApiKeyForm large={mode === "onboarding"} submitLabel={startLabel} onSaved={() => onChosen("claude")} />
+          <>
+            {/* Settings has its own "Models" row once a key is in use. */}
+            {mode === "onboarding" && (
+              <div className="mb-4">
+                <ModelPicker kind="claude" />
+              </div>
+            )}
+            <ApiKeyForm large={mode === "onboarding"} submitLabel={startLabel} onSaved={() => onChosen("claude")} />
+          </>
         )}
       </>
     );

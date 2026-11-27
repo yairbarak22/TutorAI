@@ -92,3 +92,21 @@ test("on the website, Import from Moodle explains that it needs TutorAI on the c
   await expect(page.getByTestId("moodle-strip")).toHaveCount(0);
   expect(moodleRequests).toEqual([]);
 });
+
+test("onboarding with an API key: model dropdowns start on the recommended models and save the choice", async ({ page }) => {
+  await page.route("https://api.anthropic.com/**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: '{"id":"claude-haiku-5-5","type":"model"}' }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "בואו נתחיל" }).click();
+  await page.getByText("בתוך הדפדפן").click();
+  await page.getByRole("combobox", { name: "איזה חשבון AI יש לכם?" }).click();
+  await page.getByRole("option", { name: /מפתח API/ }).click();
+  const hard = page.getByRole("combobox", { name: "מודל למשימות קשות" });
+  const simple = page.getByRole("combobox", { name: "מודל למשימות פשוטות" });
+  await expect(hard).toHaveText(/Claude Sonnet 5.5 · מומלץ/);
+  await expect(simple).toHaveText(/Claude Haiku 5.5 · מומלץ/);
+  await hard.click();
+  await expect(page.getByRole("option", { name: /Claude Fable 5.2.*הכי יקר/ })).toBeVisible();
+  await page.getByRole("option", { name: /Claude Opus 5.5/ }).click();
+  await expect(hard).toHaveText(/Claude Opus 5.5/);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("tutorai.models") ?? "null"))).toEqual({ fast: "claude-haiku-5-5", smart: "claude-opus-5-5" });
+});

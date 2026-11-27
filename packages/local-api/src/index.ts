@@ -98,6 +98,14 @@ export type Settings = z.infer<typeof Settings>;
 export const SettingsPatch = Settings.partial();
 export type SettingsPatch = z.infer<typeof SettingsPatch>;
 
+/** The recommended ChatGPT models from the account's list: the first (newest) for hard work, a mini/nano one for simple work. */
+export function pickChatgptDefaults(models: { slug: string }[]): { fast: string; smart: string } {
+  if (!models.length) return { fast: "", smart: "" };
+  const smart = models[0].slug;
+  const fast = models.find((m) => /(mini|nano|lite|fast)/i.test(m.slug))?.slug ?? models[models.length - 1].slug;
+  return { fast, smart };
+}
+
 export const DEFAULT_CLAUDE_CODE_MODELS = { fast: "claude-haiku-5-5", smart: "claude-sonnet-5-5" } as const;
 
 export const Folder = z.object({ path: z.string(), label: z.string() });

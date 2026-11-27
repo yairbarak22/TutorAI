@@ -1,36 +1,27 @@
 import { useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
-import { DEFAULT_MODELS } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { download, forgetStorage, importBackup } from "../platform/storage.ts";
 import { isPlanProvider, secrets, type Provider } from "../platform/secrets.ts";
 import { localServer } from "../platform/local-server.ts";
 import { PLAN_MODEL_PREFIX } from "@tutorai/local-api";
 import { ConnectionPicker, type Choice } from "../ui/ConnectionPicker.tsx";
+import { ModelPicker } from "../ui/ModelPicker.tsx";
+import { priceOf } from "../platform/models.ts";
 import { LocalComputerRows } from "../ui/LocalComputer.tsx";
 import { MoodleSettingsRows } from "../ui/Moodle.tsx";
 import { ApiKeyForm } from "../ui/ApiKey.tsx";
-import { Alert, Badge, Button, Field, Row, Tabs, errorMessage, inputClass } from "../ui/components.tsx";
+import { Alert, Badge, Button, Row, Tabs, errorMessage } from "../ui/components.tsx";
 import { fmtTime, switchLanguage, t, useLanguage } from "../i18n.tsx";
-
-/** Rough cost estimate (USD per 1M tokens: input/output) for the defaults. */
-const PRICES: Record<string, [number, number]> = {
-  "claude-opus-5-5": [4, 20],
-  "claude-sonnet-5-5": [2, 10],
-  "claude-haiku-5-5": [0.1, 0.5],
-};
 
 export function Settings() {
   const engine = useEngine();
   const lang = useLanguage();
   const [msg, setMsg] = useState<{ kind: "success" | "error"; text: string } | null>(null);
-  const models = secrets.getModels() ?? DEFAULT_MODELS;
-  const [fast, setFast] = useState(models.fast);
-  const [smart, setSmart] = useState(models.smart);
   const restoreInput = useRef<HTMLInputElement>(null);
   const usage = engine.store.usageTotals();
   const cost = usage.reduce((n, u) => {
-    const p = PRICES[u.model];
+    const p = priceOf(u.model);
     return p ? n + (u.input * p[0] + u.output * p[1]) / 1e6 : n;
   }, 0);
   const hasKey = !!secrets.getApiKey();
@@ -185,29 +176,19 @@ export function Settings() {
           </Row>
           <Row
             title={t("מודלים", "Models")}
-            desc={t("מודל מהיר לניתוח החומר ולכרטיסיות, ומודל חכם להסברים ולמבחנים.", "A fast model for extraction and flashcards, and a smart model for explanations and exams.")}
+            desc={t("איזה מודל עושה כל עבודה. אפשר להשאיר את המומלץ.", "Which model does each job. You can keep the recommended ones.")}
             wide
           >
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Field label={t("מודל מהיר", "Fast model")}>
-                <input dir="ltr" className={inputClass} value={fast} onChange={(e) => setFast(e.target.value)} />
-              </Field>
-              <Field label={t("מודל חכם", "Smart model")}>
-                <input dir="ltr" className={inputClass} value={smart} onChange={(e) => setSmart(e.target.value)} />
-              </Field>
+            <div className="mt-3">
+              <ModelPicker
+                kind="claude"
+                wide
+                onSaved={() => {
+                  engine.configureLLM();
+                  setMsg({ kind: "success", text: t("המודלים עודכנו.", "Models updated.") });
+                }}
+              />
             </div>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="mt-3"
-              onClick={() => {
-                secrets.setModels({ fast: fast.trim() || DEFAULT_MODELS.fast, smart: smart.trim() || DEFAULT_MODELS.smart });
-                engine.configureLLM();
-                setMsg({ kind: "success", text: t("המודלים עודכנו.", "Models updated.") });
-              }}
-            >
-              {t("שמירת מודלים", "Save models")}
-            </Button>
           </Row>
             </>
           )}

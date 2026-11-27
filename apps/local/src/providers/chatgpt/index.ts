@@ -15,12 +15,9 @@ const ModelsResponse = z.object({
   models: z.array(z.object({ slug: z.string(), display_name: z.string().optional(), visibility: z.string().optional() }).passthrough()),
 });
 
-export function pickDefaults(models: { slug: string }[]): { fast: string; smart: string } {
-  if (!models.length) return { fast: "", smart: "" };
-  const smart = models[0].slug;
-  const fast = models.find((m) => /(mini|nano|lite|fast)/i.test(m.slug))?.slug ?? models[models.length - 1].slug;
-  return { fast, smart };
-}
+/** Shared with the web app, which marks these as "recommended" in the model picker. */
+import { pickChatgptDefaults as pickDefaults } from "@tutorai/local-api";
+export { pickDefaults };
 
 /** Maps OpenAI's documented subscription_sharing_* codes (and HTTP statuses) to our error kinds. */
 export function mapError(code: string | undefined, status?: number): { kind: ErrorKind; message: string; retry?: boolean } {

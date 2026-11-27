@@ -80,6 +80,17 @@ test("connects a ChatGPT plan through Sign in with ChatGPT and answers with it",
 
   await expect(page.getByRole("dialog")).toContainText("ChatGPT");
   await page.getByRole("button", { name: "הבנתי" }).click();
+
+  // The account's models, starting on the recommended pair; a change is saved in the server's settings.
+  const hard = page.getByRole("combobox", { name: "מודל למשימות קשות" });
+  await expect(hard).toHaveText(/GPT-6.2 · מומלץ/);
+  await expect(page.getByRole("combobox", { name: "מודל למשימות פשוטות" })).toHaveText(/GPT-6.2 mini · מומלץ/);
+  await hard.click();
+  await page.getByRole("option", { name: /GPT-6.2 mini/ }).click();
+  await expect
+    .poll(() => JSON.parse(readFileSync(join(state().config, "settings.json"), "utf8")).models?.chatgpt)
+    .toEqual({ fast: "gpt-6.2-mini", smart: "gpt-6.2-mini" });
+
   await page.getByRole("button", { name: "שימוש במנוי ChatGPT" }).click();
   await dismissTip(page);
   await expect(page.getByText("ערב טוב").or(page.getByText("בוקר טוב")).or(page.getByText("צהריים טובים")).or(page.getByText("לילה טוב")).first()).toBeVisible();
