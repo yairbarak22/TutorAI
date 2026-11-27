@@ -33,7 +33,9 @@ const go = async (hash) => {
 await page.goto(base);
 await page.getByRole("button", { name: "Let's get started" }).click();
 await page.getByText("Inside the browser").click();
-await page.getByRole("button", { name: /Try demo mode/ }).click();
+await page.getByRole("combobox", { name: "Which AI account do you have?" }).click();
+await page.getByRole("option", { name: /Just try it/ }).click();
+await page.getByRole("button", { name: "Start in demo mode" }).click();
 await page.getByRole("button", { name: "Sample course: Probability" }).click();
 await page.getByRole("button", { name: "Dismiss" }).click().catch(() => {});
 

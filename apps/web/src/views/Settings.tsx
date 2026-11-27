@@ -6,10 +6,8 @@ import { download, forgetStorage, importBackup } from "../platform/storage.ts";
 import { isPlanProvider, secrets, type Provider } from "../platform/secrets.ts";
 import { localServer } from "../platform/local-server.ts";
 import { PLAN_MODEL_PREFIX } from "@tutorai/local-api";
-import { ChatGptPlanCard, ClaudePlanCard } from "../ui/ConnectionCards.tsx";
+import { ConnectionPicker, type Choice } from "../ui/ConnectionPicker.tsx";
 import { LocalComputerRows } from "../ui/LocalComputer.tsx";
-import { InstallLocal } from "../ui/InstallLocal.tsx";
-import { LocalModelSetup } from "../ui/LocalModelSetup.tsx";
 import { ApiKeyForm } from "../ui/ApiKey.tsx";
 import { Alert, Badge, Button, Field, Row, Tabs, errorMessage, inputClass } from "../ui/components.tsx";
 import { fmtTime, switchLanguage, t, useLanguage } from "../i18n.tsx";
@@ -38,13 +36,6 @@ export function Settings() {
   const [provider, setProvider] = useState<Provider>(secrets.getProvider());
   const local = localServer();
   const planUsage = usage.filter((u) => u.model.startsWith(PLAN_MODEL_PREFIX));
-  const usePlan = (p: "claude-code" | "chatgpt") => {
-    secrets.setProvider(p);
-    setProvider(p);
-    secrets.setDemo(false);
-    engine.configureLLM();
-    setMsg({ kind: "success", text: p === "chatgpt" ? t("עובדים עם מנוי ChatGPT שלכם.", "Using your ChatGPT plan.") : t("עובדים עם מנוי Claude שלכם.", "Using your Claude plan.") });
-  };
 
   const [tab, setTab] = useState<"ai" | "data" | "about">("ai");
   return (
@@ -121,80 +112,38 @@ export function Settings() {
               )
             }
           />
-          {!local && (
-            <Row title={t("להשתמש במנוי Claude או ChatGPT", "Use your Claude or ChatGPT plan")} wide>
-              <div className="mt-3">
-                <InstallLocal />
-              </div>
-            </Row>
-          )}
           <Row
-            title={t("מאיפה מגיע המודל", "Where the model runs")}
-            desc={t("מודל מקומי רץ על המחשב שלכם וחוסך את כל העלות, אבל איטי יותר וחלש יותר בעברית.", "A local model runs on your computer and costs nothing, but it is slower and weaker in Hebrew.")}
+            title={t("חיבור ה-AI", "AI connection")}
+            desc={t("בחרו איזה חשבון AI יש לכם. יופיעו רק ההגדרות שלו.", "Choose which AI account you have. Only its settings are shown.")}
             wide
           >
-            <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label={t("ספק המודל", "Model provider")}>
-              {([
-                ...(local
-                  ? ([
-                      ["chatgpt", t("מנוי ChatGPT", "ChatGPT plan")],
-                      ["claude-code", t("מנוי Claude", "Claude plan")],
-                    ] as const)
-                  : []),
-                ["claude", local ? t("מפתח API של Claude", "Claude API key") : t("Claude (בענן)", "Claude (cloud)")],
-                ["local", t("מקומי בלבד (חינם)", "Local only (free)")],
-                ["hybrid", t("היברידי (מקומי + Claude)", "Hybrid (local + Claude)")],
-              ] as const).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  aria-pressed={provider === id}
-                  onClick={() => {
-                    setProvider(id);
-                    // A plan becomes active only from its card ("Use my plan"), once it's connected.
-                    if (isPlanProvider(id)) return;
-                    secrets.setProvider(id);
-                    if (id === "claude" || secrets.getLocal()) {
-                      secrets.setDemo(false);
-                      engine.configureLLM();
-                    }
-                  }}
-                  className={`h-8 cursor-pointer rounded-full border px-3 text-[13px] transition-colors ${
-                    provider === id ? "border-ink bg-ink text-white" : "border-black/10 bg-white text-ink-2 hover:bg-hover"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="mt-3">
+              <ConnectionPicker
+                mode="settings"
+                active={engine.demo ? undefined : (engine.provider as Choice)}
+                onChosen={(c) => {
+                  if (c === "demo") return;
+                  secrets.setProvider(c);
+                  setProvider(c);
+                  secrets.setDemo(false);
+                  engine.configureLLM();
+                  setMsg({
+                    kind: "success",
+                    text:
+                      c === "chatgpt"
+                        ? t("עובדים עם מנוי ChatGPT שלכם.", "Using your ChatGPT plan.")
+                        : c === "claude-code"
+                          ? t("עובדים עם מנוי Claude שלכם.", "Using your Claude plan.")
+                          : c === "claude"
+                            ? t("עובדים עם מפתח ה-API.", "Using your API key.")
+                            : t("המודל המקומי נשמר.", "Local model saved."),
+                  });
+                }}
+              />
             </div>
-            {provider === "hybrid" && (
-              <p className="mt-2 text-xs text-muted">
-                {t("ניתוח קבצים, מושגים וכרטיסיות רצים מקומית (רוב השימוש); הסברים, מבחנים ובדיקה לפי מחוון עוברים ל-Claude. צריך גם מפתח API.", "File analysis, concepts and flashcards run locally (most of the usage); explanations, exams and rubric grading go to Claude. Needs an API key too.")}
-              </p>
-            )}
-            {provider === "chatgpt" && (
-              <div className="mt-4">
-                <ChatGptPlanCard active={engine.provider === "chatgpt"} onReady={() => usePlan("chatgpt")} />
-              </div>
-            )}
-            {provider === "claude-code" && (
-              <div className="mt-4">
-                <ClaudePlanCard active={engine.provider === "claude-code"} onReady={() => usePlan("claude-code")} />
-              </div>
-            )}
-            {(provider === "local" || provider === "hybrid") && (
-              <div className="mt-4">
-                <LocalModelSetup
-                  onSaved={() => {
-                    secrets.setDemo(false);
-                    engine.configureLLM();
-                    setMsg({ kind: "success", text: t("המודל המקומי נשמר.", "Local model saved.") });
-                  }}
-                />
-              </div>
-            )}
           </Row>
-          {(provider === "claude" || provider === "hybrid") && (
+          {/* Key management and model choice only for an API key that's in use (the picker connects it). */}
+          {!engine.demo && (engine.provider === "claude" || engine.provider === "hybrid") && (
             <>
           <Row
             title={hasKey ? t("החלפת מפתח API", "Replace API key") : t("מפתח API", "API key")}

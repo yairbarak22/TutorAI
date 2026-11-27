@@ -64,7 +64,8 @@ fi
 
 # A TutorAI icon. Created on this computer, so macOS doesn't quarantine it.
 if [ "$OS" = macos ]; then
-  APP="$HOME/Applications/TutorAI.app"
+  # The regular Applications folder (Launchpad, Spotlight, Finder) when we may write there; else ~/Applications.
+  if [ -w /Applications ] && [ -z "${TUTORAI_USER_APPS:-}" ]; then APP="/Applications/TutorAI.app"; else APP="$HOME/Applications/TutorAI.app"; fi
   rm -rf "$APP"
   mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
   cat > "$APP/Contents/Info.plist" <<PLIST
@@ -87,7 +88,7 @@ exec "$BIN" open
 LAUNCH
   chmod 755 "$APP/Contents/MacOS/TutorAI"
   curl -fsSL -o "$APP/Contents/Resources/icon.icns" "$BASE/icon.icns" 2>/dev/null || true
-  say "Added TutorAI to your Applications folder ($APP)."
+  say "Added TutorAI to Applications ($APP)."
 else
   DESKTOP="$HOME/.local/share/applications/tutorai.desktop"
   mkdir -p "$(dirname "$DESKTOP")" "$HOME/.local/share/icons"
@@ -115,5 +116,13 @@ case ":$PATH:" in
     ;;
 esac
 
-say "TutorAI is installed. Opening it in your browser…"
+say ""
+say "TutorAI is installed."
+if [ "$OS" = macos ]; then
+  say "  To open it later: press ⌘+Space, type TutorAI and press Enter (or open it from Launchpad / Applications)."
+else
+  say "  To open it later: TutorAI in your applications menu, or run: tutorai"
+fi
+say "  When you're done: just close the browser. TutorAI stops by itself after 15 minutes without use."
+say "Opening TutorAI in your browser…"
 [ "${TUTORAI_NO_OPEN:-}" = 1 ] || "$BIN" open || say "Open TutorAI from its icon."

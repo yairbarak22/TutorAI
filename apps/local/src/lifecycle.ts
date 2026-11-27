@@ -22,7 +22,8 @@ import { Updater, cleanupOld } from "./update/index.ts";
 declare const __TUTORAI_VERSION__: string | undefined;
 export const VERSION = typeof __TUTORAI_VERSION__ === "string" ? __TUTORAI_VERSION__ : "0.1.0-dev";
 
-export const IDLE_EXIT_MS = Number(process.env.TUTORAI_IDLE_MS) || 60 * 60 * 1000;
+/** Stop after this long with no open TutorAI tab and nothing running (closing the browser is enough). */
+export const IDLE_EXIT_MS = Number(process.env.TUTORAI_IDLE_MS) || 15 * 60 * 1000;
 
 /** True inside the single binary (then process.execPath is the binary itself). */
 export function isSea(): boolean {

@@ -29,6 +29,12 @@ async function openApp(page: Page) {
   await page.goto(`/open?code=${code}`);
 }
 
+/** The first-run "close and reopen" explanation appears once TutorAI is set up; dismiss it. */
+async function dismissTip(page: Page) {
+  const got = page.getByRole("dialog", { name: "TutorAI רץ במחשב שלכם" }).getByRole("button", { name: "הבנתי" });
+  await got.waitFor({ state: "visible", timeout: 5000 }).then(() => got.click(), () => {});
+}
+
 test.beforeEach(async () => {
   await freshInstall();
 });
@@ -47,7 +53,10 @@ test("opens from a one-time link; the link can't be reused; data is saved in the
   await page.getByRole("button", { name: "בואו נתחיל" }).click();
   // No storage step in the local version: straight to connecting the AI.
   await expect(page.getByRole("heading", { name: "איך לחבר את ה-AI?" })).toBeVisible();
-  await page.getByRole("button", { name: /נסו במצב הדגמה/ }).click();
+  await page.getByRole("combobox", { name: "איזה חשבון AI יש לכם?" }).click();
+  await page.getByRole("option", { name: /רק לנסות/ }).click();
+  await page.getByRole("button", { name: "כניסה במצב הדגמה" }).click();
+  await dismissTip(page);
   await page.getByRole("button", { name: "קורס לדוגמה: הסתברות" }).click();
   await expect(page.getByRole("heading", { name: "הסתברות למדעי המחשב" })).toBeVisible();
   // Saved to the real folder (the database is written ~0.7 s after a change).
@@ -61,6 +70,8 @@ test("opens from a one-time link; the link can't be reused; data is saved in the
 test("connects a ChatGPT plan through Sign in with ChatGPT and answers with it", async ({ page }) => {
   await openApp(page);
   await page.getByRole("button", { name: "בואו נתחיל" }).click();
+  await page.getByRole("combobox", { name: "איזה חשבון AI יש לכם?" }).click();
+  await page.getByRole("option", { name: /מנוי ChatGPT/ }).click();
   const popup = page.waitForEvent("popup");
   await page.getByRole("button", { name: "Continue with ChatGPT" }).click();
   const tab = await popup;
@@ -70,6 +81,7 @@ test("connects a ChatGPT plan through Sign in with ChatGPT and answers with it",
   await expect(page.getByRole("dialog")).toContainText("ChatGPT");
   await page.getByRole("button", { name: "הבנתי" }).click();
   await page.getByRole("button", { name: "שימוש במנוי ChatGPT" }).click();
+  await dismissTip(page);
   await expect(page.getByText("ערב טוב").or(page.getByText("בוקר טוב")).or(page.getByText("צהריים טובים")).or(page.getByText("לילה טוב")).first()).toBeVisible();
 
   // A model call from the page goes through the server to the (mock) Responses API.
@@ -87,10 +99,13 @@ test("connects a Claude plan through the official CLI's own sign-in", async ({ p
   test.skip(process.platform === "win32", "the fake CLI is a shell script; Windows supports only the native claude.exe");
   await openApp(page);
   await page.getByRole("button", { name: "בואו נתחיל" }).click();
+  await page.getByRole("combobox", { name: "איזה חשבון AI יש לכם?" }).click();
+  await page.getByRole("option", { name: /מנוי Claude/ }).click();
   await expect(page.getByText("תנאים של Anthropic")).toBeVisible();
   await page.getByRole("button", { name: "התחברות לחשבון Claude" }).click();
   // The fake CLI "signs in" like `claude auth login`; the card notices by polling.
   await page.getByRole("button", { name: "שימוש במנוי Claude" }).click({ timeout: 20_000 });
+  await dismissTip(page);
 
   const answer = await page.evaluate(async () => {
     const r = await fetch("/api/llm", { method: "POST", headers: { "content-type": "application/json", "x-tutorai": localStorage.getItem("tutorai.localToken") ?? "" }, body: JSON.stringify({ provider: "claude-code", tier: "fast", prompt: "hi" }) });

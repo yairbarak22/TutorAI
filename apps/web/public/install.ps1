@@ -71,7 +71,11 @@ try {
     [Environment]::SetEnvironmentVariable('Path', (($UserPath, $Dir) | Where-Object { $_ }) -join ';', 'User')
   }
 
-  Write-Host 'TutorAI is installed. Opening it in your browser...'
+  Write-Host ''
+  Write-Host 'TutorAI is installed.'
+  Write-Host '  To open it later: the TutorAI icon on your Desktop or in the Start menu.'
+  Write-Host '  When you are done: just close the browser. TutorAI stops by itself after 15 minutes without use.'
+  Write-Host 'Opening TutorAI in your browser...'
   if ($env:TUTORAI_NO_OPEN -ne '1') { & $Exe open }
 } catch {
   # No `exit`: under `irm | iex` it would close the student's PowerShell window with the message.
