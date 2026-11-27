@@ -21,8 +21,8 @@ The whole path, in plain words:
 3. **Make the change** on your own copy of the project (a *fork*), in a separate *branch*.
 4. **Check it** with `npm test`, and look at it in the app.
 5. **Open a pull request (PR):** a request to add your change. Write `Closes #<issue>` and explain the change in your own words.
-6. **Review:** automatic checks run, and a maintainer may suggest changes. That's normal and friendly.
-7. **Merge:** your change goes live on the site within minutes. 🎉
+6. **Review:** the maintainer looks at your PR and may suggest changes. That's normal and friendly. On your first PR, the automatic checks start once the maintainer approves them to run.
+7. **Merge:** the maintainer merges it, and your change goes live on the site within minutes. 🎉
 
 Can't continue? Comment **`/unclaim`**. An issue with no PR after **10 days** gets a reminder, and after **14 days** it's released so someone else can take it.
 
@@ -81,6 +81,17 @@ npm run check   # typecheck + unit tests + evals for every tool + browser E2E
 - UI text is available in Hebrew and English: add both when you add UI strings. Code, comments, and plugin prompts are in English.
 - PRs are checked by CI (typecheck, unit tests, recorded plugin evals, Playwright E2E). To try a PR, check it out locally and run `npm run dev`.
 - **Reusing code from another project?** Use only code under a compatible open license (MIT, BSD, Apache-2.0), keep its copyright notice, and add an entry to [NOTICE](NOTICE). Don't copy code from projects with a non-open or copyleft license (for example AGPL).
+
+## Who merges
+
+Anyone can open a pull request; **only the project maintainer ([@yairbarak22](https://github.com/yairbarak22)) merges into `main`** and publishes releases. Concretely:
+
+- Every PR needs the maintainer's approval ([CODEOWNERS](.github/CODEOWNERS)) and passing checks (typecheck, unit tests, plugin evals, browser E2E) before it can be merged.
+- Pushing to the PR after it was approved resets the approval, so the maintainer reviews the final version.
+- For contributors from outside the project, the automatic checks start only after the maintainer approves them to run. This is normal and doesn't mean anything is wrong with your PR.
+- Releases of TutorAI Local (the installable program) are made only by the maintainer: release tags (`v*`) are protected.
+
+Please don't ask to be added as a collaborator to get a PR in. Open the PR from your fork, and it will be reviewed.
 
 ## Non-negotiables
 
