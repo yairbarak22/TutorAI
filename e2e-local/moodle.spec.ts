@@ -99,6 +99,8 @@ test("connects by signing in on Moodle's page, imports a course's files, and not
   await strip.getByRole("button", { name: /ייבוא 2 קבצים/ }).click();
   await expect(strip.getByText(/יובאו 2 קבצים/)).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("source-row")).toHaveCount(2);
+  // With nothing left to import there is no import button (and no "import 0 files").
+  await expect(strip.getByRole("button", { name: /ייבוא|בחרו קבצים/ })).toHaveCount(0);
   await expect(page.getByTestId("source-row").filter({ hasText: "מוכן" })).toHaveCount(2, { timeout: 30_000 });
 
   // In the data folder under the usual names, and known to the saved database.
