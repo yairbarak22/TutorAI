@@ -18,7 +18,17 @@ New-Item -ItemType Directory -Force -Path $Tmp | Out-Null
 # Downloads a URL to a file; a file:// base (local test releases) is copied instead.
 function Get-TutorAIFile([string]$Url, [string]$OutFile) {
   if ($Url -like 'file:*') { Copy-Item -Force ([uri]$Url).LocalPath $OutFile }
-  else { Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $OutFile }
+  else {
+    # Retry dropped connections (unstable Wi-Fi) before giving up.
+    for ($i = 1; ; $i++) {
+      try { Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $OutFile; return }
+      catch {
+        $status = if ($_.Exception.Response) { [int]$_.Exception.Response.StatusCode } else { 0 }
+        if ($status -eq 404 -or $i -ge 5) { throw }
+        Start-Sleep -Seconds 2
+      }
+    }
+  }
 }
 
 try {
