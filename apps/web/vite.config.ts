@@ -59,6 +59,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,wasm,mjs}"],
         // TutorAI Local serves these itself (one-time sign-in link, ChatGPT callback, API).
         navigateFallbackDenylist: SW_DENYLIST,
+        // Reloads open tabs once when a new version replaces an older one (public/sw-update.js).
+        importScripts: ["sw-update.js"],
         maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
       },
     }),
