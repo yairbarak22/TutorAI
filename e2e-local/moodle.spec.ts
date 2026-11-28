@@ -96,6 +96,14 @@ test("connects by signing in on Moodle's page, imports a course's files, and not
   await expect(strip.getByText(/פעילות אחת שאינה קובץ/)).toBeVisible();
   await expect(page.getByTestId("source-row")).toHaveCount(0);
 
+  // Select all clears and re-ticks everything; a file can be ticked by clicking its name.
+  const all = strip.getByRole("checkbox", { name: "סימון כל הקבצים", exact: true });
+  await expect(all).toBeChecked();
+  await all.click();
+  await expect(strip.getByRole("button", { name: "בחרו קבצים לייבוא" })).toBeDisabled();
+  await strip.getByText("lecture-graphs.pdf").click();
+  await expect(strip.getByRole("button", { name: /ייבוא קובץ אחד/ })).toBeVisible();
+  await all.click();
   await strip.getByRole("button", { name: /ייבוא 2 קבצים/ }).click();
   await expect(strip.getByText(/יובאו 2 קבצים/)).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("source-row")).toHaveCount(2);

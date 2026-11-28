@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GraduationCap, RefreshCw } from "lucide-react";
 import type { MoodleFileRow, Source } from "@tutorai/core";
 import type { MoodleContents } from "@tutorai/local-api";
@@ -113,6 +113,20 @@ export function MoodleStrip({ courseId }: { courseId: number }) {
       return n;
     });
 
+  /** Ticks or clears every importable file in `list` (all of them, or one section). */
+  const setMany = (list: MoodleFileRow[], on: boolean) =>
+    setSelected((s) => {
+      const n = new Set(s);
+      for (const r of list) if (selectable(r)) (on ? n.add(r.id) : n.delete(r.id));
+      return n;
+    });
+  const tickState = (list: MoodleFileRow[]) => {
+    const can = list.filter(selectable);
+    const on = can.filter((r) => selected.has(r.id)).length;
+    return { can: can.length, on, all: can.length > 0 && on === can.length, some: on > 0 && on < can.length };
+  };
+  const everything = tickState(visible);
+
   const runImport = async () => {
     setOutcome(null);
     setProblem(null);
@@ -199,24 +213,63 @@ export function MoodleStrip({ courseId }: { courseId: number }) {
       {open && (
         <div className="space-y-3" data-testid="moodle-files">
           {sections.length === 0 && <p className="text-sm text-muted">{t("אין קבצים חדשים לייבוא.", "There are no new files to import.")}</p>}
+          {everything.can > 1 && (
+            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-black/[0.03] px-3 py-2">
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                <TriCheck
+                  checked={everything.all}
+                  indeterminate={everything.some}
+                  disabled={importing}
+                  onChange={() => setMany(visible, !everything.all)}
+                  label={t("סימון כל הקבצים", "Select all files")}
+                />
+                {t("סימון הכל", "Select all")}
+              </label>
+              <span className="text-xs text-muted">{t(`נבחרו ${everything.on} מתוך ${everything.can}`, `${everything.on} of ${everything.can} selected`)}</span>
+              {everything.on > 0 && (
+                <button type="button" className="ms-auto cursor-pointer text-[13px] text-muted underline hover:text-ink" disabled={importing} onClick={() => setMany(visible, false)}>
+                  {t("ניקוי הבחירה", "Clear selection")}
+                </button>
+              )}
+            </div>
+          )}
           {sections.map(([section, list]) => (
             <div key={section}>
-              {section && <div className="mb-1 text-xs font-semibold text-muted" dir="auto">{section}</div>}
+              {section && (() => {
+                const st = tickState(list);
+                return st.can > 1 ? (
+                  <label className="mb-1 flex w-fit cursor-pointer items-center gap-2 text-xs font-semibold text-muted">
+                    <TriCheck
+                      checked={st.all}
+                      indeterminate={st.some}
+                      disabled={importing}
+                      onChange={() => setMany(list, !st.all)}
+                      label={t(`סימון כל הקבצים ב${section}`, `Select all files in ${section}`)}
+                    />
+                    <span dir="auto">{section}</span>
+                  </label>
+                ) : (
+                  <div className="mb-1 text-xs font-semibold text-muted" dir="auto">{section}</div>
+                );
+              })()}
               <ul className="divide-y divide-slate-100 rounded-xl border border-black/[0.06]">
                 {list.map((r) => {
                   const can = selectable(r);
                   const pct = progress?.get(r.id);
                   return (
                     <li key={r.id} className={`flex flex-wrap items-center gap-3 px-3 py-2 ${can ? "" : "opacity-60"}`} data-testid="moodle-file">
-                      <input type="checkbox" aria-label={r.filename} checked={selected.has(r.id) && can} disabled={!can || importing} onChange={() => toggle(r.id)} />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm" dir="auto">{r.filename}</div>
-                        <div className="truncate text-xs text-muted" dir="auto">
-                          {r.activity} · {mb(r.size)}
-                          {r.state === "failed" && r.error ? ` · ${moodleProblem(r.error)}` : ""}
+                      {/* The whole name is clickable, not just the small box. */}
+                      <label className={`flex min-w-0 flex-1 items-center gap-3 ${can && !importing ? "cursor-pointer" : ""}`}>
+                        <input type="checkbox" aria-label={r.filename} checked={selected.has(r.id) && can} disabled={!can || importing} onChange={() => toggle(r.id)} />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm" dir="auto">{r.filename}</div>
+                          <div className="truncate text-xs text-muted" dir="auto">
+                            {r.activity} · {mb(r.size)}
+                            {r.state === "failed" && r.error ? ` · ${moodleProblem(r.error)}` : ""}
+                          </div>
+                          {pct !== undefined && <ProgressBar value={pct} className="mt-1" />}
                         </div>
-                        {pct !== undefined && <ProgressBar value={pct} className="mt-1" />}
-                      </div>
+                      </label>
                       {stateBadge(r)}
                       {can && (
                         <div className="w-36">
@@ -280,4 +333,13 @@ export function MoodleStrip({ courseId }: { courseId: number }) {
       />
     </Card>
   );
+}
+
+/** A checkbox that can also show "some ticked" (for select all / a whole section). */
+function TriCheck({ checked, indeterminate, disabled, onChange, label }: { checked: boolean; indeterminate: boolean; disabled?: boolean; onChange: () => void; label: string }) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = indeterminate;
+  }, [indeterminate]);
+  return <input ref={ref} type="checkbox" aria-label={label} checked={checked} disabled={disabled} onChange={onChange} />;
 }
