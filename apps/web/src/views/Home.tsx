@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { ArrowUp, BookOpen, Box, CalendarDays, ClipboardCheck, Ellipsis, FileText, Flame, Layers, ListChecks, Plus, ScanLine, Trash2, Zap } from "lucide-react";
-import { localDay } from "@tutorai/core";
+import { ArrowUp, BookOpen, Box, CalendarDays, ClipboardCheck, Ellipsis, FileText, Layers, ListChecks, Plus, ScanLine, Trash2 } from "lucide-react";
 import { useEngine } from "../engine.ts";
 import { go, href } from "../router.ts";
 import { Badge, Button, Card, Empty, Field, Modal, inputClass } from "../ui/components.tsx";
-import { ChevronForward, t } from "../i18n.tsx";
+import { t } from "../i18n.tsx";
 import { MoodleHomeButton } from "../ui/Moodle.tsx";
 
 export function daysUntil(date: string | null): number | null {
@@ -62,29 +61,38 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
 
   return (
     <div className="space-y-12">
-      <div className="mx-auto max-w-[640px] pt-[4vh] text-center">
+      <div className="mx-auto max-w-[760px] pt-[4vh] text-center">
         <h1 className="text-[28px] font-medium tracking-tight">{greeting()}, {t("מה לומדים היום?", "what are we learning today?")}</h1>
         <form
-          className="mt-6 flex h-12 items-center gap-2 rounded-full border border-black/10 bg-white ps-2 pe-2 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] focus-within:border-black/25"
+          className="mx-auto mt-7 max-w-[720px] rounded-3xl border border-black/10 bg-white p-3 text-start shadow-[0_4px_24px_-8px_rgba(0,0,0,0.15)] focus-within:border-black/25"
           onSubmit={(e) => {
             e.preventDefault();
             ask();
           }}
         >
-          <span className="tile-grad-5 h-8 w-8 shrink-0 rounded-full shadow-[inset_0_-6px_10px_rgba(0,0,0,0.12)]" />
-          <input
-            className="min-w-0 flex-1 bg-transparent px-1 text-[14px] outline-none placeholder:text-slate-400"
+          <textarea
+            rows={3}
+            className="block w-full resize-none bg-transparent px-2 pt-1 text-[16px] leading-7 outline-none placeholder:text-slate-400"
             placeholder={course ? t(`שאלו את המורה הפרטי על ${course.name}…`, `Ask the tutor about ${course.name}…`) : t("צרו קורס כדי לשאול את המורה הפרטי…", "Create a course to ask the tutor…")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter sends; Shift+Enter starts a new line.
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                ask();
+              }
+            }}
             aria-label={t("שאלה למורה הפרטי", "Question for the tutor")}
           />
-          {course && <span className="hidden rounded-md bg-black/[0.05] px-1.5 text-[11px] font-medium leading-5 text-ink-2 sm:inline">{course.name.split(" ")[0]}</span>}
-          <button type="submit" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-white disabled:bg-slate-300" disabled={!q.trim()} aria-label={t("שליחה", "Send")}>
-            <ArrowUp size={16} />
-          </button>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="tile-grad-5 h-7 w-7 shrink-0 rounded-full shadow-[inset_0_-6px_10px_rgba(0,0,0,0.12)]" />
+            {course && <span className="min-w-0 truncate rounded-lg bg-black/[0.05] px-2 text-[12px] font-medium leading-6 text-ink-2">{course.name}</span>}
+            <button type="submit" className="ms-auto grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-white disabled:bg-slate-300" disabled={!q.trim()} aria-label={t("שליחה", "Send")}>
+              <ArrowUp size={18} />
+            </button>
+          </div>
         </form>
-        {course ? <TodayCard courseId={course.id} /> : totalDueLine(engine, courses, now)}
       </div>
 
       <div className="mx-auto grid max-w-[720px] grid-cols-4 gap-y-5 sm:grid-cols-8">
@@ -108,10 +116,11 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
         ))}
       </div>
 
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="flex items-center gap-1 text-[16px] font-semibold tracking-tight">
-            {t("הקורסים שלי", "My courses")} <ChevronForward size={16} className="text-muted" />
+      <section className="rounded-3xl border border-black/[0.08] bg-black/[0.02] p-4 sm:p-6" aria-labelledby="my-courses">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-black/[0.08] pb-4">
+          <h2 id="my-courses" className="flex items-center gap-2 text-[18px] font-semibold tracking-tight">
+            {t("הקורסים שלי", "My courses")}
+            {courses.length > 0 && <span className="rounded-md bg-black/[0.06] px-1.5 text-[12px] font-medium leading-5 text-ink-2">{courses.length}</span>}
           </h2>
           <div className="flex flex-wrap items-center gap-2">
             <MoodleHomeButton />
@@ -142,15 +151,15 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
               const due = engine.store.dueCards(c.id, now).length;
               const d = daysUntil(c.exam_date);
               return (
-                <div key={c.id} className="group relative rounded-2xl border border-black/[0.08] bg-white transition hover:border-black/20 hover:shadow-sm">
-                <a href={href.course(c.id)} className="flex items-start gap-3 rounded-2xl p-3 pe-11">
+                <div key={c.id} className="group relative rounded-2xl border border-black/[0.1] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-black/25 hover:shadow-md">
+                <a href={href.course(c.id)} className="flex items-start gap-3 rounded-2xl p-4 pe-11">
                   <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-black/[0.04]">
                     <span className={`tile-grad-${((c.id - 1) % 8) + 1} grid h-9 w-9 place-items-center rounded-full text-[14px] font-semibold text-ink/75 shadow-[inset_0_-6px_12px_rgba(0,0,0,0.08)]`}>
                       {c.name.trim().charAt(0)}
                     </span>
                   </span>
                   <span className="min-w-0 flex-1 pt-0.5">
-                    <span className="block truncate text-[14px] font-medium">{c.name}</span>
+                    <span className="block truncate text-[15px] font-medium" dir="auto">{c.name}</span>
                     <span className="block text-[12.5px] text-muted">
                       {t(`${sources.length === 1 ? "קובץ אחד" : `${sources.length} קבצים`} · ${concepts === 1 ? "מושג אחד" : `${concepts} מושגים`}`, `${sources.length} ${sources.length === 1 ? "file" : "files"} · ${concepts} ${concepts === 1 ? "concept" : "concepts"}`)}
                     </span>
@@ -189,11 +198,6 @@ export function Home({ onNewCourse }: { onNewCourse: () => void }) {
   );
 }
 
-function totalDueLine(engine: ReturnType<typeof useEngine>, courses: { id: number }[], now: string) {
-  const n = courses.reduce((a, c) => a + engine.store.dueCards(c.id, now).length, 0);
-  return n > 0 ? <p className="mt-3 text-[13px] text-muted">{t(n === 1 ? "יש לכם כרטיסייה אחת לחזרה היום." : `יש לכם ${n} כרטיסיות לחזרה היום.`, `You have ${n} ${n === 1 ? "flashcard" : "flashcards"} to review today.`)}</p> : null;
-}
-
 export function NewCourse({ open, onClose }: { open: boolean; onClose: () => void }) {
   const engine = useEngine();
   const [name, setName] = useState("");
@@ -226,48 +230,3 @@ export function NewCourse({ open, onClose }: { open: boolean; onClose: () => voi
   );
 }
 
-/** "Today's session" entry point: what is waiting, how long it takes, and the streak. */
-function TodayCard({ courseId }: { courseId: number }) {
-  const engine = useEngine();
-  const p = engine.sessionPreview(courseId);
-  const items = p.mistakes.length + p.cards.length + p.weak.length * 2 + p.mixed.length;
-  const streak = engine.streak(courseId);
-  const doneToday = engine.store.sessionDays(courseId)[0] === localDay();
-  if (!items && !streak) return null;
-  return (
-    <a
-      href={href.course(courseId, "session")}
-      className="group mt-4 flex items-center gap-3 rounded-2xl border border-black/[0.08] bg-white p-3 text-start transition hover:border-black/15 hover:shadow"
-      data-testid="today-card"
-    >
-      <span className="tile-grad-5 grid h-10 w-10 shrink-0 place-items-center rounded-xl text-ink/80">
-        <Zap size={18} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[14px] font-medium">
-          {doneToday ? t("הסשן של היום הושלם", "Today's session is done") : t("הסשן היומי שלכם", "Your daily session")}
-        </span>
-        <span className="block text-[12.5px] text-muted">
-          {doneToday
-            ? t("כל הכבוד! אפשר לתרגל עוד אם בא לכם.", "Nice work! You can practice more if you like.")
-            : items
-              ? t(`${items} פריטים · כ-${p.minutes} דק'`, `${items} items · ~${p.minutes} min`) +
-                (p.mistakes.length ? t(` · ${p.mistakes.length} טעויות לתיקון`, ` · ${p.mistakes.length} mistakes to fix`) : "")
-              : t("אין עוד מה לתרגל היום", "Nothing more to practice today")}
-        </span>
-      </span>
-      {streak > 0 && (
-        <span className="inline-flex items-center gap-1 text-[12.5px] font-medium text-amber-700">
-          <Flame size={14} /> {streak}
-        </span>
-      )}
-      {items > 0 && (
-        <span
-          className={`inline-flex h-8 items-center gap-1 rounded-[10px] px-3 text-[13px] font-medium ${doneToday ? "border border-black/10 text-ink-2" : "bg-ink text-white"}`}
-        >
-          {doneToday ? t("עוד סשן", "Another one") : t("התחלה", "Start")}
-        </span>
-      )}
-    </a>
-  );
-}
