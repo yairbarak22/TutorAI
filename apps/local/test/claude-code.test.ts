@@ -133,6 +133,8 @@ describe("Claude Code helpers", () => {
   it("classifies errors", () => {
     expect(classifyError("You've hit your limit · resets 5pm").kind).toBe("rate_limit");
     expect(classifyError("Invalid API key · Please run /login").kind).toBe("auth");
+    // The CLI's sign-in ran out: the student is told to sign in again, not shown the raw text.
+    expect(classifyError("Failed to authenticate: OAuth session expired and could not be refreshed").kind).toBe("auth");
     expect(classifyError("weird").kind).toBe("other");
   });
 

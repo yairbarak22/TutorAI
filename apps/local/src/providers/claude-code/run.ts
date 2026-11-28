@@ -66,7 +66,8 @@ export function classifyError(text: string): { kind: ErrorKind; resetAt?: string
     const epoch = text.match(/limit reached\|(\d{9,})/i)?.[1];
     return { kind: "rate_limit", resetAt: epoch ? new Date(Number(epoch) * 1000).toISOString() : undefined };
   }
-  if (/not logged in|please run \/login|claude auth login|invalid api key|oauth token|authentication|unauthorized|\b401\b/.test(t)) return { kind: "auth" };
+  // "Failed to authenticate: OAuth session expired and could not be refreshed" is what the CLI says when its sign-in ran out.
+  if (/not logged in|please run \/login|claude auth login|invalid api key|oauth token|oauth session|session expired|authenticat|unauthorized|\b401\b/.test(t)) return { kind: "auth" };
   if (/overloaded|network|econn|enotfound|etimedout|connection/.test(t)) return { kind: "network" };
   return { kind: "other" };
 }
