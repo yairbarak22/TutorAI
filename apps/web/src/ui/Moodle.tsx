@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ExternalLink, GraduationCap } from "lucide-react";
 import type { MoodleCandidate, MoodleConnection, MoodleInstitutions, MoodleStart, MoodleStatus } from "@tutorai/local-api";
 import { isSafeLaunchUrl, type RemoteCourse } from "@tutorai/moodle";
@@ -545,16 +545,23 @@ export function MoodleFlow({ open, onClose, linkCourseId, signInFirst }: { open:
   );
 }
 
-/** Home: "Import from Moodle". On the website it explains that this needs TutorAI on the computer. */
-export function MoodleHomeButton() {
+/**
+ * "Import from Moodle" (Home and the sidebar). On the website it explains that this needs TutorAI on the computer.
+ * `trigger` renders a different opener (the sidebar's nav item) instead of the default button.
+ */
+export function MoodleHomeButton({ trigger }: { trigger?: (open: () => void) => ReactNode } = {}) {
   const [open, setOpen] = useState(false);
   const local = localServer();
   if (local && !moodleAvailable()) return null;
   return (
     <>
-      <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-        <GraduationCap size={14} /> {t("ייבוא מ-Moodle", "Import from Moodle")}
-      </Button>
+      {trigger ? (
+        trigger(() => setOpen(true))
+      ) : (
+        <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+          <GraduationCap size={14} /> {t("ייבוא מ-Moodle", "Import from Moodle")}
+        </Button>
+      )}
       {local ? (
         <MoodleFlow open={open} onClose={() => setOpen(false)} />
       ) : (

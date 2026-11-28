@@ -9,6 +9,8 @@ import { fileURLToPath } from "node:url";
 const fixtures = (name: string) => fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url));
 
 const tab = (page: Page, name: RegExp) => page.getByRole("navigation", { name: "לשוניות הקורס" }).getByRole("link", { name });
+/** Course pages that are no longer in the sidebar (reached from Home and the session in the app). */
+const openCoursePage = (page: Page, tab: string) => page.goto(page.url().replace(/(#\/course\/\d+)\/.*$/, `$1/${tab}`));
 
 async function onboard(page: Page) {
   await page.goto("/");
@@ -51,6 +53,18 @@ test("concept map, tools, quiz → mastery, flashcards → review, tutor with ci
   await onboard(page);
   await page.getByRole("button", { name: "קורס לדוגמה: הסתברות" }).click();
 
+  // Sidebar: Learn has the study plan; a tool can be pinned under Tools and removed again.
+  const nav = page.getByRole("navigation", { name: "לשוניות הקורס" });
+  await expect(nav.getByRole("link", { name: "תכנית לימוד" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: /מחברת טעויות|התקדמות|סשן יומי/ })).toHaveCount(0);
+  await nav.getByRole("button", { name: "הוספת כלי" }).click();
+  await nav.getByRole("group", { name: "כלים להוספה" }).getByRole("button", { name: "כרטיסיות" }).click();
+  await expect(page.getByTestId("pinned-tools").getByRole("link", { name: "כרטיסיות" })).toBeVisible();
+  // Kept with the other display preferences, so it is still there next time (demo data itself is not kept across a reload).
+  expect(await page.evaluate(() => localStorage.getItem("tutorai.pinnedTools"))).toBe('["flashcards"]');
+  await page.getByTestId("pinned-tools").getByRole("button", { name: "הסרת כרטיסיות מהתפריט" }).click();
+  await expect(page.getByTestId("pinned-tools").getByRole("link", { name: "כרטיסיות" })).toHaveCount(0);
+
   await tab(page, /מפת מושגים/).click();
   await expect(page.getByTestId("concept-card")).toHaveCount(8);
   // The file filter is a dropdown that starts on all materials.
@@ -83,7 +97,7 @@ test("concept map, tools, quiz → mastery, flashcards → review, tutor with ci
   await q.getByRole("radio").first().click();
   await q.getByRole("button", { name: "בדיקה" }).click();
   await expect(q).toContainText("נכון");
-  await tab(page, /התקדמות/).click();
+  await openCoursePage(page, "progress");
   await expect(page.getByTestId("mastery-row").filter({ hasText: "הסתברות מותנית" })).toContainText("· 1");
 
   // Flashcards → spaced repetition
@@ -143,7 +157,7 @@ test("a wrong answer goes to the mistakes notebook and comes back in the daily s
   await q.getByRole("radio").nth(3).click(); // the demo quiz's first answer is option 1
   await q.getByRole("button", { name: "בדיקה" }).click();
 
-  await tab(page, /מחברת טעויות/).click();
+  await openCoursePage(page, "mistakes");
   const card = page.getByTestId("mistake-card").first();
   await expect(card).toBeVisible();
   await expect(card).toContainText("למה זה כנראה קרה"); // the diagnosis arrives in the background
@@ -179,7 +193,7 @@ test("check my solution finds the first mistake and reveals hints one at a time"
   await expect(page.getByTestId("solution-step").nth(1)).toContainText("כאן הטעות הראשונה");
   await page.getByRole("button", { name: "רמז ראשון" }).click();
   await expect(page.getByTestId("solution-check")).toContainText("נוסחת ההסתברות הבינומית");
-  await tab(page, /מחברת טעויות/).click();
+  await openCoursePage(page, "mistakes");
   await expect(page.getByTestId("mistake-card").first()).toContainText("בדיקת פתרון");
 });
 

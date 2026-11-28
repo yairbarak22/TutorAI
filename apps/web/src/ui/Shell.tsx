@@ -1,7 +1,9 @@
 import { LocalStatus } from "./LocalComputer.tsx";
+import { MoodleHomeButton } from "./Moodle.tsx";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   BookOpen,
+  CalendarDays,
   ChartLine,
   Check,
   ChevronLeft,
@@ -28,7 +30,6 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { localDay } from "@tutorai/core";
 import { useEngine } from "../engine.ts";
 import { ChevronForward, isRTL, t, toolText } from "../i18n.tsx";
 import { href, useRoute } from "../router.ts";
@@ -112,11 +113,29 @@ const kvSet = (k: string, v: string) => {
   }
 };
 
-const GROUPS: { he: string; en: string; ids: (typeof COURSE_SECTIONS)[number]["id"][] }[] = [
-  { he: "לימוד", en: "Learn", ids: ["session", "materials", "concepts", "tutor", "review"] },
-  { he: "יצירה", en: "Create", ids: ["studio", "artifacts"] },
-  { he: "מעקב", en: "Track", ids: ["progress", "mistakes"] },
-];
+/** Sidebar "Learn" group. The other course pages are reached from Home, the daily session and the tools. */
+const LEARN_IDS = ["materials", "concepts", "tutor"] as const;
+const STUDY_PLAN_TOOL = "study-plan";
+
+/** Tools the student pinned under "Tools" in the sidebar (tool ids, in the order they were added). */
+const PINNED_TOOLS = "tutorai.pinnedTools";
+function usePinnedTools() {
+  const [ids, setIds] = useState<string[]>(() => {
+    try {
+      const v = JSON.parse(kvGet(PINNED_TOOLS) ?? "[]");
+      return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+  const save = (next: string[]) => {
+    setIds(next);
+    kvSet(PINNED_TOOLS, JSON.stringify(next));
+  };
+  return { ids, pin: (id: string) => !ids.includes(id) && save([...ids, id]), unpin: (id: string) => save(ids.filter((x) => x !== id)) };
+}
+
+const chip = "rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2";
 
 /** Course switcher at the top of the sidebar (like a workspace switcher). */
 function CourseSwitcher({ currentId, onNavigate, onNewCourse }: { currentId: number | null; onNavigate: () => void; onNewCourse: () => void }) {
@@ -183,12 +202,14 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
       : remembered && engine.store.course(remembered)
         ? remembered
         : (courses[0]?.id ?? null);
-  const nowIso = new Date().toISOString();
-  const due = courseId ? engine.store.dueCards(courseId, nowIso).length : 0;
-  const dueMistakes = courseId ? engine.store.dueMistakes(courseId, nowIso).length : 0;
-  const openMistakes = courseId ? engine.store.mistakes(courseId, "open").length : 0;
-  const doneToday = courseId ? engine.store.sessionDays(courseId)[0] === localDay() : true;
   const inCourse = route.name === "course" && route.id === courseId;
+  const tab = inCourse && route.name === "course" ? route.tab : null;
+  const sub = inCourse && route.name === "course" ? route.sub : undefined;
+  const pinned = usePinnedTools();
+  const [adding, setAdding] = useState(false);
+  const tools = engine.tools.filter((x) => x.manifest.output !== "chat");
+  const pinnedTools = pinned.ids.map((id) => tools.find((x) => x.manifest.id === id)).filter((x) => !!x);
+  const toolIcon = (emoji?: string) => <span className="text-[13px] leading-none">{emoji ?? "✦"}</span>;
   return (
     <div className="flex h-full flex-col">
       <a href={href.home()} onClick={onNavigate} className="mx-3 mt-3 mb-3 flex h-9 items-center gap-2 px-1.5">
@@ -205,42 +226,98 @@ function Sidebar({ onNavigate, onNewCourse }: { onNavigate: () => void; onNewCou
           <NavItem icon={<Plus size={16} />} onClick={onNewCourse}>
             {t("קורס חדש", "New course")}
           </NavItem>
+          <MoodleHomeButton
+            trigger={(open) => (
+              <NavItem icon={<GraduationCap size={16} />} onClick={open}>
+                {t("ייבוא קורס מ-Moodle", "Import a course from Moodle")}
+              </NavItem>
+            )}
+          />
         </div>
 
         {courseId ? (
           <div className="space-y-5" role="navigation" aria-label={t("לשוניות הקורס", "Course sections")}>
-            {GROUPS.map((g) => (
-              <div key={g.en}>
-                <div className="mb-1 px-2.5 text-[12px] font-medium text-muted">{t(g.he, g.en)}</div>
-                <div className="space-y-0.5">
-                  {g.ids.map((id) => {
-                    const sec = COURSE_SECTIONS.find((x) => x.id === id)!;
-                    return (
-                      <NavItem
-                        key={id}
-                        href={href.course(courseId, id)}
-                        icon={<sec.icon size={16} />}
-                        active={inCourse && route.name === "course" && route.tab === id}
-                        onClick={onNavigate}
-                        badge={
-                          id === "session" && !doneToday && due + dueMistakes > 0 ? (
-                            <span className="h-2 w-2 rounded-full bg-amber-400" aria-label={t("מחכה לך", "Waiting for you")} />
-                          ) : id === "mistakes" && openMistakes > 0 ? (
-                            <span className="rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2">{openMistakes}</span>
-                          ) : id === "review" && due > 0 ? (
-                            <span className="rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2">{due}</span>
-                          ) : id === "studio" ? (
-                            <span className="rounded-md bg-black/[0.06] px-1.5 text-[11px] font-medium leading-[18px] text-ink-2">AI</span>
-                          ) : undefined
-                        }
-                      >
-                        {sec.label}
-                      </NavItem>
-                    );
-                  })}
-                </div>
+            <div>
+              <div className="mb-1 px-2.5 text-[12px] font-medium text-muted">{t("לימוד", "Learn")}</div>
+              <div className="space-y-0.5">
+                {LEARN_IDS.map((id) => {
+                  const sec = COURSE_SECTIONS.find((x) => x.id === id)!;
+                  return (
+                    <NavItem key={id} href={href.course(courseId, id)} icon={<sec.icon size={16} />} active={tab === id} onClick={onNavigate}>
+                      {sec.label}
+                    </NavItem>
+                  );
+                })}
+                <NavItem
+                  href={href.course(courseId, "studio", STUDY_PLAN_TOOL)}
+                  icon={<CalendarDays size={16} />}
+                  active={tab === "studio" && sub === STUDY_PLAN_TOOL}
+                  onClick={onNavigate}
+                >
+                  {t("תכנית לימוד", "Study plan")}
+                </NavItem>
               </div>
-            ))}
+            </div>
+
+            <div>
+              <NavItem
+                href={href.course(courseId, "studio")}
+                icon={<Sparkles size={16} />}
+                active={tab === "studio" && !sub}
+                onClick={onNavigate}
+                badge={<span className={chip}>AI</span>}
+              >
+                {t("כלים", "Tools")}
+              </NavItem>
+              <div className="mt-0.5 space-y-0.5" data-testid="pinned-tools">
+                {pinnedTools.map((x) => (
+                  <div key={x.manifest.id} className="group/pin relative">
+                    <NavItem
+                      href={href.course(courseId, "studio", x.manifest.id)}
+                      icon={toolIcon(x.manifest.icon)}
+                      active={tab === "studio" && sub === x.manifest.id}
+                      onClick={onNavigate}
+                      indent
+                    >
+                      {toolText(x.manifest).name}
+                    </NavItem>
+                    <button
+                      type="button"
+                      onClick={() => pinned.unpin(x.manifest.id)}
+                      aria-label={t(`הסרת ${toolText(x.manifest).name} מהתפריט`, `Remove ${toolText(x.manifest).name} from the menu`)}
+                      className="absolute end-1.5 top-1/2 grid h-6 w-6 -translate-y-1/2 cursor-pointer place-items-center rounded-md text-muted opacity-0 transition hover:bg-black/[0.06] hover:text-ink focus:opacity-100 group-hover/pin:opacity-100"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+                <NavItem icon={<Plus size={15} />} onClick={() => setAdding(!adding)} indent>
+                  <span className="text-muted">{t("הוספת כלי", "Add a tool")}</span>
+                </NavItem>
+                {adding && (
+                  <div className="ms-4 rounded-lg border border-black/[0.08] bg-white p-1 shadow-sm" role="group" aria-label={t("כלים להוספה", "Tools to add")}>
+                    {tools.filter((x) => !pinned.ids.includes(x.manifest.id)).length === 0 ? (
+                      <div className="px-2.5 py-2 text-[12.5px] text-muted">{t("כל הכלים כבר בתפריט.", "Every tool is already in the menu.")}</div>
+                    ) : (
+                      tools
+                        .filter((x) => !pinned.ids.includes(x.manifest.id))
+                        .map((x) => (
+                          <NavItem
+                            key={x.manifest.id}
+                            icon={toolIcon(x.manifest.icon)}
+                            onClick={() => {
+                              pinned.pin(x.manifest.id);
+                              setAdding(false);
+                            }}
+                          >
+                            {toolText(x.manifest).name}
+                          </NavItem>
+                        ))
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="px-2.5 text-[13px] leading-relaxed text-muted">{t("צרו קורס או פתחו קורס לדוגמה כדי לראות כאן את הכלים.", "Create a course or open a sample course to see its tools here.")}</div>
